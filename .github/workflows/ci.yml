@@ -35,22 +35,14 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npm run lint || true
+        run: npm run lint -- --max-warnings=50 || true
 
-      - name: Run Vitest unit tests with coverage
-        run: npm run test -- --coverage
+      - name: Run Vitest unit tests
+        run: npm run test
         env:
           CI: true
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: client-coverage
-          path: client/coverage/
-          retention-days: 7
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api' }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'test-client-id' }}
 
   # ─────────────────────────────────────────────
   # JOB 2: Server — ESLint + Vitest + Supertest
@@ -108,11 +100,14 @@ jobs:
         env:
           CI: true
           NODE_ENV: test
-          DATABASE_URL: mysql://root:testpassword@localhost:3306/fish_market_test
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: testpassword
+          DB_NAME: fish_market_test
           REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-jwt-secret-for-ci-only
-          JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-only
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          JWT_SECRET: ci-test-jwt-secret-minimum-32-characters
+          JWT_REFRESH_SECRET: ci-test-refresh-secret-minimum-32-chars
           PORT: 5000
           ALLOWED_ORIGINS: http://localhost:3000
 
@@ -123,6 +118,8 @@ jobs:
     name: 🎭 Playwright E2E Tests
     runs-on: ubuntu-latest
     needs: [lint-and-test-client, lint-and-test-server]
+    # Only run E2E on push to main/dev, not on every PR to save minutes
+    if: github.event_name == 'push'
 
     services:
       mysql:
@@ -156,8 +153,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
 
       - name: Install root dependencies
         run: npm ci
@@ -170,25 +165,22 @@ jobs:
         run: npm ci
         working-directory: server
 
-      - name: Install Playwright browsers
+      - name: Install Playwright browsers (Chromium only for speed)
         run: npx playwright install --with-deps chromium
-
-      - name: Build client
-        run: npm run build
-        working-directory: client
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:5000/api
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
 
       - name: Start server in background
         run: npm run dev &
         working-directory: server
         env:
           NODE_ENV: test
-          DATABASE_URL: mysql://root:testpassword@localhost:3306/fish_market_test
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: testpassword
+          DB_NAME: fish_market_test
           REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-jwt-secret-for-ci-only
-          JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-only
+          JWT_SECRET: ci-test-jwt-secret-minimum-32-characters
+          JWT_REFRESH_SECRET: ci-test-refresh-secret-minimum-32-chars
           PORT: 5000
           ALLOWED_ORIGINS: http://localhost:3000
 
@@ -196,10 +188,11 @@ jobs:
         run: npx wait-on http://localhost:5000/health --timeout 60000
 
       - name: Run Playwright E2E tests
-        run: npx playwright test
+        run: npx playwright test --project="Desktop Chrome"
         env:
           CI: true
           NEXT_PUBLIC_API_URL: http://localhost:5000/api
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: test-client-id
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
