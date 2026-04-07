@@ -1,5 +1,5 @@
 import webpush from 'web-push';
-import pool from '../core/db';
+import pool from '../config/db';
 import dotenv from 'dotenv';
 import path from 'path';
 

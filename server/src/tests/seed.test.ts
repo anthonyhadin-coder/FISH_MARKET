@@ -1,4 +1,4 @@
-import pool from '../core/db'; 
+import pool from '../config/db'; 
 
 export const seedDatabase = async () => {
   // Clear existing data (Order matters for FK constraints)

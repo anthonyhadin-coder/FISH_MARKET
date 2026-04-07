@@ -4,11 +4,11 @@ import jwt from 'jsonwebtoken';
 import crypto, { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { OAuth2Client } from 'google-auth-library';
-import pool from '../../core/db';
-import { catchAsync } from '../../core/errors';
-import { validate } from '../../core/validation';
-import { authenticate, AuthRequest } from '../../core/auth';
-import { blockToken } from '../../core/redis';
+import pool from '../../config/db';
+import { catchAsync } from '../../middleware/errors';
+import { validate } from '../../middleware/validation';
+import { authenticate, AuthRequest } from '../../middleware/auth';
+import { blockToken } from '../../config/redis';
 
 // ── Env guards ───────────────────────────────────────────────────
 const JWT_SECRET = process.env.JWT_SECRET;

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import { app } from '../index';
-import pool from '../core/db';
+import pool from '../config/db';
 
 const mockConn = {
     beginTransaction: vi.fn(),
@@ -11,7 +11,7 @@ const mockConn = {
     release: vi.fn(),
 };
 
-vi.mock('../core/db', () => ({
+vi.mock('../config/db', () => ({
     default: {
         query: vi.fn(),
         getConnection: vi.fn(() => mockConn),
@@ -19,7 +19,7 @@ vi.mock('../core/db', () => ({
 }));
 
 // Mock authentication middleware
-vi.mock('../core/auth', () => ({
+vi.mock('../middleware/auth', () => ({
     authenticate: (req: any, res: any, next: any) => {
         req.user = { userId: '1', role: 'agent' };
         next();

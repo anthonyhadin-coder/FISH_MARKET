@@ -2,10 +2,10 @@ import { Response, Router } from 'express';
 import { createNotification } from '../notifications/notifications';
 import { sendPushToUser, pushTemplates } from '../../services/push.service';
 import { z } from 'zod';
-import pool from '../../core/db';
-import { authenticate, authorize, AuthRequest } from '../../core/auth';
-import { catchAsync } from '../../core/errors';
-import { validate } from '../../core/validation';
+import pool from '../../config/db';
+import { authenticate, authorize, AuthRequest } from '../../middleware/auth';
+import { catchAsync } from '../../middleware/errors';
+import { validate } from '../../middleware/validation';
 
 const getDailyReportSchema = z.object({
     query: z.object({

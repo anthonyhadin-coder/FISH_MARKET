@@ -1,7 +1,7 @@
 import { Response, Router } from 'express';
-import pool from '../../core/db';
-import { authenticate, AuthRequest } from '../../core/auth';
-import { catchAsync } from '../../core/errors';
+import pool from '../../config/db';
+import { authenticate, AuthRequest } from '../../middleware/auth';
+import { catchAsync } from '../../middleware/errors';
 import { sendPushToUser } from '../../services/push.service';
 import { z } from 'zod';
 

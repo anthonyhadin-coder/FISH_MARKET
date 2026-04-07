@@ -4,10 +4,10 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import pool from './core/db';
-import { logger } from './core/logger';
-import { errorHandler } from './core/errors';
-import { initSentry } from './core/sentry';
+import pool from './config/db';
+import { logger } from './utils/logger';
+import { errorHandler } from './middleware/errors';
+import { initSentry } from './config/sentry';
 
 dotenv.config();
 

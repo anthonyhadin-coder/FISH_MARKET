@@ -1,4 +1,4 @@
-import pool from '../core/db';
+import pool from '../config/db';
 
 async function unlock() {
   try {

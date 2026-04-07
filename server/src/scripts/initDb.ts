@@ -1,4 +1,4 @@
-import pool from '../core/db';
+import pool from '../config/db';
 import bcrypt from 'bcryptjs';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
