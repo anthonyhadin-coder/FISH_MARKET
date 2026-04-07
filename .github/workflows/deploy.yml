@@ -1,0 +1,132 @@
+name: Deploy — Production
+
+on:
+  push:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ─────────────────────────────────────────────
+  # JOB 1: Deploy Client to Vercel
+  # ─────────────────────────────────────────────
+  deploy-client:
+    name: 🚀 Deploy Client → Vercel
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: client
+
+      - name: Build Next.js app
+        run: npm run build
+        working-directory: client
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment info
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: client
+
+      - name: Build for Vercel
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: client
+
+      - name: Deploy to Vercel (production)
+        id: vercel-deploy
+        run: |
+          DEPLOY_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+        working-directory: client
+
+      - name: Log deployment URL
+        run: echo "✅ Client deployed to ${{ steps.vercel-deploy.outputs.deploy_url }}"
+
+  # ─────────────────────────────────────────────
+  # JOB 2: Deploy Server to VPS via SSH + PM2
+  # ─────────────────────────────────────────────
+  deploy-server:
+    name: 🚀 Deploy Server → VPS (PM2)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo "🔁 Pulling latest code..."
+            cd /var/www/deep-ocean-fish-market || exit 1
+            git pull origin main
+
+            echo "📦 Installing server dependencies..."
+            cd server
+            npm install
+
+            echo "🏗️ Building server TypeScript..."
+            npm run build
+
+            echo "♻️ Restarting PM2 process..."
+            pm2 restart fish-market-server || pm2 start dist/index.js --name fish-market-server
+
+            echo "💾 Saving PM2 process list..."
+            pm2 save
+
+            echo "✅ Server deployment complete."
+            pm2 list
+
+  # ─────────────────────────────────────────────
+  # JOB 3: Post-Deployment Notification
+  # ─────────────────────────────────────────────
+  notify:
+    name: 🎉 Notify Deployment Success
+    runs-on: ubuntu-latest
+    needs: [deploy-client, deploy-server]
+    if: success()
+
+    steps:
+      - name: Print success summary
+        run: |
+          echo "======================================"
+          echo "  🐟 Deep Ocean Fish Market Deployed! "
+          echo "======================================"
+          echo "  Branch: ${{ github.ref_name }}"
+          echo "  Commit: ${{ github.sha }}"
+          echo "  Author: ${{ github.actor }}"
+          echo "  Time:   $(date -u '+%Y-%m-%d %H:%M UTC')"
+          echo "======================================"
+
+      - name: Create deployment summary
+        run: |
+          echo "## 🐟 Deployment Successful! 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch   | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit   | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Author   | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Client   | ✅ Deployed to Vercel |" >> $GITHUB_STEP_SUMMARY
+          echo "| Server   | ✅ Restarted via PM2 |" >> $GITHUB_STEP_SUMMARY

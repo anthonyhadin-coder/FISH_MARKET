@@ -1,10 +1,15 @@
 {
   "name": "fish_market",
   "version": "1.0.0",
-  "description": "",
+  "description": "Deep Ocean Fish Market PWA — Monorepo",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently --names \"CLIENT,SERVER\" --prefix-colors \"cyan,green\" \"npm run dev --prefix client\" \"npm run dev --prefix server\"",
+    "build": "npm run build --prefix client && npm run build --prefix server",
+    "test": "npm run test --prefix client && npm run test --prefix server",
+    "test:e2e": "npx playwright test",
+    "lint": "npm run lint --prefix client && npm run lint --prefix server",
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +20,7 @@
     "@playwright/test": "^1.58.2",
     "@types/node": "^25.5.0",
     "axe-playwright": "^2.2.2",
+    "concurrently": "^9.1.2",
     "vitest": "^4.1.0"
   }
 }
