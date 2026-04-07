@@ -1,7 +1,7 @@
 # 🐟 Deep Ocean Fish Market PWA
 
-[![CI Pipeline](https://github.com/YOUR-USERNAME/deep-ocean-fish-market/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/YOUR-USERNAME/deep-ocean-fish-market/actions/workflows/ci.yml)
-[![Deploy](https://github.com/YOUR-USERNAME/deep-ocean-fish-market/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/YOUR-USERNAME/deep-ocean-fish-market/actions/workflows/deploy.yml)
+[![CI Pipeline](https://github.com/anthonyhadin-coder/FISH_MARKET/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/anthonyhadin-coder/FISH_MARKET/actions/workflows/ci.yml)
+[![Deploy](https://github.com/anthonyhadin-coder/FISH_MARKET/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/anthonyhadin-coder/FISH_MARKET/actions/workflows/deploy.yml)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
