@@ -1,0 +1,238 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mC:/coding_program_files/FISH_MARKET/server[39m
+
+[90mstdout[2m | src/tests/sales.test.ts
+[22m[39m[dotenv@17.3.1] injecting env (5) from .env -- tip: ≡ƒ¢í∩╕Å auth for agents: https://vestauth.com
+
+node.exe : 
+[90mstderr[2m | 
+src/tests/sales.test.ts
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: ([90mstderr[   
+ 2m...s/sales.test.    
+ts:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+[22m[39mValidationErr
+or: Custom 
+keyGenerator appears 
+to use request IP 
+without calling the 
+ipKeyGenerator helper 
+function for IPv6 
+addresses. This could 
+allow IPv6 users to 
+bypass limits. See http
+s://express-rate-limit.
+github.io/ERR_ERL_KEY_G
+EN_IPV6/ for more 
+information.
+    at Object.keyGenera
+torIpFallback [90m(fil
+e:///C:/coding_program_
+files/FISH_MARKET/serve
+r/[39mnode_modules/[4
+mexpress-rate-limit[24
+m/dist/index.mjs:613:13
+[90m)[39m
+    at Object.wrappedVa
+lidations.<computed> 
+[as keyGeneratorIpFallb
+ack] [90m(file:///C:/c
+oding_program_files/FIS
+H_MARKET/server/[39mno
+de_modules/[4mexpress-
+rate-limit[24m/dist/in
+dex.mjs:656:22[90m)[3
+9m
+    at parseOptions [9
+0m(file:///C:/coding_pr
+ogram_files/FISH_MARKET
+/server/[39mnode_modul
+es/[4mexpress-rate-lim
+it[24m/dist/index.mjs:
+726:16[90m)[39m
+    at rateLimit [90m(
+file:///C:/coding_progr
+am_files/FISH_MARKET/se
+rver/[39mnode_modules/
+[4mexpress-rate-limit
+[24m/dist/index.mjs:807
+:18[90m)[39m
+    at C:/coding_progra
+m_files/FISH_MARKET/ser
+ver/src/core/audioValid
+ator.ts:5:38
+[90m    at processTick
+sAndRejections (node:in
+ternal/process/task_que
+ues:103:5)[39m
+    at VitestModuleEval
+uator._runInlinedModule
+ [90m(file:///C:/codin
+g_program_files/FISH_MA
+RKET/server/[39mnode_m
+odules/[4mvitest[24m/
+dist/module-evaluator.j
+s:206:4[90m)[39m
+    at VitestModuleRunn
+er.directRequest [90m(
+file:///C:/coding_progr
+am_files/FISH_MARKET/se
+rver/[39mnode_modules/
+[4mvite[24m/dist/node
+/module-runner.js:1243:
+59[90m)[39m
+    at VitestModuleRunn
+er.cachedRequest [90m(
+file:///C:/coding_progr
+am_files/FISH_MARKET/se
+rver/[39mnode_modules/
+[4mvite[24m/dist/node
+/module-runner.js:1150:
+73[90m)[39m
+    at C:/coding_progra
+m_files/FISH_MARKET/ser
+ver/src/modules/agent/v
+oice.ts:8:1 {
+  code: [32m'ERR_ERL_K
+EY_GEN_IPV6'[39m,
+  help: [32m'https://e
+xpress-rate-limit.githu
+b.io/ERR_ERL_KEY_GEN_IP
+V6/'[39m
+}
+
+[90mstdout[2m | src/tests/sales.test.ts
+[22m[39m[dotenv@17.3.1] injecting env (0) from .env -- tip: ≡ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+Sentry DSN not found, skipping initialization.
+
+[90mstdout[2m | src/tests/sales.test.ts[2m > [22m[2mAgent Sales Module (Catch Entry)[2m > [22m[2mPOST /api/sales[2m > [22m[2mQAF-001: should record a valid catch entry successfully
+[22m[39m{"timestamp":"2026-03-25T02:53:09.557Z","level":"INFO","message":"POST /api/sales"}
+
+[90mstderr[2m | src/t
+ests/sales.test.ts[2m 
+> [22m[2mAgent Sales 
+Module (Catch 
+Entry)[2m > 
+[22m[2mPOST 
+/api/sales[2m > 
+[22m[2mQAF-001: 
+should record a valid 
+catch entry 
+successfully
+[22m[39m{"timestamp":
+"2026-03-25T02:53:09.56
+2Z","level":"ERROR","me
+ssage":"POST 
+/api/sales - 
+(intermediate value) 
+is not iterable","error
+":{"message":"(intermed
+iate value) is not iter
+able","stack":"TypeErro
+r: (intermediate 
+value) is not 
+iterable\n    at C:/cod
+ing_program_files/FISH_
+MARKET/server/src/modul
+es/agent/sales.ts:71:38
+\n    at processTicksAn
+dRejections (node:inter
+nal/process/task_queues
+:103:5)"}}
+
+[90mstdout[2m | src/tests/sales.test.ts[2m > [22m[2mAgent Sales Module (Catch Entry)[2m > [22m[2mPOST /api/sales[2m > [22m[2mQAN-001: should reject catch entry if rate exceeds Γé╣99,999
+[22m[39m{"timestamp":"2026-03-25T02:53:09.579Z","level":"INFO","message":"POST /api/sales"}
+
+[90mstdout[2m | src/tests/sales.test.ts[2m > [22m[2mAgent Sales Module (Catch Entry)[2m > [22m[2mPOST /api/sales[2m > [22m[2mQAN-002: should reject catch entry if fish name is missing
+[22m[39m{"timestamp":"2026-03-25T02:53:09.585Z","level":"INFO","message":"POST /api/sales"}
+
+ [31m├ù[39m src/tests/sales.test.ts[2m > [22mAgent Sales Module (Catch Entry)[2m > [22mPOST /api/sales[2m > [22mQAF-001: should record a valid catch entry successfully[32m 55[2mms[22m[39m
+[31m   ΓåÆ expected 500 to be 201 // Object.is equality[39m
+ [32mΓ£ô[39m src/tests/sales.test.ts[2m > [22mAgent Sales Module (Catch Entry)[2m > [22mPOST /api/sales[2m > [22mQAN-001: should reject catch entry if rate exceeds Γé╣99,999[32m 8[2mms[22m[39m
+ [32mΓ£ô[39m src/tests/sales.test.ts[2m > [22mAgent Sales Module (Catch Entry)[2m > [22mPOST /api/sales[2m > [22mQAN-002: should reject catch entry if fish name is missing[32m 5[2mms[22m[39m
+
+[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»[39m[1m[41m 
+Failed Tests 1 [49m[2
+2m[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»[39m
+
+[41m[1m FAIL 
+[22m[49m src/tests/sa
+les.test.ts[2m > 
+[22mAgent Sales 
+Module (Catch 
+Entry)[2m > [22mPOST 
+/api/sales[2m > 
+[22mQAF-001: should 
+record a valid catch 
+entry successfully
+[31m[1mAssertionError
+[22m: expected 500 to 
+be 201 // Object.is 
+equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 201[39m
+[31m+ 500[39m
+
+[36m [2mΓ¥»[22m src/
+tests/sales.test.ts:[2
+m64:36[22m[39m
+    [90m 62|[39m     
+            
+console.log("Auth 
+failed in test - need 
+to mock authenΓÇª
+    [90m 63|[39m     
+        } 
+[35melse[39m {
+    [90m 64|[39m     
+            [34mexpect
+[39m(res[33m.[39msta
+tus)[33m.[39m[34mtoB
+e[39m([34m201[39m)[
+33m;[39m
+    [90m   |[39m     
+                       
+        [31m^[39m
+    [90m 65|[39m     
+            [34mexpect
+[39m(res[33m.[39mbod
+y[33m.[39mtotal)[33m
+.[39m[34mtoBe[39m([
+34m5000[39m)[33m;[39
+m
+    [90m 66|[39m     
+        }
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ
+»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»[2
+2m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 08:23:07
+[2m   Duration [22m 1.76s[2m (transform 304ms, setup 0ms, import 1.46s, tests 70ms, environment 0ms)[22m
+

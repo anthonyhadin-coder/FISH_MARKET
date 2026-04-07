@@ -1,0 +1,25 @@
+{
+  "cookies": [
+    {
+      "name": "g_state",
+      "value": "{\"i_l\":0,\"i_ll\":1774731369374,\"i_b\":\"7gFgk2MPn6P4fAc7eDC1WqZh4POgt3cZJkNzUYF5Nyw\",\"i_e\":{\"enable_itp_optimization\":0}}",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1790283369,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "user",
+          "value": "{\"id\":\"1\",\"name\":\"Test Agent\",\"role\":\"agent\"}"
+        }
+      ]
+    }
+  ]
+}

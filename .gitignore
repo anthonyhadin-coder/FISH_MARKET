@@ -1,0 +1,51 @@
+# ── Dependencies ──────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Build Outputs ─────────────────
+dist/
+build/
+.next/
+out/
+
+# ── Environment ───────────────────
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ── Logs ──────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# ── Temp / Junk ───────────────────
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# ── Lint / Audit Results ──────────
+*_lint_*.json
+tsc_*.txt
+*lint*.*
+*tsc*.*
+coverage/
+
+# ── Test Cache ────────────────────
+.vitest-cache/
+playwright-report/
+test-results/
+
+# ── TypeScript ────────────────────
+*.tsbuildinfo
+
+# ── MySQL ─────────────────────────
+*.sql.bak
+dump_*.sql
+
+# ── Agent ─────────────────────────
+size_*.txt
+*_tree*.txt
+structure.txt

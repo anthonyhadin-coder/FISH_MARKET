@@ -1,0 +1,8 @@
+C:\coding_program_files\FISH_MARKET\client\node_modules\zod\src\v4\core\api.ts
+C:\coding_program_files\FISH_MARKET\client\public\sw.js
+C:\coding_program_files\FISH_MARKET\client\src\contexts\AuthContext.tsx
+C:\coding_program_files\FISH_MARKET\client\src\lib\api.ts
+C:\coding_program_files\FISH_MARKET\client\src\lib\api\api.ts
+C:\coding_program_files\FISH_MARKET\server\node_modules\zod\src\v4\core\api.ts
+C:\coding_program_files\FISH_MARKET\server\src\core\auth.ts
+C:\coding_program_files\FISH_MARKET\server\src\modules\auth\auth.ts

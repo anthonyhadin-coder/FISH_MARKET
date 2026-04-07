@@ -1,0 +1,57 @@
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests/e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'html',
+  timeout: 60000,
+  globalTimeout: 300000,
+  expect: {
+    timeout: 15000,
+    toHaveScreenshot: {
+      maxDiffPixels: 100
+    }
+  },
+  use: {
+    baseURL: 'http://localhost:3000',
+    actionTimeout: 15000,
+    navigationTimeout: 30000,
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+  },
+
+  projects: [
+    {
+      name: 'setup',
+      testMatch: /.*\.setup\.ts/,
+    },
+    /* 💻 Desktop */
+    {
+      name: 'Desktop Chrome',
+      use: { 
+        ...devices['Desktop Chrome'],
+        storageState: 'playwright/.auth/agent.json',
+      },
+      dependencies: ['setup'],
+    },
+    /* 📱 Mobile Android */
+    {
+      name: 'Mobile Pixel 5',
+      use: { 
+        ...devices['Pixel 5'],
+        storageState: 'playwright/.auth/agent.json',
+      },
+      dependencies: ['setup'],
+    },
+  ],
+
+  webServer: {
+    command: 'npm run dev',
+    cwd: 'client',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
+});
