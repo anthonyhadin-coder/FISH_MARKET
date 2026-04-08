@@ -18,6 +18,7 @@ setup('create agent auth state via localStorage injection', async ({ page, reque
             name: 'Test Agent',
             role: 'agent'
         }));
+        document.cookie = 'fm_role=agent; path=/; max-age=86400; SameSite=Lax';
     });
     
     // Ensure auth directory exists

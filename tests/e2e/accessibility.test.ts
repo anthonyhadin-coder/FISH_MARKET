@@ -12,7 +12,8 @@ test.describe('Accessibility (WCAG 2.1 AA)', () => {
   });
 
   test('Voice Entry Tab should have proper contrast and tab order', async ({ page }: { page: Page }) => {
-    await page.goto('/agent/slips'); // Adjust based on routing
+    await page.route('**/api/auth/me', route => route.fulfill({ status: 200, json: { user: { id: '1', name: 'Test Agent', role: 'agent' } } }));
+    await page.goto('/staff'); // Adjust based on routing
     await injectAxe(page);
     
     // Check contrast for Deep Ocean theme
@@ -24,11 +25,11 @@ test.describe('Accessibility (WCAG 2.1 AA)', () => {
     });
 
     // Verify keyboard navigation
-    const voiceButton = page.locator('button[aria-label="Start Voice Input"]');
+    // Verify keyboard navigation - voice button should be focusable via Tab after language toggle
+    const langToggle = page.locator('[data-testid="language-toggle"]');
+    const voiceButton = page.locator('button[aria-label="Start voice entry"]');
+    await langToggle.focus();
     await page.keyboard.press('Tab');
-    while ((await page.evaluate(() => document.activeElement?.tagName)) !== 'BUTTON') {
-      await page.keyboard.press('Tab');
-    }
     await expect(voiceButton).toBeFocused();
   });
 });

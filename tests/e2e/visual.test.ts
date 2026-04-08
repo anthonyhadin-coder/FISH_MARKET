@@ -14,8 +14,9 @@ test.describe('Visual Regression (Percy/Chromatic)', () => {
   });
 
   test('Voice Input Dialog visual snapshot', async ({ page }: { page: Page }) => {
-    await page.goto('/agent/slips');
-    await page.click('button[aria-label="Start Voice Input"]');
+    await page.route('**/api/auth/me', route => route.fulfill({ status: 200, json: { user: { id: '1', name: 'Test Agent', role: 'agent' } } }));
+    await page.goto('/staff');
+    await page.click('button[aria-label="Start voice entry"]');
     
     await expect(page.locator('.voice-dialog-container')).toHaveScreenshot('voice-dialog.png');
   });

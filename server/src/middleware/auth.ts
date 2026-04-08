@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { isTokenBlocked } from './redis';
+import { isTokenBlocked } from '../config/redis';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {

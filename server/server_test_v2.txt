@@ -1,0 +1,92 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mC:/coding_program_files/FISH_MARKET/server[39m
+
+[90mstdout[2m | src/tests/db-integrity.test.ts
+[22m[39m[dotenv@17.3.1] injecting env (6) from .env -- tip: ≡ƒöÉ prevent committing .env to code: https://dotenvx.com/precommit
+
+ [32mΓ£ô[39m src/tests/db-integrity.test.ts[2m > [22mDatabase Integrity & Constraints[2m > [22mshould enforce Foreign Key constraints on sales[32m 8[2mms[22m[39m
+ [32mΓ£ô[39m src/tests/db-integrity.test.ts[2m > [22mDatabase Integrity & Constraints[2m > [22mshould enforce NOT NULL constraints[32m 1[2mms[22m[39m
+ [32mΓ£ô[39m src/tests/db-integrity.test.ts[2m > [22mDatabase Integrity & Constraints[2m > [22mshould verify cascade delete behavior[32m 7[2mms[22m[39m
+node.exe : 
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo      
+        : NotSpecified: 
+(:    String) [], 
+RemoteExc    eption
+    + 
+FullyQualifiedError    
+Id : NativeCommandErr   
+ or
+ 
+[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+[39m[1m[41m Failed 
+Suites 1 [49m[22m[31m
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3
+9m
+
+[41m[1m FAIL 
+[22m[49m src/tests/sal
+es.test.ts[2m [ 
+src/tests/sales.test.ts 
+][22m
+[31m[1mError[22m: 
+Cannot find module 
+'./logger' imported 
+from C:/coding_program_f
+iles/FISH_MARKET/server/
+src/config/redis.ts[39m
+[36m [2mΓ¥»[22m src/c
+onfig/redis.ts:[2m2:1[
+22m[39m
+    [90m  1|[39m 
+[35mimport[39m 
+[33mRedis[39m 
+[35mfrom[39m [32m'ior
+edis'[39m[33m;[39m
+    [90m  2|[39m 
+[35mimport[39m { 
+logger } [35mfrom[39m 
+[32m'./logger'[39m[33
+m;[39m
+    [90m   |[39m 
+[31m^[39m
+    [90m  3|[39m
+    [90m  4|[39m 
+[35mconst[39m 
+redisUrl [33m=[39m pro
+cess[33m.[39menv[33m.
+[39m[33mREDIS_URL[39m
+[33m;[39m
+[90m [2mΓ¥»[22m src/m
+odules/auth/auth.ts:[2m
+11:1[22m[39m
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»[22m[39m
+[31m[1mSerialized 
+Error:[22m[39m [90m{ 
+code: 
+'ERR_MODULE_NOT_FOUND' 
+}[39m
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»[22m[
+39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 12:47:44
+[2m   Duration [22m 3.25s[2m (transform 275ms, setup 0ms, import 198ms, tests 321ms, environment 0ms)[22m
+

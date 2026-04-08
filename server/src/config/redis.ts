@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-import { logger } from './logger';
+import { logger } from '../utils/logger';
 
 const redisUrl = process.env.REDIS_URL;
 let redis: Redis | null = null;

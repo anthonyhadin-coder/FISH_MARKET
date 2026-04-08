@@ -17,10 +17,14 @@ test.describe('PWA & Feature Verification', () => {
         }));
         await page.route('**/api/sales/history*', route => route.fulfill({ status: 200, json: [] }));
         await page.route('**/api/boat-payments*', route => route.fulfill({ status: 200, json: [] }));
+        await page.route('**/api/auth/me', route => route.fulfill({
+            status: 200,
+            json: { user: { id: '1', name: 'Test Agent', role: 'agent' } }
+        }));
 
-        await page.goto('/agent');
+        await page.goto('/staff');
         
-        await expect(page).toHaveURL(/.*agent/);
+        await expect(page).toHaveURL(/.*staff/);
         // Wait for header to load
         await expect(page.locator('h1')).toBeVisible();
     });

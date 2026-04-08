@@ -9,6 +9,10 @@ test.describe('Analytics Visual Regression', () => {
             const url = route.request().url();
             console.log('INTERCEPTED API CALL:', url);
             
+            if (url.includes('/auth/me')) {
+                console.log('-> Returning auth me data');
+                return route.fulfill({ json: { user: { id: '1', name: 'Test Agent', role: 'agent' } } });
+            }
             if (url.includes('/reports/trends')) {
                 const deterministicTrends = [
                     { date: '2026-03-10', sales: 5200, expenses: 1100 },
@@ -70,7 +74,7 @@ test.describe('Analytics Visual Regression', () => {
         page.on('pageerror', error => console.error('BROWSER ERROR:', error.message));
 
         // Navigation (Auth is handled by storageState from setup project)
-        await page.goto('/agent');
+        await page.goto('/staff');
         
         // Dismiss Next.js error overlay if present
         const overlay = page.locator('nextjs-portal');

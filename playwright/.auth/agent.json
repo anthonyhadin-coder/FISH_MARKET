@@ -2,10 +2,20 @@
   "cookies": [
     {
       "name": "g_state",
-      "value": "{\"i_l\":0,\"i_ll\":1774731369374,\"i_b\":\"7gFgk2MPn6P4fAc7eDC1WqZh4POgt3cZJkNzUYF5Nyw\",\"i_e\":{\"enable_itp_optimization\":0}}",
+      "value": "{\"i_l\":0,\"i_ll\":1775631064863,\"i_b\":\"Ca0GwdKfFqJ8H0TDt8zMHs+vUHbsDYsNimaw/CK23I8\",\"i_e\":{\"enable_itp_optimization\":0}}",
       "domain": "localhost",
       "path": "/",
-      "expires": 1790283369,
+      "expires": 1791183064,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "fm_role",
+      "value": "agent",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1775717464.886767,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"

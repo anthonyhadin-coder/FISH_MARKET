@@ -1,0 +1,121 @@
+auth.setup.ts
+TITLE: create agent auth state via localStorage injection
+ERROR: undefined
+
+accessibility.test.ts > Accessibility (WCAG 2.1 AA)
+TITLE: Home Page should be accessible
+ERROR: AssertionError: 3 accessibility violations were detected
+
+3 !== 0
+
+
+accessibility.test.ts > Accessibility (WCAG 2.1 AA)
+TITLE: Home Page should be accessible
+ERROR: AssertionError: 3 accessibility violations were detected
+
+3 !== 0
+
+
+accessibility.test.ts > Accessibility (WCAG 2.1 AA)
+TITLE: Home Page should be accessible
+ERROR: AssertionError: 3 accessibility violations were detected
+
+3 !== 0
+
+
+accessibility.test.ts > Accessibility (WCAG 2.1 AA)
+TITLE: Voice Entry Tab should have proper contrast and tab order
+ERROR: TimeoutError: locator.focus: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="language-toggle"]')[22m
+
+
+accessibility.test.ts > Accessibility (WCAG 2.1 AA)
+TITLE: Voice Entry Tab should have proper contrast and tab order
+ERROR: TimeoutError: locator.focus: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="language-toggle"]')[22m
+
+
+accessibility.test.ts > Accessibility (WCAG 2.1 AA)
+TITLE: Voice Entry Tab should have proper contrast and tab order
+ERROR: TimeoutError: locator.focus: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="language-toggle"]')[22m
+
+
+analytics_visual.spec.ts > Analytics Visual Regression
+TITLE: Desktop: Reports Tab Visual Consistency
+ERROR: TimeoutError: locator.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="reports-tab"]')[22m
+
+
+analytics_visual.spec.ts > Analytics Visual Regression
+TITLE: Desktop: Reports Tab Visual Consistency
+ERROR: TimeoutError: locator.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="reports-tab"]')[22m
+
+
+analytics_visual.spec.ts > Analytics Visual Regression
+TITLE: Desktop: Reports Tab Visual Consistency
+ERROR: TimeoutError: locator.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="reports-tab"]')[22m
+
+
+analytics_visual.spec.ts > Analytics Visual Regression
+TITLE: Mobile: Reports Tab Responsiveness
+ERROR: TimeoutError: locator.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="reports-tab"]')[22m
+
+
+analytics_visual.spec.ts > Analytics Visual Regression
+TITLE: Mobile: Reports Tab Responsiveness
+ERROR: TimeoutError: locator.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="reports-tab"]')[22m
+
+
+analytics_visual.spec.ts > Analytics Visual Regression
+TITLE: Mobile: Reports Tab Responsiveness
+ERROR: TimeoutError: locator.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="reports-tab"]')[22m
+
+
+analytics_visual.spec.ts > Analytics Visual Regression
+TITLE: Tamil: Reports Tab Visuals
+ERROR: TimeoutError: locator.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="reports-tab"]')[22m
+
+
+analytics_visual.spec.ts > Analytics Visual Regression
+TITLE: Tamil: Reports Tab Visuals
+ERROR: TimeoutError: locator.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="reports-tab"]')[22m
+
+
+analytics_visual.spec.ts > Analytics Visual Regression
+TITLE: Tamil: Reports Tab Visuals
+ERROR: TimeoutError: locator.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="reports-tab"]')[22m
+
+
+feature_verification.spec.ts > PWA & Feature Verification
+TITLE: should show offline indicator and sync notification
+ERROR: Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+Locator: locator('h1')
+Expected: visible
+Timeout: 15000ms
+Error: element(s) not found
+
+Call log:
+[2m  - Expect "toBeVisible" with timeout 15000ms[22m
+[2m  - waiting for locator('h1')[22m

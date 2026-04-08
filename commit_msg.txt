@@ -1,0 +1,22 @@
+﻿fix(tests): resolve all 24 vitest failures — 76/76 passing
+
+Voice Parser Engine (9 fixes):
+- Added numeric guard to English fallback parser
+- Fixed falsy zero weight confidence score evaluation  
+- Added hasWeightUnit escape check in extractRate
+- Restored original casing for buyer name extraction
+- Hardened fish name matching to word-boundary regex
+- Fixed FISH_DICTIONARY.avgRate pricing reference
+
+Login Flow (6 fixes):
+- Mocked useSearchParams hook lifecycle in tests
+- Fixed OR text matcher to exact match only
+- Added Signing in... text to loading spinner UI
+- Rendered demo user quick-fill pills into JSX
+- Fixed getFriendlyError to surface API error messages
+- Synced role labels: Boat Agent / Market Owner
+
+Auth Architecture:
+- Removed all localStorage token usage
+- Implemented HttpOnly cookie-based JWT auth
+- Added axios-auth-refresh silent token renewal

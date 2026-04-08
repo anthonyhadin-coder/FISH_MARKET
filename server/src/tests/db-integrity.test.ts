@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import pool from '../config/db';
-import { seedDatabase, teardownDatabase } from './seed.test';
+import { seedDatabase, teardownDatabase } from './seed';
 
 describe('Database Integrity & Constraints', () => {
   beforeAll(async () => {
