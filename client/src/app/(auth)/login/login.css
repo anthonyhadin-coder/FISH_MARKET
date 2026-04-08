@@ -1,0 +1,563 @@
+/* ═══════════════════════════════════════════════════════════════════
+   login.css — Deep Ocean Premium Login Page
+   Deep Ocean Design System v2
+   ═══════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Tamil:wght@400;600;700&display=swap');
+
+/* ── Color tokens ──────────────────────────────────────────────── */
+:root {
+  --ocean-deepest  : #040D1A;
+  --ocean-deep     : #071428;
+  --ocean-mid      : #0A2540;
+  --ocean-surface  : #0D3D6E;
+  --teal-primary   : #06B6D4;
+  --teal-glow      : #22D3EE;
+  --teal-soft      : #0891B2;
+  --gold-accent    : #F59E0B;
+  --white-primary  : #F0F9FF;
+  --white-secondary: #94A3B8;
+  --error-red      : #F43F5E;
+  --success-green  : #10B981;
+  --glass-bg       : rgba(7, 20, 40, 0.85);
+  --glass-border   : rgba(6, 182, 212, 0.15);
+}
+
+/* ── Base ──────────────────────────────────────────────────────── */
+
+/* ── Keyframe Animations ───────────────────────────────────────── */
+@keyframes wave-scroll {
+  from { transform: translateX(0) scaleY(1); }
+  to   { transform: translateX(-60px) scaleY(1.08); }
+}
+
+@keyframes float-bubble-a {
+  0%,100% { transform: translate(0, 0) scale(1); }
+  40%     { transform: translate(30px, 50px) scale(1.08); }
+  70%     { transform: translate(-20px, 30px) scale(0.93); }
+}
+
+@keyframes float-bubble-b {
+  0%,100% { transform: translate(0, 0) scale(1); }
+  35%     { transform: translate(-40px, 20px) scale(1.05); }
+  70%     { transform: translate(20px, -30px) scale(0.95); }
+}
+
+@keyframes cardRise {
+  from { opacity: 0; transform: translateY(40px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+@keyframes brandFade {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer-line {
+  0%,100% { opacity: 0.3; transform: scaleX(0.75); }
+  50%     { opacity: 1;   transform: scaleX(1); }
+}
+
+@keyframes oceanWave {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-8px); }
+  40%,80% { transform: translateX(8px); }
+}
+
+@keyframes focusGlow {
+  0%   { box-shadow: 0 0 0 0   rgba(6,182,212,0.5); }
+  100% { box-shadow: 0 0 0 4px rgba(6,182,212,0.1); }
+}
+
+@keyframes checkScale {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes wavePulse {
+  0%,100% { transform: scaleY(0.4); }
+  50%     { transform: scaleY(1.0); }
+}
+
+@keyframes count-pulse {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0.6; }
+}
+
+@keyframes particleFloat {
+  0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0.4; }
+  50%  { transform: translateY(-30px) translateX(15px) scale(1.1); opacity: 0.7; }
+  100% { transform: translateY(-60px) translateX(-10px) scale(0.9); opacity: 0; }
+}
+
+@keyframes lockShake {
+  0%,100% { transform: rotate(0deg); }
+  25%     { transform: rotate(-8deg); }
+  75%     { transform: rotate(8deg); }
+}
+
+/* ── Background ────────────────────────────────────────────────── */
+.login-bg {
+  min-height: 100svh;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% -10%, rgba(6,182,212,0.14) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 90% 90%,  rgba(2,132,199,0.1)  0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 10% 80%,  rgba(8,37,74,0.9)    0%, transparent 70%),
+    var(--ocean-deepest);
+  position: relative;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Wave layer */
+.login-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%2306B6D4' fill-opacity='0.04' d='M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,160C1200,181,1320,203,1440,192L1440,320L0,320Z'/%3E%3C/svg%3E")
+    no-repeat bottom center / cover;
+  pointer-events: none;
+  animation: wave-scroll 24s ease-in-out infinite alternate;
+  z-index: 0;
+}
+
+/* Bubble A — top-left glow */
+.login-bg::after {
+  content: '';
+  position: fixed;
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  left: -120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(6,182,212,0.07), transparent 70%);
+  animation: float-bubble-a 16s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Bubble B — bottom-right glow (via a pseudo on login-content) */
+.login-content {
+  position: relative;
+  z-index: 1;
+}
+
+.login-content::after {
+  content: '';
+  position: fixed;
+  width: 350px;
+  height: 350px;
+  bottom: -100px;
+  right: -100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(8,145,178,0.07), transparent 70%);
+  animation: float-bubble-b 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Glass Card ────────────────────────────────────────────────── */
+.login-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.55),
+    0 0 80px rgba(6, 182, 212, 0.07),
+    0 0 0 1px rgba(6, 182, 212, 0.05) inset;
+  border-radius: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  animation: cardRise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Shimmer top border */
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--teal-primary), transparent);
+  animation: shimmer-line 3.5s ease-in-out infinite;
+}
+
+/* Subtle inner corner glow */
+.login-card::after {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(6,182,212,0.06), transparent 70%);
+  pointer-events: none;
+}
+
+/* ── Brand ─────────────────────────────────────────────────────── */
+.login-brand {
+  animation: brandFade 0.5s ease both;
+  font-family: 'Inter', sans-serif;
+  margin-bottom: 1.5rem !important; /* Reduced from 2rem/8 */
+}
+
+.login-brand .ta {
+  font-family: 'Noto Sans Tamil', sans-serif;
+}
+
+.fish-icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 1.25rem;
+  background: rgba(6,182,212,0.1);
+  border: 1px solid rgba(6,182,212,0.22);
+  box-shadow: 0 0 40px rgba(6,182,212,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.25rem;
+  margin: 0 auto 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.fish-icon:hover {
+  transform: scale(1.06) rotate(-4deg);
+  box-shadow: 0 0 60px rgba(6,182,212,0.25);
+}
+
+/* ── Input ─────────────────────────────────────────────────────── */
+.ocean-input {
+  background: rgba(10, 37, 64, 0.5) !important;
+  border: 1px solid rgba(6,182,212,0.12) !important;
+  color: var(--white-primary) !important;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s !important;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9375rem; /* 15px — prevents iOS auto-zoom */
+}
+
+.ocean-input::placeholder {
+  color: rgba(148, 163, 184, 0.45) !important;
+}
+
+.ocean-input:focus {
+  border-color: rgba(6,182,212,0.55) !important;
+  box-shadow: 0 0 0 3px rgba(6,182,212,0.13), 0 0 20px rgba(6,182,212,0.07) !important;
+  background: rgba(10, 37, 64, 0.7) !important;
+  outline: none !important;
+  animation: focusGlow 0.35s ease both;
+}
+
+.ocean-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Login Button ──────────────────────────────────────────────── */
+.login-btn {
+  background: linear-gradient(135deg, #06B6D4 0%, #0891B2 50%, #0E7490 100%);
+  background-size: 200% 200%;
+  animation: oceanWave 6s ease infinite;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s;
+  position: relative;
+  overflow: hidden;
+  min-height: 52px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+}
+
+.login-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.login-btn:hover:not(:disabled)::before { opacity: 1; }
+.login-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(6,182,212,0.45);
+}
+.login-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+}
+.login-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  animation: none;
+}
+
+/* ── Wave loading bars ─────────────────────────────────────────── */
+.wave-bars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 18px;
+}
+
+.wave-bars span {
+  display: block;
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  background: #fff;
+  animation: wavePulse 0.7s ease-in-out infinite;
+}
+
+.wave-bars span:nth-child(2) { animation-delay: 0.1s; }
+.wave-bars span:nth-child(3) { animation-delay: 0.2s; }
+.wave-bars span:nth-child(4) { animation-delay: 0.3s; }
+.wave-bars span:nth-child(5) { animation-delay: 0.4s; }
+
+/* ── Google Button ─────────────────────────────────────────────── */
+.google-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.22s ease;
+  min-height: 52px;
+  border-radius: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+}
+
+.google-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.google-btn:active:not(:disabled) { transform: translateY(0) scale(0.99); }
+.google-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Divider ───────────────────────────────────────────────────── */
+.ocean-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(6,182,212,0.15), transparent);
+}
+
+/* ── Banners ───────────────────────────────────────────────────── */
+.error-banner {
+  background: rgba(244,63,94,0.1);
+  border: 1px solid rgba(244,63,94,0.3);
+  border-radius: 0.875rem;
+  color: #fda4af;
+  animation: shake 0.4s ease;
+}
+
+.error-banner.locked {
+  background: rgba(245,158,11,0.1);
+  border-color: rgba(245,158,11,0.3);
+  color: #fcd34d;
+}
+
+.popup-banner {
+  background: rgba(120,53,15,0.25);
+  border: 1px solid rgba(251,191,36,0.3);
+  border-radius: 0.875rem;
+  color: #fcd34d;
+}
+
+.offline-banner {
+  background: rgba(30, 64, 175, 0.18);
+  border: 1px solid rgba(147,197,253,0.2);
+  border-radius: 0.875rem;
+  color: #93c5fd;
+}
+
+.session-expired-banner {
+  background: rgba(6,182,212,0.08);
+  border: 1px solid rgba(6,182,212,0.25);
+  border-radius: 0.875rem;
+  color: var(--teal-glow);
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ── Success Overlay ───────────────────────────────────────────── */
+.success-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 13, 26, 0.95);
+  border-radius: 1.5rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.success-check {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(16,185,129,0.12);
+  border: 1px solid rgba(16,185,129,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: checkScale 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Role Modal ────────────────────────────────────────────────── */
+.role-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 13, 26, 0.88);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.role-modal-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+  backdrop-filter: blur(24px);
+}
+
+.role-card {
+  background: rgba(10,37,64,0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1rem;
+  padding: 1.1rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 70px;
+}
+
+.role-card:hover {
+  background: rgba(6,182,212,0.12);
+  border-color: rgba(6,182,212,0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(6,182,212,0.15);
+}
+
+.role-card:active { transform: translateY(0) scale(0.99); }
+
+/* ── Beta Badge ────────────────────────────────────────────────── */
+.beta-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: rgba(6,182,212,0.12);
+  border: 1px solid rgba(6,182,212,0.28);
+  border-radius: 999px;
+  color: var(--teal-glow);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Security Badge ────────────────────────────────────────────── */
+.security-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: rgba(10, 37, 64, 0.5);
+  border: 1px solid rgba(6,182,212,0.15);
+  border-radius: 999px;
+  color: rgba(148, 163, 184, 0.7);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Lang Toggle ───────────────────────────────────────────────── */
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 15px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  color: #bae6fd;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: 'Inter', 'Noto Sans Tamil', sans-serif;
+}
+
+.lang-toggle:hover {
+  background: rgba(6,182,212,0.13);
+  border-color: rgba(6,182,212,0.32);
+  color: var(--white-primary);
+}
+
+/* ── Demo Pills ────────────────────────────────────────────────── */
+.demo-pill {
+  padding: 6px 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(148,163,184,0.5);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+
+.demo-pill:hover {
+  background: rgba(6,182,212,0.08);
+  border-color: rgba(6,182,212,0.25);
+  color: var(--teal-glow);
+}
+
+/* ── Rate Limit ────────────────────────────────────────────────── */
+.rate-timer {
+  font-variant-numeric: tabular-nums;
+  color: #f87171;
+  font-feature-settings: 'tnum';
+}
+
+.rate-pulse { animation: count-pulse 1s ease-in-out infinite; }
+
+.lock-icon { animation: lockShake 1.5s ease-in-out infinite; }
+
+/* ── Mobile-first touch targets ────────────────────────────────── */
+button, input {
+  min-height: 48px;
+}
+
+/* ── Tamil font override ────────────────────────────────────────── */
+.ta, [lang='ta'] {
+  font-family: 'Noto Sans Tamil', sans-serif;
+}

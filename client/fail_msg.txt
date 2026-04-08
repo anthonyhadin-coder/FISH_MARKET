@@ -1,0 +1,41 @@
+﻿
+
+Title : State 1: renders 
+        Google button, 
+        divider, phone 
+        form and demo 
+        pills
+Error : TestingLibraryElem
+        entError: Found 
+        multiple elements 
+        with the text: 
+        /OR/i
+        
+        Here are the 
+        matching elements:
+        
+        Ignored nodes: 
+        comments, script, 
+        style
+        [36m<p[39m
+          [33mclass[39m=
+        [32m"text-sm 
+        font-medium"[39m
+          [33mstyle[39m=
+        [32m"color: var(-
+        -white-secondary);
+        "[39m
+        [36m>[39m
+          [0mDigital 
+        Ledger for 
+        Fishing Agents[0m
+        [36m</p>[39m
+        
+        Ignored nodes: 
+        comments, script, 
+        style
+        [36m<span[39m
+          
+
+
+

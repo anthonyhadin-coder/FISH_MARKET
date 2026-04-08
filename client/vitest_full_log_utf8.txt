@@ -1,0 +1,962 @@
+﻿node.exe : 
+[vite:react-swc] We 
+recommend switching to 
+`@vitejs/plugin-react` 
+for improved performance 
+as no swc plugins are 
+used. More information at 
+https://vite.dev/rolldown
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: ([  
+  vite:react-swc...te.d   
+ ev/rolldown:String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mC:/coding_program_files/FISH_MARKET/client[39m
+
+ [31mΓ¥»[39m src/tests/LoginPage.test.tsx [2m([22m[2m8 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 236[2mms[22m[39m
+[31m     [31m├ù[31m State 1: renders Google button, divider, phone form and demo pills[39m[32m 64[2mms[22m[39m
+     [32mΓ£ô[39m State 2: shows loading spinner while phone login request is pending[32m 31[2mms[22m[39m
+     [32mΓ£ô[39m State 3: shows error banner on invalid credentials[32m 34[2mms[22m[39m
+     [32mΓ£ô[39m State 4: shows Google verifying spinner when googleLoading=true[32m 11[2mms[22m[39m
+     [32mΓ£ô[39m State 5: calls login() after successful Google auth[32m 10[2mms[22m[39m
+     [32mΓ£ô[39m State 6: shows Google error message[32m 9[2mms[22m[39m
+     [32mΓ£ô[39m State 7: shows popup-blocked warning banner[32m 10[2mms[22m[39m
+     [32mΓ£ô[39m State 8: shows role selection modal for new Google users[32m 64[2mms[22m[39m
+
+[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+[39m[1m[41m Failed 
+Tests 1 [49m[22m[31mΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[39m
+
+[41m[1m FAIL [22m[49m 
+src/tests/LoginPage.test.t
+sx[2m > [22mLoginPage 
+ΓÇö 8 UX States[2m > 
+[22mState 1: renders 
+Google button, divider, 
+phone form and demo pills
+[31m[1mTestingLibraryEle
+mentError[22m[39m: 
+Found multiple elements 
+with the text: /OR/i
+
+Here are the matching 
+elements:
+
+Ignored nodes: comments, 
+script, style
+[36m<p[39m
+  [33mclass[39m=[32m"te
+xt-sm font-medium"[39m
+  [33mstyle[39m=[32m"co
+lor: var(--white-secondary
+);"[39m
+[36m>[39m
+  [0mDigital Ledger for 
+Fishing Agents[0m
+[36m</p>[39m
+
+Ignored nodes: comments, 
+script, style
+[36m<span[39m
+  [33mclass[39m=[32m"te
+xt-[11px] font-bold 
+uppercase 
+tracking-[0.18em]"[39m
+  [33mstyle[39m=[32m"co
+lor: var(--white-secondary
+);"[39m
+[36m>[39m
+  [0mOR[0m
+[36m</span>[39m
+
+Ignored nodes: comments, 
+script, style
+[36m<label[39m
+  [33mclass[39m=[32m"te
+xt-[11px] font-black 
+uppercase 
+tracking-widest"[39m
+  [33mstyle[39m=[32m"co
+lor: var(--white-secondary
+);"[39m
+[36m>[39m
+  [0mPassword[0m
+[36m</label>[39m
+
+Ignored nodes: comments, 
+script, style
+[36m<button[39m
+  [33mclass[39m=[32m"te
+xt-[10px] font-black 
+uppercase tracking-widest 
+hover:text-white"[39m
+  [33mstyle[39m=[32m"co
+lor: 
+var(--teal-glow);"[39m
+  [33mtype[39m=[32m"but
+ton"[39m
+[36m>[39m
+  [0mForgot?[0m
+[36m</button>[39m
+
+(If this is intentional, 
+then use the `*AllBy*` 
+variant of the query 
+(like `queryAllByText`, 
+`getAllByText`, or 
+`findAllByText`)).
+
+Ignored nodes: comments, 
+script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32
+m"login-bg flex flex-col 
+items-center 
+justify-center 
+min-h-screen px-4 
+py-8"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"login-content w-full 
+max-w-[440px]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=
+[32m"flex items-center 
+justify-between mb-4"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39
+m=[32m"beta-badge"[39m
+          [36m>[39m
+            [0mBETA v0.9 
+(Pre-Launch)[0m
+          
+[36m</span>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"flex items-center 
+gap-3"[39m
+          [36m>[39m
+            
+[36m<button[39m
+              [33mclass[
+39m=[32m"lang-toggle"[39
+m
+            [36m>[39m
+              
+[36m<svg[39m
+                [33maria-
+hidden[39m=[32m"true"[3
+9m
+                [33mclass
+[39m=[32m"lucide 
+lucide-globe w-3.5 
+h-3.5"[39m
+                [33mfill
+[39m=[32m"none"[39m
+                [33mheigh
+t[39m=[32m"24"[39m
+                [33mstrok
+e[39m=[32m"currentColor"
+[39m
+                [33mstrok
+e-linecap[39m=[32m"round
+"[39m
+                [33mstrok
+e-linejoin[39m=[32m"roun
+d"[39m
+                [33mstrok
+e-width[39m=[32m"2"[39m
+                
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                [33mwidth
+[39m=[32m"24"[39m
+                [33mxmlns
+[39m=[32m"http://www.w3.
+org/2000/svg"[39m
+              [36m>[39m
+                
+[36m<circle[39m
+                  [33mcx
+[39m=[32m"12"[39m
+                  [33mcy
+[39m=[32m"12"[39m
+                  
+[33mr[39m=[32m"10"[39m
+                
+[36m/>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"M12 
+2a14.5 14.5 0 0 0 0 20 
+14.5 14.5 0 0 0 0-20"[39m
+                
+[36m/>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"M2 
+12h20"[39m
+                
+[36m/>[39m
+              
+[36m</svg>[39m
+              
+[0mα«ñα««α«┐α«┤α»ì[0m
+            
+[36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=
+[32m"login-brand 
+text-center mb-8"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"fish-icon"[39m
+          [36m>[39m
+            [0m≡ƒîè[0m
+          [36m</div>[39m
+          [36m<h1[39m
+            [33mclass[39
+m=[32m"text-3xl 
+font-black text-white 
+tracking-tight 
+mb-0.5"[39m
+          [36m>[39m
+            [0mFish 
+Market[0m
+          [36m</h1>[39m
+          [36m<p[39m
+            [33mclass[39
+m=[32m"text-sm 
+font-medium"[39m
+            [33mstyle[39
+m=[32m"color: var(--white
+-secondary);"[39m
+          [36m>[39m
+            [0mDigital 
+Ledger for Fishing 
+Agents[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=
+[32m"login-card p-7"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"relative"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[
+39m=[32m"google-btn 
+w-full rounded-2xl flex 
+items-center 
+justify-center 
+overflow-hidden"[39m
+              [33mid[39m
+=[32m"google-oauth-btn"[
+39m
+              [33mstyle[
+39m=[32m"min-height: 
+56px;"[39m
+            [36m>[39m
+              
+[36m<button[39m
+                [33mdata-
+testid[39m=[32m"google-s
+dk-btn"[39m
+              [36m>[39m
+                
+[0mGoogle SDK Button[0m
+              
+[36m</button>[39m
+            
+[36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"flex items-center 
+gap-4 my-6"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[
+39m=[32m"ocean-divider 
+flex-1"[39m
+            [36m/>[39m
+            
+[36m<span[39m
+              [33mclass[
+39m=[32m"text-[11px] 
+font-bold uppercase 
+tracking-[0.18em]"[39m
+              [33mstyle[
+39m=[32m"color: var(--whi
+te-secondary);"[39m
+            [36m>[39m
+              [0mOR[0m
+            
+[36m</span>[39m
+            [36m<div[39m
+              [33mclass[
+39m=[32m"ocean-divider 
+flex-1"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<form[39m
+            [33mclass[39
+m=[32m"space-y-5"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[
+39m=[32m"space-y-1.5"[39
+m
+            [36m>[39m
+              
+[36m<label[39m
+                [33mclass
+[39m=[32m"text-[11px] 
+font-black uppercase 
+tracking-widest ml-1"[39m
+                [33mstyle
+[39m=[32m"color: var(--w
+hite-secondary);"[39m
+              [36m>[39m
+                [0mPhone 
+Number[0m
+              
+[36m</label>[39m
+              
+[36m<div[39m
+                [33mclass
+[39m=[32m"relative"[39m
+              [36m>[39m
+                
+[36m<svg[39m
+                  [33mari
+a-hidden[39m=[32m"true"
+[39m
+                  [33mcla
+ss[39m=[32m"lucide 
+lucide-phone absolute 
+left-4 top-1/2 
+-translate-y-1/2 w-4 
+h-4"[39m
+                  [33mfil
+l[39m=[32m"none"[39m
+                  [33mhei
+ght[39m=[32m"24"[39m
+                  [33mstr
+oke[39m=[32m"currentColo
+r"[39m
+                  [33mstr
+oke-linecap[39m=[32m"rou
+nd"[39m
+                  [33mstr
+oke-linejoin[39m=[32m"ro
+und"[39m
+                  [33mstr
+oke-width[39m=[32m"2"[3
+9m
+                  [33msty
+le[39m=[32m"color: var(-
+-white-secondary);"[39m
+                  
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                  [33mwid
+th[39m=[32m"24"[39m
+                  [33mxml
+ns[39m=[32m"http://www.w
+3.org/2000/svg"[39m
+                
+[36m>[39m
+                  
+[36m<path[39m
+                    
+[33md[39m=[32m"M13.832 
+16.568a1 1 0 0 0 
+1.213-.303l.355-.465A2 2 
+0 0 1 17 15h3a2 2 0 0 1 2 
+2v3a2 2 0 0 1-2 2A18 18 0 
+0 1 2 4a2 2 0 0 1 2-2h3a2 
+2 0 0 1 2 2v3a2 2 0 0 
+1-.8 1.6l-.468.351a1 1 0 
+0 0-.292 1.233 14 14 0 0 
+0 6.392 6.384"[39m
+                  
+[36m/>[39m
+                
+[36m</svg>[39m
+                
+[36m<input[39m
+                  [33mari
+a-invalid[39m=[32m"false
+"[39m
+                  [33mcla
+ss[39m=[32m"ocean-input 
+w-full rounded-2xl pl-10 
+pr-4 font-semibold "[39m
+                  [33mid
+[39m=[32m"phone"[39m
+                  [33mnam
+e[39m=[32m"phone"[39m
+                  [33mpla
+ceholder[39m=[32m"Enter 
+phone number"[39m
+                  [33mreq
+uired[39m=[32m""[39m
+                  [33msty
+le[39m=[32m"height: 
+52px;"[39m
+                  [33mtyp
+e[39m=[32m"tel"[39m
+                  [33mval
+ue[39m=[32m""[39m
+                
+[36m/>[39m
+              
+[36m</div>[39m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33mclass[
+39m=[32m"space-y-1.5"[39
+m
+            [36m>[39m
+              
+[36m<div[39m
+                [33mclass
+[39m=[32m"flex 
+items-center 
+justify-between ml-1"[39m
+              [36m>[39m
+                
+[36m<label[39m
+                  [33mcla
+ss[39m=[32m"text-[11px] 
+font-black uppercase 
+tracking-widest"[39m
+                  [33msty
+le[39m=[32m"color: var(-
+-white-secondary);"[39m
+                
+[36m>[39m
+                  
+[0mPassword[0m
+                
+[36m</label>[39m
+                
+[36m<button[39m
+                  [33mcla
+ss[39m=[32m"text-[10px] 
+font-black uppercase 
+tracking-widest 
+hover:text-white"[39m
+                  [33msty
+le[39m=[32m"color: 
+var(--teal-glow);"[39m
+                  [33mtyp
+e[39m=[32m"button"[39m
+                
+[36m>[39m
+                  
+[0mForgot?[0m
+                
+[36m</button>[39m
+              
+[36m</div>[39m
+              
+[36m<div[39m
+                [33mclass
+[39m=[32m"relative"[39m
+              [36m>[39m
+                
+[36m<svg[39m
+                  [33mari
+a-hidden[39m=[32m"true"
+[39m
+                  [33mcla
+ss[39m=[32m"lucide 
+lucide-lock absolute 
+left-4 top-1/2 
+-translate-y-1/2 w-4 
+h-4"[39m
+                  [33mfil
+l[39m=[32m"none"[39m
+                  [33mhei
+ght[39m=[32m"24"[39m
+                  [33mstr
+oke[39m=[32m"currentColo
+r"[39m
+                  [33mstr
+oke-linecap[39m=[32m"rou
+nd"[39m
+                  [33mstr
+oke-linejoin[39m=[32m"ro
+und"[39m
+                  [33mstr
+oke-width[39m=[32m"2"[3
+9m
+                  [33msty
+le[39m=[32m"color: var(-
+-white-secondary);"[39m
+                  
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                  [33mwid
+th[39m=[32m"24"[39m
+                  [33mxml
+ns[39m=[32m"http://www.w
+3.org/2000/svg"[39m
+                
+[36m>[39m
+                  
+[36m<rect[39m
+                    [33mh
+eight[39m=[32m"11"[39m
+                    
+[33mrx[39m=[32m"2"[39m
+                    
+[33mry[39m=[32m"2"[39m
+                    [33mw
+idth[39m=[32m"18"[39m
+                    
+[33mx[39m=[32m"3"[39m
+                    
+[33my[39m=[32m"11"[39m
+                  
+[36m/>[39m
+                  
+[36m<path[39m
+                    
+[33md[39m=[32m"M7 
+11V7a5 5 0 0 1 10 
+0v4"[39m
+                  
+[36m/>[39m
+                
+[36m</svg>[39m
+                
+[36m<input[39m
+                  [33mari
+a-invalid[39m=[32m"false
+"[39m
+                  [33mcla
+ss[39m=[32m"ocean-input 
+w-full rounded-2xl pl-10 
+pr-12 font-semibold "[39m
+                  [33mid
+[39m=[32m"password"[39m
+                  [33mnam
+e[39m=[32m"password"[39
+m
+                  [33mpla
+ceholder[39m=[32m"ΓÇóΓÇó
+ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó"[39m
+                  [33mreq
+uired[39m=[32m""[39m
+                  [33msty
+le[39m=[32m"height: 
+52px;"[39m
+                  [33mtyp
+e[39m=[32m"password"[39
+m
+                  [33mval
+ue[39m=[32m""[39m
+                
+[36m/>[39m
+                
+[36m<button[39m
+                  [33mcla
+ss[39m=[32m"absolute 
+right-4 top-1/2 
+-translate-y-1/2 
+text-white/40 
+hover:text-white"[39m
+                  [33mtyp
+e[39m=[32m"button"[39m
+                
+[36m>[39m
+                  
+[36m<svg[39m
+                    [33ma
+ria-hidden[39m=[32m"true
+"[39m
+                    [33mc
+lass[39m=[32m"lucide 
+lucide-eye w-4 h-4"[39m
+                    [33mf
+ill[39m=[32m"none"[39m
+                    [33mh
+eight[39m=[32m"24"[39m
+                    [33ms
+troke[39m=[32m"currentCo
+lor"[39m
+                    [33ms
+troke-linecap[39m=[32m"r
+ound"[39m
+                    [33ms
+troke-linejoin[39m=[32m"
+round"[39m
+                    [33ms
+troke-width[39m=[32m"2"
+[39m
+                    
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                    [33mw
+idth[39m=[32m"24"[39m
+                    [33mx
+mlns[39m=[32m"http://www
+.w3.org/2000/svg"[39m
+                  
+[36m>[39m
+                    
+[36m<path[39m
+                      
+[33md[39m=[32m"M2.062 
+12.348a1 1 0 0 1 0-.696 
+10.75 10.75 0 0 1 19.876 
+0 1 1 0 0 1 0 .696 10.75 
+10.75 0 0 1-19.876 0"[39m
+                    
+[36m/>[39m
+                    
+[36m<circle[39m
+                      [33
+mcx[39m=[32m"12"[39m
+                      [33
+mcy[39m=[32m"12"[39m
+                      
+[33mr[39m=[32m"3"[39m
+                    
+[36m/>[39m
+                  
+[36m</svg>[39m
+                
+[36m</button>[39m
+              
+[36m</div>[39m
+            
+[36m</div>[39m
+            
+[36m<button[39m
+              [33mclass[
+39m=[32m"login-btn 
+w-full mt-4 text-white 
+border-0 flex 
+items-center 
+justify-center gap-3"[39m
+              [33mtype[3
+9m=[32m"submit"[39m
+            [36m>[39m
+              
+[36m<svg[39m
+                [33maria-
+hidden[39m=[32m"true"[3
+9m
+                [33mclass
+[39m=[32m"lucide 
+lucide-arrow-right w-4 
+h-4"[39m
+                [33mfill
+[39m=[32m"none"[39m
+                [33mheigh
+t[39m=[32m"24"[39m
+                [33mstrok
+e[39m=[32m"currentColor"
+[39m
+                [33mstrok
+e-linecap[39m=[32m"round
+"[39m
+                [33mstrok
+e-linejoin[39m=[32m"roun
+d"[39m
+                [33mstrok
+e-width[39m=[32m"2"[39m
+                
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                [33mwidth
+[39m=[32m"24"[39m
+                [33mxmlns
+[39m=[32m"http://www.w3.
+org/2000/svg"[39m
+              [36m>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"M5 
+12h14"[39m
+                
+[36m/>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"m12 5 7 
+7-7 7"[39m
+                
+[36m/>[39m
+              
+[36m</svg>[39m
+              
+[36m<span[39m
+                [33mclass
+[39m=[32m"uppercase 
+tracking-widest 
+font-black"[39m
+              [36m>[39m
+                [0mSign 
+In[0m
+              
+[36m</span>[39m
+            
+[36m</button>[39m
+            [36m<div[39m
+              [33mclass[
+39m=[32m"flex flex-wrap 
+gap-2 mt-4 
+justify-center"[39m
+            [36m>[39m
+              
+[36m<button[39m
+                [33mclass
+[39m=[32m"demo-pill 
+text-xs px-3 py-1.5 
+rounded-full border 
+border-white/20 
+bg-white/5 
+hover:bg-white/10 
+text-white/70 
+hover:text-white 
+transition-all 
+font-semibold"[39m
+                [33mtype
+[39m=[32m"button"[39m
+              [36m>[39m
+                [0mRavi 
+(Agent)[0m
+              
+[36m</button>[39m
+              
+[36m<button[39m
+                [33mclass
+[39m=[32m"demo-pill 
+text-xs px-3 py-1.5 
+rounded-full border 
+border-white/20 
+bg-white/5 
+hover:bg-white/10 
+text-white/70 
+hover:text-white 
+transition-all 
+font-semibold"[39m
+                [33mtype
+[39m=[32m"button"[39m
+              [36m>[39m
+                [0mAdmin 
+Owner[0m
+              
+[36m</button>[39m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33mclass[
+39m=[32m"text-center 
+mt-5"[39m
+            [36m>[39m
+              [36m<p[39m
+                [33mclass
+[39m=[32m"text-xs 
+font-semibold"[39m
+                [33mstyle
+[39m=[32m"color: var(--w
+hite-secondary);"[39m
+              [36m>[39m
+                [0mDon't 
+have an account?[0m
+                [0m [0m
+                
+[36m<a[39m
+                  [33mcla
+ss[39m=[32m"text-white 
+hover:underline 
+transition-all 
+font-black"[39m
+                  [33mhre
+f[39m=[32m"/register"[3
+9m
+                  [33msty
+le[39m=[32m"color: 
+var(--teal-glow);"[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m7 passed[39m[22m[90m (8)[39m
+[2m   Start at [22m 07:26:44
+[2m   Duration [22m 2.23s[2m (transform 187ms, setup 122ms, import 611ms, tests 236ms, environment 1.03s)[22m
+
+                
+[36m>[39m
+                  
+[0mCreate New Account[0m
+                
+[36m</a>[39m
+              
+[36m</p>[39m
+            
+[36m</div>[39m
+          
+[36m</form>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=
+[32m"mt-6 flex flex-col 
+items-center gap-4"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"security-badge"[3
+9m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"lucide 
+lucide-lock w-3 h-3"[39m
+              [33mfill[3
+9m=[32m"none"[39m
+              [33mheight
+[39m=[32m"24"[39m
+              [33mstroke
+[39m=[32m"currentColor"[
+39m
+              [33mstroke-
+linecap[39m=[32m"round"
+[39m
+              [33mstroke-
+linejoin[39m=[32m"round"
+[39m
+              [33mstroke-
+width[39m=[32m"2"[39m
+              
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+              [33mwidth[
+39m=[32m"24"[39m
+              [33mxmlns[
+39m=[32m"http://www.w3.or
+g/2000/svg"[39m
+            [36m>[39m
+              
+[36m<rect[39m
+                [33mheigh
+t[39m=[32m"11"[39m
+                
+[33mrx[39m=[32m"2"[39m
+                
+[33mry[39m=[32m"2"[39m
+                [33mwidth
+[39m=[32m"18"[39m
+                
+[33mx[39m=[32m"3"[39m
+                
+[33my[39m=[32m"11"[39m
+              [36m/>[39m
+              
+[36m<path[39m
+                
+[33md[39m=[32m"M7 
+11V7a5 5 0 0 1 10 
+0v4"[39m
+              [36m/>[39m
+            
+[36m</svg>[39m
+            [0mSecured 
+ΓÇó 256-bit SSL[0m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+[90m [2mΓ¥»[22m 
+Object.getElementError nod
+e_modules/@testing-library
+/dom/dist/config.js:[2m37
+:19[22m[39m
+[90m [2mΓ¥»[22m 
+getElementError node_modul
+es/@testing-library/dom/di
+st/query-helpers.js:[2m20
+:35[22m[39m
+[90m [2mΓ¥»[22m getMult
+ipleElementsFoundError nod
+e_modules/@testing-library
+/dom/dist/query-helpers.js
+:[2m23:10[22m[39m
+[90m [2mΓ¥»[22m node_mo
+dules/@testing-library/dom
+/dist/query-helpers.js:[2
+m55:13[22m[39m
+[90m [2mΓ¥»[22m 
+getByText node_modules/@te
+sting-library/dom/dist/que
+ry-helpers.js:[2m95:19[2
+2m[39m
+[36m [2mΓ¥»[22m src/tes
+ts/LoginPage.test.tsx:[2m
+83:19[22m[39m
+    [90m 81|[39m     [3
+4mexpect[39m(screen[33m.
+[39m[34mgetByPlaceholder
+Text[39m([36m/phone numb
+er/i[39m))[33m.[39m[34
+mtoBeTruthy[39m()[33m;[
+39m
+    [90m 82|[39m     [3
+4mexpect[39m(screen[33m.
+[39m[34mgetByText[39m(
+[36m/Ravi \(Agent\)/i[39m
+))[33m.[39m[34mtoBeTrut
+hy[39m()[33m;[39m
+    [90m 83|[39m     [3
+4mexpect[39m(screen[33m.
+[39m[34mgetByText[39m(
+[36m/OR/i[39m))[33m.[39
+m[34mtoBeTruthy[39m()[3
+3m;[39m
+    [90m   |[39m        
+           [31m^[39m
+    [90m 84|[39m   
+})[33m;[39m
+    [90m 85|[39m
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ
+»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»[1/1]ΓÄ»[22m[39m
+

@@ -1,0 +1,443 @@
+"use client";
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import { Globe, Eye, EyeOff, CheckCircle2, Lock, WifiOff, AlertTriangle, Clock, ArrowRight, Phone } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useGoogleAuth } from '@/hooks/useGoogleAuth';
+import { loginT } from '@/lib/loginTranslations';
+import api from '@/lib/api';
+import GoogleAuthButton from './_components/GoogleAuthButton';
+import RoleSelectModal from '@/components/shared/RoleSelectModal';
+import { useFormErrors } from '@/hooks/useFormErrors';
+import './login.css';
+
+// ── Demo quick-fill accounts ─────────────────────────────────────
+const DEMO_USERS = [
+  { username: '9876543210', password: 'password123', label: 'Ravi (Agent)' },
+  { username: '1111111111', password: 'owner1234',   label: 'Admin Owner' },
+];
+
+// ── UX states ───────────────────────────────────────────────────
+type LoginState =
+  | 'idle'
+  | 'typing'
+  | 'loading'
+  | 'success'
+  | 'error'
+  | 'locked'
+  | 'offline'
+  | 'sessionExpired';
+
+function LoginContent() {
+  const [mounted, setMounted]         = useState(false);
+  const [phone, setPhone]             = useState('');
+  const [password, setPassword]       = useState('');
+  const [showPass, setShowPass]       = useState(false);
+  const [loginState, setLoginState]   = useState<LoginState>('idle');
+  const [error, setError]             = useState('');
+  const [retryAfter, setRetryAfter]   = useState(0);   
+  const [cooldown, setCooldown]       = useState(0);   
+
+  const { errors, clearAllErrors, formRef, getInputProps } = useFormErrors();
+
+  const { lang, setLang } = useLanguage();
+  const { user, login } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Safely resolve translation set
+  const currentLang = (lang === 'ta' || lang === 'en') ? lang : 'en';
+  const t = loginT[currentLang];
+
+  // Google auth hook
+  const {
+    isLoading: googleLoading,
+    error: googleError,
+    popupBlocked,
+    needsRoleSelection,
+    newUserName,
+    handleGoogleSuccess,
+    handleGoogleError,
+    handleRoleSelect,
+    clearError: clearGoogleError,
+  } = useGoogleAuth();
+
+  useEffect(() => { setMounted(true); }, []);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (mounted && user) {
+      if (user.role === 'owner' || user.role === 'admin') router.push('/owner');
+      else if (user.role === 'agent') router.push('/staff');
+      else if (user.role === 'buyer') router.push('/customer');
+      else router.push(`/${user.role}`);
+    }
+  }, [mounted, user, router]);
+
+  // BUG 2 FIX: Read ?error= query param set by Google OAuth redirect-on-failure
+  // The backend redirects to /login?error=google_failed when OAuth errors occur.
+  // We show a specific, user-friendly message instead of a blank/silent failure.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const errorParam = searchParams?.get('error');
+    if (errorParam === 'google_failed') {
+      setLoginState('error');
+      setError('Google sign-in failed. Please try again or use phone/password.');
+    }
+
+    if (errorParam) {
+      router.replace('/login', { scroll: false });
+    }
+  }, [searchParams, router]);
+
+  // Session expired detection
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('reason') === 'session-expired') {
+      setLoginState('sessionExpired');
+    }
+  }, []);
+
+  // Offline detection
+  useEffect(() => {
+    const onOnline  = () => setLoginState((s: LoginState) => s === 'offline' ? 'idle' : s);
+    const onOffline = () => setLoginState('offline');
+    if (!navigator.onLine) setLoginState('offline');
+    window.addEventListener('online',  onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      window.removeEventListener('online',  onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, []);
+
+  // IP rate-limit countdown
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => {
+      setCooldown((c: number) => {
+        if (c <= 1) { clearInterval(id); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
+
+  // Account lockout countdown
+  useEffect(() => {
+    if (retryAfter <= 0) return;
+    const id = setInterval(() => {
+      setRetryAfter((r: number) => {
+        if (r <= 1) {
+          clearInterval(id);
+          setLoginState('idle');
+          return 0;
+        }
+        return r - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [retryAfter]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginState === 'loading' || loginState === 'locked') return;
+
+    setLoginState('loading');
+    setError('');
+    clearAllErrors();
+
+    try {
+      const res = await api.post('/auth/login', { phone, password });
+      setLoginState('success');
+      await new Promise(r => setTimeout(r, 1000));
+      login(res.data.user);
+    } catch (err: any) {
+      function getFriendlyError(err: any): string {
+        if (!navigator.onLine) return 'You appear to be offline.';
+        const status = err?.response?.status;
+        const msg = err?.response?.data?.message || '';
+        if (status === 401) return 'Incorrect phone number or password.';
+        if (status === 403) return 'Your account has been locked. Contact support.';
+        if (status === 429) return 'Too many attempts. Please wait and try again.';
+        if (status >= 500) return 'Server error. Please try again in a moment.';
+        if (err?.message === 'Network Error') return 'Cannot reach the server. Check your connection.';
+        // Only pass through safe, known backend messages
+        const safeMsgs = [
+          'User not found',
+          'Invalid password',
+          'Account locked',
+          'Invalid phone number or password.',
+        ];
+        if (safeMsgs.includes(msg)) return msg;
+        return 'Login failed. Please try again.';
+      }
+
+      if (err?.response?.status === 429) {
+        setLoginState('locked');
+        setRetryAfter(60); // Default to 60s
+        setError(getFriendlyError(err));
+      } else {
+        setLoginState('error');
+        setError(getFriendlyError(err));
+      }
+    }
+  };
+
+  const handleDemoFill = (u: string, p: string) => {
+    setPhone(u);
+    setPassword(p);
+    setLoginState('typing');
+  };
+
+  if (!mounted) {
+    return (
+      <div className="login-bg min-h-screen flex items-center justify-center">
+         <div className="wave-bars">
+           {[1,2,3,4,5].map(i => <span key={i} />)}
+         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="login-bg flex flex-col items-center justify-center min-h-screen px-4 py-8">
+      <div className="login-content w-full max-w-[440px]">
+        
+        {/* Top Bar */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="beta-badge">BETA v0.9 (Pre-Launch)</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setLang(lang === 'en' ? 'ta' : 'en')}
+              className="lang-toggle"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              {t.langToggle}
+            </button>
+          </div>
+        </div>
+
+        {/* Brand */}
+        <div className="login-brand text-center mb-8">
+          <div className="fish-icon">🌊</div>
+          <h1 className="text-3xl font-black text-white tracking-tight mb-0.5">
+             {t.loginTitle}
+          </h1>
+          <p className="text-sm font-medium" style={{ color: 'var(--white-secondary)' }}>
+            Digital Ledger for Fishing Agents
+          </p>
+        </div>
+
+        {/* Card */}
+        <div className="login-card p-7">
+          <AnimatePresence>
+            {loginState === 'offline' && (
+              <motion.div 
+                className="offline-banner flex items-center gap-2 p-3 text-sm font-semibold mb-5"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                <WifiOff className="w-4 h-4" />
+                <span>{t.offlineBanner}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {(error || googleError) && (
+            <div className="error-banner flex items-center gap-3 p-3.5 text-sm font-semibold mb-5">
+              <span className="flex-1">{error || googleError}</span>
+              <button onClick={() => { setError(''); clearGoogleError(); }}>✕</button>
+            </div>
+          )}
+
+          {/* Google */}
+          <GoogleAuthButton
+            lang={currentLang}
+            isLoading={googleLoading}
+            isOffline={loginState === 'offline'}
+            popupBlocked={popupBlocked}
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+          />
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="ocean-divider flex-1" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--white-secondary)' }}>
+              {t.dividerOr}
+            </span>
+            <div className="ocean-divider flex-1" />
+          </div>
+
+          <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
+            {/* Phone */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black uppercase tracking-widest ml-1" style={{ color: 'var(--white-secondary)' }}>
+                {t.phoneLabel}
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--white-secondary)' }} />
+                <input
+                  type="tel"
+                  placeholder={t.phonePlaceholder}
+                  value={phone}
+                  {...getInputProps('phone')}
+                  onChange={e => {
+                    setPhone(e.target.value.replace(/[^\d+]/g, ''));
+                    getInputProps('phone').onChange();
+                    if (loginState !== 'typing') setLoginState('typing');
+                  }}
+                  className={`ocean-input w-full rounded-2xl pl-10 pr-4 font-semibold ${errors.phone ? '!border-red-500 !shadow-[0_0_15px_rgba(239,68,68,0.2)]' : ''}`}
+                  style={{ height: '52px' }}
+                  required
+                />
+              </div>
+              {errors.phone && (
+                <p id="phone-error" className="text-red-400 text-xs mt-1 ml-1 font-bold animate-in fade-in duration-200">
+                  {errors.phone}
+                </p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between ml-1">
+                <label className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--white-secondary)' }}>
+                  {t.passwordLabel}
+                </label>
+                <button 
+                  type="button" 
+                  className="text-[10px] font-black uppercase tracking-widest hover:text-white" 
+                  style={{ color: 'var(--teal-glow)' }}
+                  onClick={() => router.push('/forgot-password')}
+                >
+                  {t.forgotPassword}
+                </button>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--white-secondary)' }} />
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  placeholder={t.passwordPlaceholder}
+                  value={password}
+                  {...getInputProps('password')}
+                  onChange={e => {
+                    setPassword(e.target.value);
+                    getInputProps('password').onChange();
+                    if (loginState !== 'typing') setLoginState('typing');
+                  }}
+                  className={`ocean-input w-full rounded-2xl pl-10 pr-12 font-semibold ${errors.password ? '!border-red-500 !shadow-[0_0_15px_rgba(239,68,68,0.2)]' : ''}`}
+                  style={{ height: '52px' }}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                >
+                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {errors.password && (
+                <p id="password-error" className="text-red-400 text-xs mt-1 ml-1 font-bold animate-in fade-in duration-200">
+                  {errors.password}
+                </p>
+              )}
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loginState === 'loading' || loginState === 'locked'}
+              className="login-btn w-full mt-4 text-white border-0 flex items-center justify-center gap-3"
+            >
+              {loginState === 'loading' ? (
+                <>
+                  <div className="wave-bars">
+                    {[1,2,3,4,5].map(i => <span key={i} />)}
+                  </div>
+                  <span className="uppercase tracking-widest font-black">Signing in…</span>
+                </>
+              ) : loginState === 'locked' ? (
+                <>
+                  <Clock className="w-4 h-4" />
+                  <span className="uppercase tracking-widest font-black">Wait {retryAfter}s</span>
+                </>
+              ) : (
+                <>
+                  <ArrowRight className="w-4 h-4" />
+                  <span className="uppercase tracking-widest font-black">{t.loginBtn}</span>
+                </>
+              )}
+            </button>
+
+
+
+            {/* Demo user pills */}
+            <div className="flex flex-wrap gap-2 mt-4 justify-center">
+              {DEMO_USERS.map(u => (
+                <button
+                  key={u.username}
+                  type="button"
+                  onClick={() => handleDemoFill(u.username, u.password)}
+                  className="demo-pill text-xs px-3 py-1.5 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all font-semibold"
+                >
+                  {u.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="text-center mt-5">
+              <p className="text-xs font-semibold" style={{ color: 'var(--white-secondary)' }}>
+                {t.dontHaveAccount}{' '}
+                <Link
+                  href="/register"
+                  className="text-white hover:underline transition-all font-black"
+                  style={{ color: 'var(--teal-glow)' }}
+                >
+                   {t.createAccount}
+                </Link>
+              </p>
+            </div>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-6 flex flex-col items-center gap-4">
+           <div className="security-badge">
+             <Lock className="w-3 h-3" />
+             {t.securedBy}
+           </div>
+        </div>
+      </div>
+
+       {/* Role Selection Modal (for Social Signups) */}
+       <RoleSelectModal
+        isOpen={needsRoleSelection}
+        lang={currentLang}
+        userName={newUserName}
+        isLoading={googleLoading}
+        onSelect={handleRoleSelect}
+      />
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="login-bg min-h-screen flex items-center justify-center">
+         <div className="wave-bars">
+           {[1,2,3,4,5].map(i => <span key={i} />)}
+         </div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
+  );
+}

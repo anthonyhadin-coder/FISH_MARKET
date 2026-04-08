@@ -1,0 +1,12 @@
+﻿FAIL: State 1: renders Google button, divider, phone form and demo pills
+ERR: TestingLibraryElementError: Unable to find an element with the text: /Ravi \(Agent\)/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+---
+FAIL: State 2: shows loading spinner while phone login request is pending
+ERR: Error: Unable to find an element with the text: /Signing in/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+---
+FAIL: State 3: shows error banner on invalid credentials
+ERR: Error: Unable to find an element with the text: /Invalid phone number or password\./i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+---
+FAIL: State 8: shows role selection modal for new Google users
+ERR: TestingLibraryElementError: Unable to find an element with the text: /Boat Agent/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+---

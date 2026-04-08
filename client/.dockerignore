@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+build
+npm-debug.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.git
+.vscode
+Dockerfile
+docker-compose.yml

@@ -1,0 +1,1 @@
+﻿FAIL: State 1: renders Google button, divider, phone form and demo pills

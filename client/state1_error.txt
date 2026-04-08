@@ -1,0 +1,394 @@
+﻿TestingLibraryElementError: Found multiple elements with the text: /OR/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<p[39m
+  [33mclass[39m=[32m"text-sm font-medium"[39m
+  [33mstyle[39m=[32m"color: var(--white-secondary);"[39m
+[36m>[39m
+  [0mDigital Ledger for Fishing Agents[0m
+[36m</p>[39m
+
+Ignored nodes: comments, script, style
+[36m<span[39m
+  [33mclass[39m=[32m"text-[11px] font-bold uppercase tracking-[0.18em]"[39m
+  [33mstyle[39m=[32m"color: var(--white-secondary);"[39m
+[36m>[39m
+  [0mOR[0m
+[36m</span>[39m
+
+Ignored nodes: comments, script, style
+[36m<label[39m
+  [33mclass[39m=[32m"text-[11px] font-black uppercase tracking-widest"[39m
+  [33mstyle[39m=[32m"color: var(--white-secondary);"[39m
+[36m>[39m
+  [0mPassword[0m
+[36m</label>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33mclass[39m=[32m"text-[10px] font-black uppercase tracking-widest hover:text-white"[39m
+  [33mstyle[39m=[32m"color: var(--teal-glow);"[39m
+  [33mtype[39m=[32m"button"[39m
+[36m>[39m
+  [0mForgot?[0m
+[36m</button>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"login-bg flex flex-col items-center justify-center min-h-screen px-4 py-8"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"login-content w-full max-w-[440px]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center justify-between mb-4"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"beta-badge"[39m
+          [36m>[39m
+            [0mBETA v0.9 (Pre-Launch)[0m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-3"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"lang-toggle"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-globe w-3.5 h-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 12h20"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mà®¤à®®à®¿à®´à¯[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"login-brand text-center mb-8"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"fish-icon"[39m
+          [36m>[39m
+            [0mðŸŒŠ[0m
+          [36m</div>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"text-3xl font-black text-white tracking-tight mb-0.5"[39m
+          [36m>[39m
+            [0mFish Market[0m
+          [36m</h1>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm font-medium"[39m
+            [33mstyle[39m=[32m"color: var(--white-secondary);"[39m
+          [36m>[39m
+            [0mDigital Ledger for Fishing Agents[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"login-card p-7"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"relative"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"google-btn w-full rounded-2xl flex items-center justify-center overflow-hidden"[39m
+              [33mid[39m=[32m"google-oauth-btn"[39m
+              [33mstyle[39m=[32m"min-height: 56px;"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mdata-testid[39m=[32m"google-sdk-btn"[39m
+              [36m>[39m
+                [0mGoogle SDK Button[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-4 my-6"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ocean-divider flex-1"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-[11px] font-bold uppercase tracking-[0.18em]"[39m
+              [33mstyle[39m=[32m"color: var(--white-secondary);"[39m
+            [36m>[39m
+              [0mOR[0m
+            [36m</span>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ocean-divider flex-1"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<form[39m
+            [33mclass[39m=[32m"space-y-5"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"space-y-1.5"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"text-[11px] font-black uppercase tracking-widest ml-1"[39m
+                [33mstyle[39m=[32m"color: var(--white-secondary);"[39m
+              [36m>[39m
+                [0mPhone Number[0m
+              [36m</label>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"relative"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-phone absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mstyle[39m=[32m"color: var(--white-secondary);"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<input[39m
+                  [33maria-invalid[39m=[32m"false"[39m
+                  [33mclass[39m=[32m"ocean-input w-full rounded-2xl pl-10 pr-4 font-semibold "[39m
+                  [33mid[39m=[32m"phone"[39m
+                  [33mname[39m=[32m"phone"[39m
+                  [33mplaceholder[39m=[32m"Enter phone number"[39m
+                  [33mrequired[39m=[32m""[39m
+                  [33mstyle[39m=[32m"height: 52px;"[39m
+                  [33mtype[39m=[32m"tel"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"space-y-1.5"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center justify-between ml-1"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"text-[11px] font-black uppercase tracking-widest"[39m
+                  [33mstyle[39m=[32m"color: var(--white-secondary);"[39m
+                [36m>[39m
+                  [0mPassword[0m
+                [36m</label>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"text-[10px] font-black uppercase tracking-widest hover:text-white"[39m
+                  [33mstyle[39m=[32m"color: var(--teal-glow);"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [0mForgot?[0m
+                [36m</button>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"relative"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-lock absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mstyle[39m=[32m"color: var(--white-secondary);"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<rect[39m
+                    [33mheight[39m=[32m"11"[39m
+                    [33mrx[39m=[32m"2"[39m
+                    [33mry[39m=[32m"2"[39m
+                    [33mwidth[39m=[32m"18"[39m
+                    [33mx[39m=[32m"3"[39m
+                    [33my[39m=[32m"11"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M7 11V7a5 5 0 0 1 10 0v4"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<input[39m
+                  [33maria-invalid[39m=[32m"false"[39m
+                  [33mclass[39m=[32m"ocean-input w-full rounded-2xl pl-10 pr-12 font-semibold "[39m
+                  [33mid[39m=[32m"password"[39m
+                  [33mname[39m=[32m"password"[39m
+                  [33mplaceholder[39m=[32m"â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"[39m
+                  [33mrequired[39m=[32m""[39m
+                  [33mstyle[39m=[32m"height: 52px;"[39m
+                  [33mtype[39m=[32m"password"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-eye w-4 h-4"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"24"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"24"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"[39m
+                    [36m/>[39m
+                    [36m<circle[39m
+                      [33mcx[39m=[32m"12"[39m
+                      [33mcy[39m=[32m"12"[39m
+                      [33mr[39m=[32m"3"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"login-btn w-full mt-4 text-white border-0 flex items-center justify-center gap-3"[39m
+              [33mtype[39m=[32m"submit"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-arrow-right w-4 h-4"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"m12 5 7 7-7 7"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"uppercase tracking-widest font-black"[39m
+              [36m>[39m
+                [0mSign In[0m
+              [36m</span>[39m
+            [36m</button>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-wrap gap-2 mt-4 justify-center"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"demo-pill text-xs px-3 py-1.5 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all font-semibold"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [0mRavi (Agent)[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"demo-pill text-xs px-3 py-1.5 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all font-semibold"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [0mAdmin Owner[0m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-center mt-5"[39m
+            [36m>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"text-xs font-semibold"[39m
+                [33mstyle[39m=[32m"color: var(--white-secondary);"[39m
+              [36m>[39m
+                [0mDon't have an account?[0m
+                [0m [0m
+                [36m<a[39m
+                  [33mclass[39m=[32m"text-white hover:underline transition-all font-black"[39m
+                  [33mhref[39m=[32m"/register"[39m
+                  [33mstyle[39m=[32m"color: var(--teal-glow);"[39m
+                [36m>[39m
+                  [0mCreate New Account[0m
+                [36m</a>[39m
+              [36m</p>[39m
+            [36m</div>[39m
+          [36m</form>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"mt-6 flex flex-col items-center gap-4"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"security-badge"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-lock w-3 h-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<rect[39m
+                [33mheight[39m=[32m"11"[39m
+                [33mrx[39m=[32m"2"[39m
+                [33mry[39m=[32m"2"[39m
+                [33mwidth[39m=[32m"18"[39m
+                [33mx[39m=[32m"3"[39m
+                [33my[39m=[32m"11"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M7 11V7a5 5 0 0 1 10 0v4"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0mSecured â€¢ 256-bit SSL[0m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+    at Object.getElementError (C:\coding_program_files\FISH_MARKET\client\node_modules\@testing-library\dom\dist\config.js:37:19)
+    at getElementError (C:\coding_program_files\FISH_MARKET\client\node_modules\@testing-library\dom\dist\query-helpers.js:20:35)
+    at getMultipleElementsFoundError (C:\coding_program_files\FISH_MARKET\client\node_modules\@testing-library\dom\dist\query-helpers.js:23:10)
+    at C:\coding_program_files\FISH_MARKET\client\node_modules\@testing-library\dom\dist\query-helpers.js:55:13
+    at getByText (C:\coding_program_files\FISH_MARKET\client\node_modules\@testing-library\dom\dist\query-helpers.js:95:19)
+    at C:/coding_program_files/FISH_MARKET/client/src/tests/LoginPage.test.tsx:83:19
+    at file:///C:/coding_program_files/FISH_MARKET/client/node_modules/@vitest/runner/dist/index.js:296:11
+    at file:///C:/coding_program_files/FISH_MARKET/client/node_modules/@vitest/runner/dist/index.js:1258:26
+    at file:///C:/coding_program_files/FISH_MARKET/client/node_modules/@vitest/runner/dist/index.js:1681:20
+    at new Promise (<anonymous>)
