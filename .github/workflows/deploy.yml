@@ -88,6 +88,8 @@ jobs:
             echo "🔁 Pulling latest code..."
             cd /var/www/deep-ocean-fish-market || exit 1
             git config --global --add safe.directory /var/www/deep-ocean-fish-market
+            # Authenticate the VPS to your private repository using the GitHub Action token
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
             git pull origin main
 
             echo "📦 Installing server dependencies..."
