@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Fish Market Server-Side Middleware
+ * Fish Market Server-Side Proxy (Next.js 16)
  * Enforces route protection and role-based redirection.
+ * Renamed from middleware.ts → proxy.ts per Next.js 16 convention.
  */
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     
     // Get role from cookies (synced by AuthContext)
@@ -50,7 +51,7 @@ export function middleware(request: NextRequest) {
 
 /**
  * Configure the matcher to EXCLUDE Next.js internal paths and public assets.
- * This prevents the middleware from interfering with JS chunks or images.
+ * This prevents the proxy from interfering with JS chunks or images.
  */
 export const config = {
     matcher: [
