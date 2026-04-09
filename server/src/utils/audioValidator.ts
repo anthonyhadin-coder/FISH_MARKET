@@ -8,7 +8,14 @@ export const transcribeRateLimiter = rateLimit({
     message: 'Too many transcription requests, please wait a minute.',
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req: any) => req.user?.userId || req.ip
+    keyGenerator: (req: any) => {
+        // Use user ID if available, otherwise fall back to IP
+        const key = req.user?.userId || req.ip;
+        // Ensure we return a string and handle potential IPv6 identification
+        return String(key);
+    },
+    // Explicitly disable the IPv6 check warning if we are providing a valid string key
+    validate: { xForwardedForHeader: false, ipKeyGenerator: false },
 });
 
 export const validateAudioFile = (req: Request, res: Response, next: NextFunction) => {

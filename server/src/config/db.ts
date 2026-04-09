@@ -9,8 +9,16 @@ if (!process.env.DATABASE_URL) {
   dotenv.config();
 }
 
+// Diagnostic logging for CI troubleshooting
+console.log('[DB-Config] Checking DATABASE_URL presence:', !!process.env.DATABASE_URL);
+if (process.env.DATABASE_URL) {
+  const maskedUrl = process.env.DATABASE_URL.replace(/:(\/\/.*?:).*?@/, ':$1********@');
+  console.log('[DB-Config] DATABASE_URL is already set:', maskedUrl);
+}
+
 // Construct DATABASE_URL from individual parameters if not set
 if (!process.env.DATABASE_URL) {
+  console.log('[DB-Config] DATABASE_URL missing, attempting construction from individual parameters...');
   const dbHost = process.env.DB_HOST || 'localhost';
   const dbPort = process.env.DB_PORT || '3306';
   const dbUser = process.env.DB_USER || 'root';
