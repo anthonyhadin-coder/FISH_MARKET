@@ -145,6 +145,11 @@ export default function LandingPage() {
           </div>
           <span className="text-xl font-bold text-white uppercase tracking-tighter">{t.appName} OS</span>
         </div>
+        <div className="flex justify-center mb-4">
+          <Link href="/about" className="text-sm font-bold text-ocean-400 hover:text-white transition-colors">
+            {t.aboutOurProject || "About Our Project"}
+          </Link>
+        </div>
         <p className="text-ocean-700 text-sm italic">© 2026 {t.appName}. {t.footerTagline}</p>
       </footer>
     </div>

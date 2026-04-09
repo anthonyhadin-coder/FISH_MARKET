@@ -1,0 +1,10 @@
+﻿Deep Ocean Fish Market PWA — v1.0.0
+
+First stable release:
+- Professional MVC monorepo structure
+- Native app login with HttpOnly JWT cookies  
+- Offline-first PWA with IndexedDB sync
+- Voice commerce with Tamil number parsing
+- Role-based routing: Owner / Staff / Customer
+- 76/76 unit tests passing
+- GitHub Actions CI/CD pipeline live

@@ -120,6 +120,7 @@ export const T: Record<string, Translation> = {
     downloadPDF: "Download PDF",
     sendToOwner: "Send to Owner",
     sendToAgent: "Send to Agent",
+    aboutOurProject: "About Our Project",
   },
   ta: {
     appName: "மீன் சந்தை கணக்கு", tagline: "மீன் முகவர்களுக்கான டிஜிட்டல் கணக்கு",
@@ -238,6 +239,7 @@ export const T: Record<string, Translation> = {
     downloadPDF: "PDF பதிவிறக்கம்",
     sendToOwner: "உரிமையாளருக்கு அனுப்பு",
     sendToAgent: "ஏஜெண்டிற்கு அனுப்பு",
+    aboutOurProject: "எங்கள் திட்டத்தை பற்றி",
   },
 };
 
