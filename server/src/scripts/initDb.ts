@@ -26,10 +26,13 @@ const initDb = async () => {
     }
 
     const dbUrl = process.env.DATABASE_URL!;
-    const urlWithoutDb = dbUrl.substring(0, dbUrl.lastIndexOf('/'));
+    const parsedUrl = new URL(dbUrl);
+    const dbName = parsedUrl.pathname.replace('/', '') || 'fish_market';
+    // Remove the pathname (database name) to connect to mysql server generally
+    const urlWithoutDb = dbUrl.replace(parsedUrl.pathname, '');
     
     connection = await mysql.createConnection(urlWithoutDb);
-    await connection.query('CREATE DATABASE IF NOT EXISTS fish_market');
+    await connection.query(`CREATE DATABASE IF NOT EXISTS \`\${dbName}\``);
     await connection.end();
     
     console.log('Database connected/created. Initializing tables...');

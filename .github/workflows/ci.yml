@@ -7,8 +7,7 @@ on:
     branches: [main, dev]
 
 env:
-  NODE_VERSION: '20'
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  NODE_VERSION: '22'
 
 jobs:
   # ─────────────────────────────────────────────
@@ -42,8 +41,8 @@ jobs:
         run: npm run test
         env:
           CI: true
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api' }}
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'test-client-id' }}
+          NEXT_PUBLIC_API_URL: http://localhost:5000/api
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: test-client-id
 
   # ─────────────────────────────────────────────
   # JOB 2: Server — ESLint + Vitest + Supertest
@@ -95,6 +94,11 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint || true
+
+      - name: Initialize Test Database
+        run: npx -y tsx src/scripts/initDb.ts
+        env:
+          DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/fish_market_test
 
       - name: Run Vitest + Supertest integration tests
         run: npm run test
@@ -164,6 +168,12 @@ jobs:
 
       - name: Install Playwright browsers (Chromium only for speed)
         run: npx playwright install --with-deps chromium
+
+      - name: Initialize Test Database
+        run: npx -y tsx src/scripts/initDb.ts
+        working-directory: server
+        env:
+          DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/fish_market_test
 
       - name: Start server in background
         run: npm run dev &
