@@ -9,6 +9,21 @@ if (!process.env.DATABASE_URL) {
   dotenv.config();
 }
 
+// Construct DATABASE_URL from individual parameters if not set
+if (!process.env.DATABASE_URL) {
+  const dbHost = process.env.DB_HOST || 'localhost';
+  const dbPort = process.env.DB_PORT || '3306';
+  const dbUser = process.env.DB_USER || 'root';
+  const dbPassword = process.env.DB_PASSWORD || '';
+  const dbName = process.env.DB_NAME || 'fish_market';
+
+  // URL encode credentials to handle special characters
+  const encodedUser = encodeURIComponent(dbUser);
+  const encodedPassword = encodeURIComponent(dbPassword);
+  
+  process.env.DATABASE_URL = `mysql://${encodedUser}:${encodedPassword}@${dbHost}:${dbPort}/${dbName}`;
+}
+
 if (!process.env.DATABASE_URL) {
   throw new Error('FATAL: DATABASE_URL environment variable is missing.');
 }

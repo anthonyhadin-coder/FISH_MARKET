@@ -12,10 +12,20 @@ const initDb = async () => {
     console.log('Connecting to MySQL to create database if not exists...');
     
     // First connect without database to create it
-    const dbUrl = process.env.DATABASE_URL;
-    if (!dbUrl) {
-      throw new Error('DATABASE_URL is not set');
+    // Construct DATABASE_URL from individual parameters if not set
+    if (!process.env.DATABASE_URL) {
+      const dbHost = process.env.DB_HOST || 'localhost';
+      const dbPort = process.env.DB_PORT || '3306';
+      const dbUser = process.env.DB_USER || 'root';
+      const dbPassword = process.env.DB_PASSWORD || '';
+      const dbName = process.env.DB_NAME || 'fish_market';
+
+      const encodedUser = encodeURIComponent(dbUser);
+      const encodedPassword = encodeURIComponent(dbPassword);
+      process.env.DATABASE_URL = `mysql://${encodedUser}:${encodedPassword}@${dbHost}:${dbPort}/${dbName}`;
     }
+
+    const dbUrl = process.env.DATABASE_URL!;
     const urlWithoutDb = dbUrl.substring(0, dbUrl.lastIndexOf('/'));
     
     connection = await mysql.createConnection(urlWithoutDb);
