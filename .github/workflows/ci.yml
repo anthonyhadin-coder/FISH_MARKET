@@ -101,11 +101,6 @@ jobs:
         env:
           CI: true
           NODE_ENV: test
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_USER: root
-          DB_PASSWORD: testpassword
-          DB_NAME: fish_market_test
           DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/fish_market_test
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: ci-test-jwt-secret-minimum-32-characters
@@ -175,11 +170,6 @@ jobs:
         working-directory: server
         env:
           NODE_ENV: e2e
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_USER: root
-          DB_PASSWORD: testpassword
-          DB_NAME: fish_market_test
           DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/fish_market_test
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: ci-test-jwt-secret-minimum-32-characters
