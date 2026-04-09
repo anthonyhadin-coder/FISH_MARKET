@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Phone, Lock, KeyRound, ArrowRight, ArrowLeft } from 'lucide-react';
 import api from '@/lib/api';
 import { showToast } from '@/components/ui/Toast';
+import { ApiError } from '@/lib/types';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -22,8 +23,9 @@ export default function ForgotPasswordPage() {
       await api.post('/auth/forgot-password', { phone });
       showToast('OTP sent successfully', 'success');
       setStep(2);
-    } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to send OTP', 'error');
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      showToast(error.response?.data?.message || 'Failed to send OTP', 'error');
     } finally {
       setLoading(false);
     }
@@ -38,8 +40,9 @@ export default function ForgotPasswordPage() {
       setResetToken(res.data.resetToken);
       showToast('OTP verified', 'success');
       setStep(3);
-    } catch (err: any) {
-      showToast(err.response?.data?.message || 'Invalid OTP', 'error');
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      showToast(error.response?.data?.message || 'Invalid OTP', 'error');
     } finally {
       setLoading(false);
     }
@@ -53,8 +56,9 @@ export default function ForgotPasswordPage() {
       await api.post('/auth/reset-password', { resetToken, newPassword });
       showToast('Password reset successfully. You can now log in.', 'success');
       router.push('/login');
-    } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to reset password', 'error');
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      showToast(error.response?.data?.message || 'Failed to reset password', 'error');
     } finally {
       setLoading(false);
     }

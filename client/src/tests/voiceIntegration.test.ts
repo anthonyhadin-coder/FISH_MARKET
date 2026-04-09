@@ -15,7 +15,7 @@ class MockSpeechRecognition {
   onend = null;
 }
 
-(window as any).webkitSpeechRecognition = MockSpeechRecognition;
+(window as Window & typeof globalThis).webkitSpeechRecognition = MockSpeechRecognition as unknown as { new (): SpeechRecognition; prototype: SpeechRecognition; };
 
 describe('Voice Integration Hook', () => {
     it('should initialize and start listening', async () => {
@@ -41,7 +41,8 @@ describe('Voice Integration Hook', () => {
         // Simulate start
         act(() => {
             // Internal starting logic simulation
-            (result.current as any).setIsListening?.(true); 
+            const internal = result.current as unknown as { setIsListening?: (b: boolean) => void };
+            internal.setIsListening?.(true); 
         });
 
         // This is a simplified test as the hook logic is tied to internal timers

@@ -12,6 +12,8 @@ import { BuyersTab } from './_components/BuyersTab';
 import { HistoryTab } from './_components/HistoryTab';
 import { T_AGENT, toKey, Payment, SaleRow, EXP_KEYS } from './SharedUI';
 import api from '@/lib/api';
+import { ApiError, Buyer } from '@/lib/types';
+import { ParsedVoiceResult } from '@/lib/voice/voiceParser';
 import { offlineStorage } from '@/lib/offlineStorage';
 import { createBoat } from '@/lib/api/agentApi';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -23,11 +25,6 @@ type Tab = "entry" | "slip" | "reports" | "buyers" | "history";
 export default function AgentDashboard() {
     const { user, logout } = useAuth();
     const { lang, setLang } = useLanguage();
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setTimeout(() => setMounted(true), 0);
-    }, []);
 
     const { 
         boats, 
@@ -79,7 +76,22 @@ export default function AgentDashboard() {
     const round = (n: number) => Math.round(n * 1000) / 1000;
     const roundFin = (n: number) => Math.round(n * 100) / 100;
 
-    const addRow = async () => {
+    const fetchDailyData = useCallback(async () => {
+        if (!selectedBoat) return;
+        try {
+            const [salesRes, paymentsRes] = await Promise.all([
+                api.get(`/sales/history?boatId=${selectedBoat.id}&date=${dateKey}`),
+                api.get(`/boat-payments?boatId=${selectedBoat.id}&date=${dateKey}`)
+            ]);
+            setDailySales(salesRes.data || []);
+            setPayments(paymentsRes.data || []);
+        } catch (err: unknown) {
+            const error = err as ApiError;
+            console.error("Failed to fetch daily data", error);
+        }
+    }, [selectedBoat, dateKey]);
+
+    const addRow = useCallback(async () => {
         if (!user || !selectedBoat || !newRow.fish || !newRow.weight || !newRow.rate) {
             setFieldErrors({
                 fish: !newRow.fish ? "Fish name required" : "",
@@ -104,17 +116,18 @@ export default function AgentDashboard() {
             toast("Sale recorded", "success");
             fetchDailyData();
             setNR({fish:"", weight: "", rate: "", buyer: "", paid: ""}); 
-            } catch (err: any) {
-                if (!navigator.onLine) {
+        } catch (err: unknown) {
+            const error = err as ApiError;
+            if (!navigator.onLine) {
                     await offlineStorage.addPendingSale({ type: 'sale', payload });
                     toast("Saved offline", "info");
                     setNR({fish:"", weight: "", rate: "", buyer: "", paid: ""}); 
                     fetchDailyData();
                 } else {
-                    toast(err.response?.data?.message || "Failed to record sale", "error");
+                    toast(error.response?.data?.message || "Failed to record sale", "error");
                 }
             }
-    };
+    }, [user, selectedBoat, newRow, toast, fetchDailyData]);
 
     const addPayment = async () => {
         if (!selectedBoat || !payAmt || +payAmt <= 0) {
@@ -135,7 +148,8 @@ export default function AgentDashboard() {
             fetchDailyData();
             setPayAmt(""); 
             setPayNote("");
-        } catch (e: any) {
+        } catch (err: unknown) {
+             const error = err as ApiError;
              if (!navigator.onLine) {
                 await offlineStorage.addPendingSale({ type: 'payment', payload });
                 toast("Payment saved offline", "info");
@@ -143,7 +157,7 @@ export default function AgentDashboard() {
                 setPayNote("");
                 fetchDailyData();
             } else {
-                toast(e.response?.data?.message || "Failed to add payment", "error");
+                toast(error.response?.data?.message || "Failed to add payment", "error");
             }
         }
     };
@@ -160,19 +174,19 @@ export default function AgentDashboard() {
     }, [lang]);
 
     // Global Voice Handler
-    const onGlobalVoiceResult = useCallback((results: any[]) => {
+    const onGlobalVoiceResult = useCallback((results: ParsedVoiceResult[]) => {
         if (!results || results.length === 0) return;
         
         results.forEach(item => {
             if (item.type === 'EXPENSE' && item.key) {
                 setRec(prev => ({
                     ...prev,
-                    exp: { ...prev.exp, [item.key]: String(item.amount) }
+                    exp: { ...prev.exp, [item.key as string]: String(item.amount || 0) }
                 }));
-                const msg = lang === 'ta' ? `${item.key} செலவு மாற்றப்பட்டது: ${item.amount}` : `${item.key} expense updated: ${item.amount}`;
+                const msg = lang === 'ta' ? `${item.key} செலவு மாற்றப்பட்டது: ${item.amount || 0}` : `${item.key} expense updated: ${item.amount || 0}`;
                 toast(msg, "success");
                 speakBack(msg);
-            } else if (item.type === 'COMMAND') {
+            } else if (item.type === 'COMMAND' && item.command) {
                 if (item.command === 'save') {
                   setActiveTab("entry");
                   addRow(); 
@@ -199,7 +213,7 @@ export default function AgentDashboard() {
                   weight: item.weight ? String(item.weight) : prev.weight,
                   rate: item.rate ? String(item.rate) : prev.rate,
                   buyer: item.buyer || prev.buyer,
-                  paid: item.paid ? String(item.paid) : prev.paid
+                  paid: item.amount ? String(item.amount) : prev.paid
                 }));
                 const msg = lang === 'ta' 
                     ? `${item.fish || 'மீன்'} ${item.weight || ''} கிலோ தயார்` 
@@ -209,22 +223,8 @@ export default function AgentDashboard() {
         });
     }, [lang, toast, addRow, setLang, speakBack]);
 
-    const fetchDailyData = useCallback(async () => {
-        if (!selectedBoat) return;
-        try {
-            const [salesRes, paymentsRes] = await Promise.all([
-                api.get(`/sales/history?boatId=${selectedBoat.id}&date=${dateKey}`),
-                api.get(`/boat-payments?boatId=${selectedBoat.id}&date=${dateKey}`)
-            ]);
-            setDailySales(salesRes.data || []);
-            setPayments(paymentsRes.data || []);
-        } catch (err) {
-            console.error("Failed to fetch daily data", err);
-        }
-    }, [selectedBoat, dateKey]);
-
     useEffect(() => {
-        void fetchDailyData(); // eslint-disable-line react-hooks/set-state-in-effect
+        void fetchDailyData();  
     }, [fetchDailyData]);
 
     // Summary calculations
@@ -276,7 +276,7 @@ export default function AgentDashboard() {
         );
     }
 
-    const t = T_AGENT[mounted ? lang : 'en'];
+    const t = T_AGENT[lang];
 
     return (
         <div className="min-h-screen bg-white text-black font-sans">
@@ -498,7 +498,7 @@ export default function AgentDashboard() {
                                         totalPaid={totalPaid}
                                         remaining={remaining}
                                         settled={settled}
-                                        setTab={(tab) => setActiveTab(tab)}
+                                        setTab={(tab) => setActiveTab(tab as Tab)}
                                         refreshDailyReport={fetchDailyData}
                                         dailySales={dailySales}
                                         onDeleteBoat={() => {}}

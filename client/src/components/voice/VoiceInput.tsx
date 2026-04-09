@@ -6,6 +6,7 @@ import { G } from '@/app/(dashboard)/staff/SharedUI';
 import { VoiceGuideModal } from './VoiceGuideModal';
 import { HelpCircle } from 'lucide-react';
 import { useState } from 'react';
+import { ParsedVoiceResult } from '@/lib/voice/voiceParser';
 
 /**
  * VoiceInput Component
@@ -14,7 +15,7 @@ import { useState } from 'react';
 
 interface VoiceInputProps {
   lang: 'ta' | 'en';
-  onParsedResult: (results: any[]) => void;
+  onParsedResult: (results: ParsedVoiceResult[]) => void;
   label?: string;
   targetField?: string;
   fishList?: string[];
@@ -25,8 +26,7 @@ interface VoiceInputProps {
 export const VoiceInput: React.FC<VoiceInputProps> = ({ 
   lang, 
   onParsedResult, 
-  label, 
-  targetField, 
+  label,
   fishList, 
   buyerList,
   variant = 'standard'
@@ -278,7 +278,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
              fontStyle: 'italic'
            }}
         >
-          "{interimTranscript}"
+          &quot;{interimTranscript}&quot;
         </div>
       )}
 

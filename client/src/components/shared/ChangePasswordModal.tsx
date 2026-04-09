@@ -5,7 +5,7 @@ import { Input } from '../ui/Input';
 import { Card } from '../ui/Card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { T } from '@/lib/i18n';
-import { Key, Lock, Eye, EyeOff, ShieldAlert, CheckCircle2, X, KeyRound, AlertCircle } from "lucide-react";
+import { CheckCircle2, X, KeyRound, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 

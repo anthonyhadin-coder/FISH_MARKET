@@ -11,6 +11,33 @@ interface AgentBoatWeeklyReportProps {
     availBoats: { id: string | number; name: string }[];
 }
 
+interface WeeklyReportData {
+    owner_name: string;
+    boat_name: string;
+    week_start: string;
+    week_end: string;
+    daily_breakdown: Array<{
+        date: string;
+        daily_total: number;
+        entries: Array<{
+            fish_name: string;
+            weight: number;
+            rate: number;
+            total: number;
+        }>;
+    }>;
+    agent_summary: {
+        total_entries: number;
+        total_weight: number;
+        gross_sales: number;
+        commission_rate: number;
+        my_commission: number;
+        bonus_earned: number;
+        total_earnings: number;
+        target_met: boolean;
+    };
+}
+
 export function AgentBoatWeeklyReport({ lang, availBoats }: AgentBoatWeeklyReportProps) {
     const t = T_AGENT[lang as 'en' | 'ta'];
     const { toast } = useToast();
@@ -19,7 +46,7 @@ export function AgentBoatWeeklyReport({ lang, availBoats }: AgentBoatWeeklyRepor
     const [weekStart, setWeekStart] = useState<string>('');
     const [weekEnd, setWeekEnd] = useState<string>('');
     
-    const [reportData, setReportData] = useState<any>(null);
+    const [reportData, setReportData] = useState<WeeklyReportData | null>(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -42,7 +69,7 @@ export function AgentBoatWeeklyReport({ lang, availBoats }: AgentBoatWeeklyRepor
         if (!selectedBoat || !weekStart || !weekEnd) return;
         try {
             setLoading(true);
-            const data = await fetchAgentBoatWeeklyReport(selectedBoat, weekStart, weekEnd);
+            const data = await fetchAgentBoatWeeklyReport(selectedBoat, weekStart, weekEnd) as WeeklyReportData;
             setReportData(data);
         } catch (err) {
             toast("Failed to load boat weekly report", "error");
@@ -133,9 +160,9 @@ export function AgentBoatWeeklyReport({ lang, availBoats }: AgentBoatWeeklyRepor
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-ocean-100 bg-white">
-                                    {reportData.daily_breakdown.map((day: any, idx: number) => (
+                                    {reportData.daily_breakdown.map((day, idx: number) => (
                                         <React.Fragment key={day.date}>
-                                            {day.entries.map((entry: any, eIdx: number) => (
+                                            {day.entries.map((entry, eIdx: number) => (
                                                 <tr key={`${day.date}-${eIdx}`} className="hover:bg-ocean-50/30 transition-colors">
                                                     <td className="px-5 py-3 font-bold text-ocean-700 whitespace-nowrap">
                                                         {eIdx === 0 ? new Date(day.date).toLocaleDateString(lang === 'ta' ? 'ta-IN' : 'en-GB', { weekday: 'short', day: 'numeric' }) : ''}

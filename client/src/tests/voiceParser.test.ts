@@ -19,7 +19,7 @@ const saleOf = (text: string, lang: 'ta' | 'en' = 'en') =>
 const confidence = (text: string, lang: 'ta' | 'en' = 'en') => {
   const sale = saleOf(text, lang);
   if (!sale) return null;
-  return scoreConfidence(sale, text, lang);
+  return scoreConfidence(sale, text);
 };
 
 // ─────────────────────────────────────────────────────────────────

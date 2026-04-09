@@ -26,7 +26,8 @@ interface SpeechRecognition extends EventTarget {
   stop: () => void;
 }
 
-import { Boat } from "../_context/AgentContext";
+import { Boat, Buyer, ApiError } from "@/lib/types";
+import { ParsedVoiceResult } from "@/lib/voice/voiceParser";
 
 interface EntryTabProps {
     lang: string;
@@ -49,11 +50,11 @@ interface EntryTabProps {
     totalPaid: number;
     remaining: number;
     settled: boolean;
-    setTab: (tab: any) => void;
+    setTab: (tab: string) => void;
     refreshDailyReport: () => void;
     dailySales: SaleRow[];
     onDeleteBoat: () => void;
-    buyers?: any[];
+    buyers?: Buyer[];
     
     // Lifted props
     newRow: { fish: string; weight: string; rate: string; buyer: string; paid: string };
@@ -116,7 +117,7 @@ export function EntryTab({
             toast("Sale deleted", "success");
             refreshDailyReport();
         } catch (err: unknown) {
-            const e = err as { response?: { data?: { message?: string } } };
+            const e = err as ApiError;
             if (!navigator.onLine) {
                 await offlineStorage.addPendingSale({ type: 'delete-sale', id });
                 toast("Deleted offline", "info");
@@ -130,9 +131,9 @@ export function EntryTab({
     const startEdit = (row: SaleRow) => {
         if(!canEdit) return;
         setEId(row.id);
-        const fish = (row.fishName || row.fish || (row as any).fish_name || "") as string;
-        const buyer = (row.buyerName || row.buyer || (row as any).buyer_name || "") as string;
-        setEV({ fish, weight: row.weight, rate: row.rate, buyer, amountPaid: row.amountPaid || (row as any).amount_paid || 0 });
+        const fish = (row.fishName || row.fish || (row as unknown as Record<string, unknown>).fish_name || "") as string;
+        const buyer = (row.buyerName || row.buyer || (row as unknown as Record<string, unknown>).buyer_name || "") as string;
+        setEV({ fish, weight: row.weight, rate: row.rate, buyer, amountPaid: Number(row.amountPaid || (row as unknown as Record<string, unknown>).amount_paid || 0) });
     };
 
     const saveEdit = async (id: string | number) => {
@@ -149,7 +150,7 @@ export function EntryTab({
             setEId(null);
             refreshDailyReport();
         } catch (e: unknown) {
-            const err = e as { response?: { status?: number, data?: { message?: string, errors?: Array<{ path: string | string[], message: string }> } } };
+            const err = e as ApiError;
             if (!navigator.onLine) {
                 const payload = {
                     fishName: editVal.fish,
@@ -176,7 +177,7 @@ export function EntryTab({
             toast("Payment deleted", "success");
             refreshDailyReport();
         } catch (err: unknown) {
-            const e = err as { response?: { data?: { message?: string } } };
+            const e = err as ApiError;
             if (!navigator.onLine) {
                 await offlineStorage.addPendingSale({ type: 'delete-payment', id });
                 toast("Payment deleted offline", "info");
@@ -218,7 +219,7 @@ export function EntryTab({
         return bestMatch;
     };
 
-    const onVoiceResult = (results: any[]) => {
+    const onVoiceResult = (results: ParsedVoiceResult[]) => {
         if (!results || results.length === 0) return;
         
         results.forEach(item => {
@@ -233,9 +234,10 @@ export function EntryTab({
             } else if (item.type === 'EXPENSE' && item.key) {
                 upd(prev => ({
                     ...prev,
-                    exp: { ...prev.exp, [item.key]: String(item.amount) }
+                    exp: { ...prev.exp, [item.key as string]: String(item.amount || 0) }
                 }));
-                toast(lang === 'ta' ? `${item.key} செலவு மாற்றப்பட்டது: ${item.amount}` : `${item.key} expense updated: ${item.amount}`, "success");
+                const expenseName = item.key as string;
+                toast(lang === 'ta' ? `${expenseName} செலவு மாற்றப்பட்டது: ${item.amount}` : `${expenseName} expense updated: ${item.amount}`, "success");
             } else if (item.type === 'COMMAND') {
                 if (item.command === 'save') addRow();
                 if (item.command === 'delete') {
@@ -414,7 +416,7 @@ export function EntryTab({
                                         <Badge color={G.muted}>{fKg} {t.fields.unitKg}</Badge>
                                     </div>
                                     <div style={{display:"flex",alignItems:"center",gap:10,paddingRight:16}}>
-                                        <VoiceInput variant="minimal" lang={lang as 'ta' | 'en'} onParsedResult={(res) => onVoiceResult(res.map(r => ({...r, fish: fishName})))} label="" fishList={fishList} buyerList={buyers.map(b=>b.name)} />
+                                        <VoiceInput variant="minimal" lang={lang as 'ta' | 'en'} onParsedResult={(res: ParsedVoiceResult[]) => onVoiceResult(res.map(r => ({...r, fish: fishName})))} label="" fishList={fishList} buyerList={buyers.map(b=>b.name)} />
                                         <span onClick={()=>toggleExp(fishName)} style={{cursor:"pointer", fontWeight:900,fontSize:17,color:col,fontVariantNumeric:"tabular-nums"}}>{fmt(fTotal, t.fields.unitCurrency)}</span>
                                         <span onClick={()=>toggleExp(fishName)} style={{cursor:"pointer", color:G.muted,fontSize:12,display:"inline-block",transform:isOpen?"rotate(0deg)":"rotate(-90deg)",transition:"transform .2s"}}>▼</span>
                                     </div>
@@ -466,11 +468,11 @@ export function EntryTab({
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <td onClick={()=>startEdit(r)} style={{...TD,fontWeight:600, cursor:"pointer"}}>{r.buyerName||r.buyer||(r as any).buyer_name||<span style={{color:G.muted,fontStyle:"italic"}}>—</span>}</td>
+                                                            <td onClick={()=>startEdit(r)} style={{...TD,fontWeight:600, cursor:"pointer"}}>{r.buyerName||r.buyer||((r as unknown as Record<string, unknown>).buyer_name as string)||<span style={{color:G.muted,fontStyle:"italic"}}>—</span>}</td>
                                                             <td onClick={()=>startEdit(r)} style={{...TD,textAlign:"right", cursor:"pointer"}}>{r.weight}</td>
                                                             <td onClick={()=>startEdit(r)} style={{...TD,textAlign:"right", cursor:"pointer"}}>{r.rate}</td>
                                                             <td style={{...TD,textAlign:"right",fontWeight:700,color:G.green,fontVariantNumeric:"tabular-nums"}}>{fmt(Math.round(Number(r.weight)*Number(r.rate)), t.fields.unitCurrency)}</td>
-                                                            <td style={{...TD,textAlign:"right",color:G.green,fontSize:12,fontVariantNumeric:"tabular-nums"}}>{fmt(r.amountPaid || (r as any).amount_paid || 0, t.fields.unitCurrency)}</td>
+                                                            <td style={{...TD,textAlign:"right",color:G.green,fontSize:12,fontVariantNumeric:"tabular-nums"}}>{fmt(Number(r.amountPaid || (r as unknown as Record<string, unknown>).amount_paid || 0), t.fields.unitCurrency)}</td>
                                                             <td style={{...TD,textAlign:"right",fontWeight:800,color:Number(r.balance) > 0 ? G.coral400 : G.green,fontVariantNumeric:"tabular-nums"}}>
                                                                 {Number(r.balance) > 0 ? fmt(r.balance, t.fields.unitCurrency) : "✅"}
                                                             </td>
@@ -528,7 +530,7 @@ export function EntryTab({
                             <div key={k}>
                                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
                                     <Label c={EXP_ICONS[k]+" "+t.expenses[k]} style={{marginBottom:0}}/>
-                                    <VoiceInput lang={lang as 'ta' | 'en'} onParsedResult={(res) => onVoiceResult(res.map(r => ({...r, key: k})))} targetField="amount" />
+                                    <VoiceInput lang={lang as 'ta' | 'en'} onParsedResult={(res: ParsedVoiceResult[]) => onVoiceResult(res.map(r => ({...r, key: k})))} targetField="amount" />
                                 </div>
                                 <input style={{...makeInp(), marginBottom: 5}} type="number" placeholder={t.fields.unitCurrency} value={rec.exp[k]} onChange={(e: React.ChangeEvent<HTMLInputElement>)=>{
                                     const val = e.target.value;
@@ -586,11 +588,11 @@ export function EntryTab({
                         <div style={{flex:"0 0 130px"}}>
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
                                 <Label c={t.payments.amtPaid} style={{color: fieldErrors.amount ? G.red : G.muted, marginBottom:0}}/>
-                                <VoiceInput lang={lang as 'ta' | 'en'} onParsedResult={(res) => {
-                                    if(res[0]?.type === 'EXPENSE' || res[0]?.type === 'SALE') {
-                                        setPayAmt(String(res[0].amount || res[0].weight || ""));
-                                    }
-                                }} />
+                                    <VoiceInput lang={lang as 'ta' | 'en'} onParsedResult={(res: ParsedVoiceResult[]) => {
+                                        if(res[0]?.type === 'EXPENSE' || res[0]?.type === 'SALE') {
+                                            setPayAmt(String(res[0].amount || res[0].weight || ""));
+                                        }
+                                    }} />
                             </div>
                             <input style={{...makeInp(),fontWeight:700, borderColor: fieldErrors.amount ? G.red : G.text}} type="number" placeholder={t.fields.unitCurrency} value={payAmt}
                                 onChange={e=>setPayAmt(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addPayment()}/>

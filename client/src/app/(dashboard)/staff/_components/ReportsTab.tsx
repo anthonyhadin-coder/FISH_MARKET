@@ -11,6 +11,7 @@ import { T_AGENT, G, GCard, Label, fmt } from "../SharedUI";
 import { AgentBoatWeeklyReport } from './AgentBoatWeeklyReport';
 import api from '@/lib/api';
 import { useToast } from '@/components/ui/Toast';
+import { ApiError } from "@/lib/types";
 
 interface ExpenseBreakdown {
     type: string;
@@ -51,13 +52,13 @@ const EXP_LABELS: Record<string, { en: string; ta: string }> = {
     other:   { en: 'Other',    ta: 'மற்றவை' },
 };
 
-function TrendChart({ data, lang }: { data: any[], lang: string }) {
+function TrendChart({ data, lang }: { data: Record<string, unknown>[], lang: string }) {
     if (!data || data.length === 0) return null;
     
     // Format dates for display
     const chartData = data.map(d => ({
         ...d,
-        name: new Date(d.date).toLocaleDateString(lang === 'ta' ? 'ta-IN' : 'en-IN', { day: 'numeric', month: 'short' })
+        name: new Date(String(d.date)).toLocaleDateString(lang === 'ta' ? 'ta-IN' : 'en-IN', { day: 'numeric', month: 'short' })
     }));
 
     return (
@@ -105,7 +106,7 @@ function TrendChart({ data, lang }: { data: any[], lang: string }) {
                         strokeWidth={3}
                         fillOpacity={1} 
                         fill="url(#colorSales)" 
-                        isAnimationActive={typeof window !== 'undefined' && !(window as any).__PLAYWRIGHT_TEST__}
+                        isAnimationActive={typeof window !== 'undefined' && !(window as unknown as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__}
                     />
                     <Area 
                         type="monotone" 
@@ -114,7 +115,7 @@ function TrendChart({ data, lang }: { data: any[], lang: string }) {
                         strokeWidth={3}
                         fillOpacity={1} 
                         fill="url(#colorExp)" 
-                        isAnimationActive={typeof window !== 'undefined' && !(window as any).__PLAYWRIGHT_TEST__}
+                        isAnimationActive={typeof window !== 'undefined' && !(window as unknown as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__}
                     />
                 </AreaChart>
             </ResponsiveContainer>
@@ -126,7 +127,7 @@ export function ReportsTab({ lang, availBoats, commRate = 8 }: ReportsTabProps) 
     const t = T_AGENT[lang as 'en' | 'ta'];
     const [rptMode, setRpm] = useState<"daily" | "weekly" | "boatWeekly">("daily");
     const [reportsData, setReportsData] = useState<ReportItem[]>([]);
-    const [trendData, setTrendData] = useState<any[]>([]);
+    const [trendData, setTrendData] = useState<Record<string, unknown>[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [expandedBoat, setExpandedBoat] = useState<string | null>(null);
     const { toast } = useToast();
@@ -158,8 +159,9 @@ export function ReportsTab({ lang, availBoats, commRate = 8 }: ReportsTabProps) 
             // Fetch Trend Data
             const trendRes = await api.get('/reports/trends?days=14');
             setTrendData(trendRes.data);
-        } catch (err: any) {
-            toast(err.response?.data?.message || "Failed to fetch reports", "error");
+        } catch (err: unknown) {
+            const error = err as ApiError;
+            toast(error.response?.data?.message || "Failed to fetch reports", "error");
             setReportsData([]);
         } finally {
             setIsLoading(false);

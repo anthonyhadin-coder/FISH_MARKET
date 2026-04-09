@@ -5,19 +5,9 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { T_AGENT, G, EXP_KEYS, fmt, dispDate, SaleRow } from "../SharedUI";
 import api from "@/lib/api";
-import { Boat } from "../_context/AgentContext";
 import { useToast } from '@/components/ui/Toast';
 import { SendToOwnerButton } from '@/components/shared/SendToOwnerButton';
-
-interface Payment {
-    id: string | number;
-    amount?: number;
-    amt?: number;
-    note?: string;
-    date?: string;
-    time?: string;
-    by?: string;
-}
+import { Boat, Payment, ApiError } from "@/lib/types";
 
 interface SlipTabProps {
     lang: string;
@@ -101,7 +91,8 @@ export function SlipTab({ lang, rec, boat, user, dateKey, commRate, commission, 
             setSent(true);
             setSlipStatus("sent");
             toast(slipStatus === 'rejected' ? "Slip resent to owner" : "Slip sent to owner", "success");
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as ApiError;
             toast(error.response?.data?.message || "Failed to send slip", "error");
         } finally {
             setSending(false);
@@ -147,7 +138,7 @@ export function SlipTab({ lang, rec, boat, user, dateKey, commRate, commission, 
             alternateRowStyles: { fillColor: [248, 250, 252] }
         });
         
-        const finalY = (doc as any).lastAutoTable.finalY + 10;
+        const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
         
         // Totals
         doc.setFontSize(12);

@@ -1,18 +1,8 @@
-"use client";
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAgent } from '@/app/(dashboard)/staff/_context/AgentContext';
 import { useToast } from '@/components/ui/Toast';
-
 import api from '@/lib/api';
-
-interface AppNotification {
-    id: string | number;
-    title: string;
-    message: string;
-    type: 'info' | 'success' | 'warning' | 'error';
-    timestamp: number;
-    read: boolean;
-}
+import { AppNotification } from '@/lib/types';
 
 interface NotificationContextType {
     notifications: AppNotification[];
@@ -35,13 +25,23 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
             const data = res.data;
             
             if (data && data.notifications && Array.isArray(data.notifications)) {
-                // Map backend to local format
-                const apiNotifs = data.notifications.map((n: any) => ({
+                // Map backend to local format with explicit types
+                const apiNotifs: AppNotification[] = data.notifications.map((n: {
+                    id: number | string;
+                    title: string;
+                    message?: string;
+                    body?: string;
+                    type?: string;
+                    timestamp?: string;
+                    created_at?: string;
+                    read?: boolean;
+                    is_read?: boolean;
+                }) => ({
                     id: String(n.id),
                     title: n.title,
-                    message: n.message || n.body, // handle both client/server naming
-                    type: n.type || 'info',
-                    timestamp: new Date(n.timestamp || n.created_at).getTime(),
+                    message: n.message || n.body || '',
+                    type: (n.type as AppNotification['type']) || 'info',
+                    timestamp: new Date(n.timestamp || n.created_at || Date.now()).getTime(),
                     read: Boolean(n.read || n.is_read)
                 }));
                 
@@ -54,28 +54,40 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
                     apiNotifs.forEach((an: AppNotification) => {
                         const existing = prev.find(p => p.id === an.id);
                         if (!existing && !an.read) {
-                            toast(an.message, an.type as any);
+                            // @ts-expect-error - AppNotification type is compatible with Toast variant
+                            toast(an.message, an.type);
                         }
                     });
                     return merged.slice(0, 50);
                 });
             }
-        } catch (err) {
-            console.error("Failed to fetch notifications");
+        } catch (err: unknown) {
+            console.error("Failed to fetch notifications", err instanceof Error ? err.message : err);
         }
     }, [toast]);
 
     useEffect(() => {
-        fetchApiNotifications();
-        const interval = setInterval(fetchApiNotifications, 30000); // poll every 30s
-        return () => clearInterval(interval);
+        let cancelled = false;
+        
+        const fetch = async () => {
+            if (!cancelled) await fetchApiNotifications();
+        };
+
+        fetch();
+        const interval = setInterval(fetch, 30000); // poll every 30s
+        
+        return () => {
+            cancelled = true;
+            clearInterval(interval);
+        };
     }, [fetchApiNotifications]);
 
     const addNotification = useCallback((n: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => {
         const id = 'loc_' + Math.random().toString(36).substr(2, 9);
         const newN: AppNotification = { ...n, id, timestamp: Date.now(), read: false };
         setNotifications(prev => [newN, ...prev].slice(0, 50));
-        toast(n.message, n.type as any);
+        // @ts-expect-error - AppNotification type is compatible with Toast variant
+        toast(n.message, n.type);
     }, [toast]);
 
     const markAsRead = async (id: string | number) => {
@@ -83,7 +95,9 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         if (!String(id).startsWith('loc_')) {
             try {
                 await api.patch(`/notifications/${id}/read`);
-            } catch (err) {}
+            } catch {
+                // Ignore background task failure
+            }
         }
     };
 
@@ -91,35 +105,43 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         setNotifications(prev => prev.filter(n => n.read === false)); // Or clear totally locally
         try {
             await api.patch('/notifications/read-all');
-            fetchApiNotifications();
-        } catch (err) {}
+            void fetchApiNotifications();
+        } catch {
+            // Background task failure ignore
+        }
     };
 
     // Monitor Sync Status
     useEffect(() => {
         if (lastPending > 0 && pendingCount === 0 && !isSyncing) {
-            addNotification({
-                title: 'Sync Complete',
-                message: 'All offline data has been successfully synchronized.',
-                type: 'success'
-            });
+            // Defer notification to avoid cascading render error
+            setTimeout(() => {
+                addNotification({
+                    title: 'Sync Complete',
+                    message: 'All offline data has been successfully synchronized.',
+                    type: 'success'
+                });
+            }, 0);
         }
-        setLastPending(pendingCount);
+        if (pendingCount !== lastPending) {
+            setTimeout(() => setLastPending(pendingCount), 0);
+        }
     }, [pendingCount, isSyncing, lastPending, addNotification]);
 
-    // Monitor Catch Targets (Mock logic for now as targets aren't defined in DB yet)
+    // Monitor Catch Targets
     useEffect(() => {
         if (dailyReport && selectedBoat) {
-            // Assume a target of 100,000 for demonstration if not set
             const target = 100000; 
             if (dailyReport.totalSales >= target) {
-                 // Check if we already notified for this boat today
                  const key = `notif_target_${selectedBoat.id}_${new Date().toDateString()}`;
                  if (!localStorage.getItem(key)) {
-                    addNotification({
-                        title: 'Target Met! 🎯',
-                        message: `Boat ${selectedBoat.name} has reached its daily catch target of ${target}!`,
-                        type: 'info'
+                    // Use a microtask to avoid synchronous render warning
+                    Promise.resolve().then(() => {
+                        addNotification({
+                            title: 'Target Met! 🎯',
+                            message: `Boat ${selectedBoat.name} has reached its daily catch target of ${target}!`,
+                            type: 'info'
+                        });
                     });
                     localStorage.setItem(key, 'true');
                  }

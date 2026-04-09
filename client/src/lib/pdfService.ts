@@ -30,8 +30,14 @@ interface SlipData {
     settled: boolean;
 }
 
+interface jsPDFWithAutoTable extends jsPDF {
+    lastAutoTable: {
+        finalY: number;
+    };
+}
+
 export const generateBoatSlipPDF = (data: SlipData, lang: 'en' | 'ta' = 'en') => {
-    const doc = new jsPDF();
+    const doc = new jsPDF() as jsPDFWithAutoTable;
     const isTa = lang === 'ta';
 
     // Header
@@ -69,7 +75,7 @@ export const generateBoatSlipPDF = (data: SlipData, lang: 'en' | 'ta' = 'en') =>
         styles: { fontSize: 10 },
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    const finalY = doc.lastAutoTable.finalY + 10;
 
     // Financials
     doc.setFontSize(12);
@@ -106,7 +112,7 @@ export const generateBoatSlipPDF = (data: SlipData, lang: 'en' | 'ta' = 'en') =>
         }
     });
 
-    const finalY2 = (doc as any).lastAutoTable.finalY + 15;
+    const finalY2 = doc.lastAutoTable.finalY + 15;
 
     // Settlement Status
     doc.setFontSize(10);

@@ -12,6 +12,7 @@ import api from '@/lib/api';
 import GoogleAuthButton from './_components/GoogleAuthButton';
 import RoleSelectModal from '@/components/shared/RoleSelectModal';
 import { useFormErrors } from '@/hooks/useFormErrors';
+import { ApiError } from '@/lib/types';
 import './login.css';
 
 // ── Demo quick-fill accounts ─────────────────────────────────────
@@ -32,11 +33,16 @@ type LoginState =
   | 'sessionExpired';
 
 function LoginContent() {
-  const [mounted, setMounted]         = useState(false);
   const [phone, setPhone]             = useState('');
   const [password, setPassword]       = useState('');
   const [showPass, setShowPass]       = useState(false);
-  const [loginState, setLoginState]   = useState<LoginState>('idle');
+  
+  // Use lazy initializer for initial state derived from window/navigator
+  const [loginState, setLoginState]   = useState<LoginState>(() => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return 'offline';
+    return 'idle';
+  });
+
   const [error, setError]             = useState('');
   const [retryAfter, setRetryAfter]   = useState(0);   
   const [cooldown, setCooldown]       = useState(0);   
@@ -65,25 +71,20 @@ function LoginContent() {
     clearError: clearGoogleError,
   } = useGoogleAuth();
 
-  useEffect(() => { setMounted(true); }, []);
-
   // Redirect if already logged in
   useEffect(() => {
-    if (mounted && user) {
+    if (user) {
       if (user.role === 'owner' || user.role === 'admin') router.push('/owner');
       else if (user.role === 'agent') router.push('/staff');
       else if (user.role === 'buyer') router.push('/customer');
       else router.push(`/${user.role}`);
     }
-  }, [mounted, user, router]);
+  }, [user, router]);
 
   // BUG 2 FIX: Read ?error= query param set by Google OAuth redirect-on-failure
-  // The backend redirects to /login?error=google_failed when OAuth errors occur.
-  // We show a specific, user-friendly message instead of a blank/silent failure.
   useEffect(() => {
-    if (typeof window === 'undefined') return;
     const errorParam = searchParams?.get('error');
-    if (errorParam === 'google_failed') {
+    if (errorParam === 'google_failed' && loginState !== 'error') {
       setLoginState('error');
       setError('Google sign-in failed. Please try again or use phone/password.');
     }
@@ -91,22 +92,21 @@ function LoginContent() {
     if (errorParam) {
       router.replace('/login', { scroll: false });
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, loginState]);
 
   // Session expired detection
   useEffect(() => {
-    if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get('reason') === 'session-expired') {
+    if (params.get('reason') === 'session-expired' && loginState !== 'sessionExpired') {
       setLoginState('sessionExpired');
     }
-  }, []);
+  }, [loginState]);
 
   // Offline detection
   useEffect(() => {
     const onOnline  = () => setLoginState((s: LoginState) => s === 'offline' ? 'idle' : s);
     const onOffline = () => setLoginState('offline');
-    if (!navigator.onLine) setLoginState('offline');
+    
     window.addEventListener('online',  onOnline);
     window.addEventListener('offline', onOffline);
     return () => {
@@ -156,16 +156,17 @@ function LoginContent() {
       setLoginState('success');
       await new Promise(r => setTimeout(r, 1000));
       login(res.data.user);
-    } catch (err: any) {
-      function getFriendlyError(err: any): string {
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      function getFriendlyError(err: ApiError): string {
         if (!navigator.onLine) return 'You appear to be offline.';
-        const status = err?.response?.status;
-        const msg = err?.response?.data?.message || '';
+        const status = err.response?.status;
+        const msg = err.response?.data?.message || '';
         if (status === 401) return 'Incorrect phone number or password.';
         if (status === 403) return 'Your account has been locked. Contact support.';
         if (status === 429) return 'Too many attempts. Please wait and try again.';
-        if (status >= 500) return 'Server error. Please try again in a moment.';
-        if (err?.message === 'Network Error') return 'Cannot reach the server. Check your connection.';
+        if (status && status >= 500) return 'Server error. Please try again in a moment.';
+        if (err.message === 'Network Error') return 'Cannot reach the server. Check your connection.';
         // Only pass through safe, known backend messages
         const safeMsgs = [
           'User not found',
@@ -177,13 +178,13 @@ function LoginContent() {
         return 'Login failed. Please try again.';
       }
 
-      if (err?.response?.status === 429) {
+      if (error.response?.status === 429) {
         setLoginState('locked');
         setRetryAfter(60); // Default to 60s
-        setError(getFriendlyError(err));
+        setError(getFriendlyError(error));
       } else {
         setLoginState('error');
-        setError(getFriendlyError(err));
+        setError(getFriendlyError(error));
       }
     }
   };
@@ -194,15 +195,6 @@ function LoginContent() {
     setLoginState('typing');
   };
 
-  if (!mounted) {
-    return (
-      <div className="login-bg min-h-screen flex items-center justify-center">
-         <div className="wave-bars">
-           {[1,2,3,4,5].map(i => <span key={i} />)}
-         </div>
-      </div>
-    );
-  }
 
   return (
     <div className="login-bg flex flex-col items-center justify-center min-h-screen px-4 py-8">

@@ -17,7 +17,7 @@ describe('Boat Weekly Report Tests', () => {
   describe('Owner Report Constraints & Calculations', () => {
     it('Owner sees only their own boats', async () => {
         // Assert API returns 403 on mismatched owner/boat
-        (api.get as any).mockRejectedValueOnce({ response: { status: 403, data: { message: 'Not your boat' }}});
+        vi.mocked(api.get).mockRejectedValueOnce({ response: { status: 403, data: { message: 'Not your boat' }}});
         await expect(api.get('/reports/boat/owner-weekly?boat_id=999')).rejects.toMatchObject({ response: { status: 403 } });
     });
 
@@ -59,7 +59,7 @@ describe('Boat Weekly Report Tests', () => {
 
     it('Owner cannot see another owners boat', async () => {
         // Handled via backend RBAC, mock response enforces it visually
-        (api.get as any).mockRejectedValueOnce({ response: { status: 403 }});
+        vi.mocked(api.get).mockRejectedValueOnce({ response: { status: 403 }});
         await expect(api.get('/reports/boat/owner-weekly?boat_id=2')).rejects.toBeDefined();
     });
   });
@@ -67,7 +67,7 @@ describe('Boat Weekly Report Tests', () => {
   describe('Agent Report Constraints & Calculations', () => {
     it('Agent sees only their own catches', async () => {
         // RBAC enforces agent_id = req.user.id
-        (api.get as any).mockResolvedValueOnce({ data: { daily_breakdown: [] }});
+        vi.mocked(api.get).mockResolvedValueOnce({ data: { daily_breakdown: [] }});
         const res = await api.get('/reports/boat/agent-weekly?boat_id=1');
         expect(res.data.daily_breakdown).toBeInstanceOf(Array);
     });
@@ -87,7 +87,7 @@ describe('Boat Weekly Report Tests', () => {
     });
 
     it('Zero catches week → all zeros, no crash', () => {
-        const catches: any[] = [];
+        const catches: { total: number }[] = [];
         const grossSales = catches.reduce((sum, c) => sum + c.total, 0);
         const commission = Math.round(grossSales * 3 / 100 * 100) / 100;
         expect(grossSales).toBe(0);

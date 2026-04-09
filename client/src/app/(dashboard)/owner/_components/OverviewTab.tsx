@@ -121,7 +121,7 @@ export function OverviewTab({ date, setDate, setTab }: OverviewTabProps) {
                                     <Tooltip 
                                         cursor={{fill: '#F0F9FF'}}
                                         contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.1)', fontWeight: 700}}
-                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                         
                                         formatter={(value: unknown) => [`₹${Number(value || 0).toLocaleString()}`, '']}
                                     />
                                     <Legend wrapperStyle={{paddingTop: '20px', fontSize: '12px', fontWeight: 700, color: '#082F49'}} iconType="circle" />

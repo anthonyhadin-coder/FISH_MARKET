@@ -50,9 +50,9 @@ function ToastCard({
     onRemove: (id: string) => void;
 }) {
     const [progress, setProgress] = useState(100); // 100% → 0%
-    const [hovered, setHovered] = useState(false);
+    const [, setHovered] = useState(false);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const startedAt = useRef(Date.now());
+    const startedAt = useRef(0);
     const elapsed = useRef(0);
 
     const startTimer = useCallback(() => {

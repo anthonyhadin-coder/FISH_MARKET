@@ -1,4 +1,4 @@
-"use client";
+import React, { useId } from 'react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -12,7 +12,8 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = ({ label, error, className, id, ...props }: InputProps) => {
-    const inputId = id || `input-${label?.toLowerCase().replace(/\s+/g, '-') || Math.random().toString(36).substring(2, 9)}`;
+    const reactId = useId();
+    const inputId = id || reactId;
     return (
         <div className="w-full space-y-1.5">
             {label && (

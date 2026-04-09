@@ -40,14 +40,15 @@ export function usePushNotifications() {
             const registration = await navigator.serviceWorker.ready;
 
             // 3. Subscribe to push
-            const vapidPublicKey = (import.meta as any).env.VITE_VAPID_PUBLIC_KEY;
+            const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
             if (!vapidPublicKey) {
-                throw new Error('VITE_VAPID_PUBLIC_KEY is not defined');
+                throw new Error('NEXT_PUBLIC_VAPID_PUBLIC_KEY is not defined');
             }
 
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as any
+                // @ts-expect-error - Uint8Array is technically a BufferSource but DOM types sometimes mismatch
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
             });
 
             // 4. Save to backend

@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, Mic, X, Check, ArrowRight, Info, AlertCircle } from 'lucide-react';
-import { parseVoiceInput } from '@/lib/voice/voiceParser';
+import { HelpCircle, Mic, X, Check, ArrowRight, Info } from 'lucide-react';
+import { ParsedVoiceResult } from '@/lib/voice/voiceParser';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 interface VoiceGuideModalProps {
@@ -12,7 +12,7 @@ interface VoiceGuideModalProps {
 }
 
 export const VoiceGuideModal: React.FC<VoiceGuideModalProps> = ({ isOpen, onClose, lang }) => {
-  const [practiceResult, setPracticeResult] = useState<any[]>([]);
+  const [practiceResult, setPracticeResult] = useState<ParsedVoiceResult[]>([]);
 
   const { isListening, interimTranscript, startListening, stopListening } = useSpeechRecognition({
     lang: lang,
@@ -103,9 +103,9 @@ export const VoiceGuideModal: React.FC<VoiceGuideModalProps> = ({ isOpen, onClos
                   {examples[lang].map((ex, i) => (
                     <div key={i} className="group p-4 bg-ocean-50/50 rounded-2xl border border-ocean-100 hover:border-ocean-300 transition-all">
                       <p className="text-ocean-900 font-bold mb-1 flex items-center gap-2">
-                        <span className="text-ocean-400">"</span>
+                        <span className="text-ocean-400">&quot;</span>
                         {ex.text}
-                        <span className="text-ocean-400">"</span>
+                        <span className="text-ocean-400">&quot;</span>
                       </p>
                       <p className="text-xs text-ocean-500 font-medium">{ex.desc}</p>
                     </div>
@@ -132,7 +132,7 @@ export const VoiceGuideModal: React.FC<VoiceGuideModalProps> = ({ isOpen, onClos
 
                   {interimTranscript && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full text-center">
-                      <p className="text-lg font-bold italic tracking-tight opacity-90 text-ocean-100">"{interimTranscript}"</p>
+                      <p className="text-lg font-bold italic tracking-tight opacity-90 text-ocean-100">&quot;{interimTranscript}&quot;</p>
                     </motion.div>
                   )}
 
@@ -140,7 +140,7 @@ export const VoiceGuideModal: React.FC<VoiceGuideModalProps> = ({ isOpen, onClos
                     <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="w-full pt-4 border-t border-white/10">
                       <p className="text-[10px] font-black uppercase tracking-widest text-ocean-400 mb-3">{t.results}</p>
                       <div className="space-y-2">
-                        {practiceResult.map((res, i) => (
+                        {practiceResult.map((res: ParsedVoiceResult, i) => (
                           <div key={i} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
                             <div className={`p-1.5 rounded-lg ${res.type === 'SALE' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}`}>
                               {res.type === 'SALE' ? <Check className="w-3.5 h-3.5" /> : <Info className="w-3.5 h-3.5" />}

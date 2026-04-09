@@ -2,13 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-
-interface User {
-    id: string;
-    name: string;
-    role: 'owner' | 'agent' | 'buyer' | 'admin' | 'viewer';
-    language?: string;
-}
+import { ApiError, User } from '@/lib/types';
 
 interface AuthContextType {
     user: User | null;
@@ -45,8 +39,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // ── FIX 4: Session hydration on first mount ──────────────────────────────
     // Silently verify whether the HttpOnly access_token cookie is still valid.
-    // This catches the case where the cookie expired between page loads while
-    // the user object was still sitting in localStorage.
     useEffect(() => {
         const verifySession = async () => {
             try {
@@ -55,28 +47,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 const freshUser: User = res.data.user;
                 setUser(freshUser);
                 localStorage.setItem('user', JSON.stringify(freshUser));
-            } catch (err: any) {
-                if (err.response?.status === 401) {
+            } catch (err) {
+                const error = err as ApiError;
+                if (error.response?.status === 401) {
                     // Cookie is expired or invalid — clear stale client state.
-                    // The axios-auth-refresh interceptor already attempted a
-                    // refresh; if we're here it means even the refresh failed.
                     localStorage.removeItem('user');
                     localStorage.removeItem('token');
                     setUser(null);
                 }
-                // For network errors (offline) we leave the cached user in place
-                // so the app stays usable offline — no redirect.
             } finally {
                 setIsLoading(false);
             }
         };
 
-        verifySession();
+        void verifySession();
     }, []);
 
     // ── FIX 1 (client side): Listen for the auth:unauthorized event ─────────
-    // Dispatched by api.ts when the refresh token is also expired.
-    // Using router.push() here keeps the SPA alive — no full-page reload.
     useEffect(() => {
         const handleUnauthorized = () => {
             setUser(null);
@@ -108,8 +95,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const logout = async () => {
         try {
             await api.post('/auth/logout');
-        } catch (e) {
-            console.error('Logout failed on server', e);
+        } catch (err) {
+            console.error('Logout failed on server', err instanceof Error ? err.message : err);
         }
 
         localStorage.removeItem('user');

@@ -161,8 +161,6 @@ const COMMAND_KEYWORDS: Record<string, string[]> = {
 };
 
 const WEIGHT_KEYWORDS = ['kg', 'kilo', 'gram', 'கிலோ', 'எடை'];
-const RATE_KEYWORDS   = ['rate', 'price', 'at', 'விலை', 'ரூபாய்', 'ரூவா', 'ரேட்'];
-const BUYER_KEYWORDS  = ['buyer', 'for', 'to', 'வாங்குபவர்', 'க்கு'];
 
 // ─────────────────────────────────────────────────────────────────
 // KEYWORD MATCHING — word-boundary aware
@@ -191,7 +189,6 @@ function matchesKeyword(seg: string, keyword: string): boolean {
 export function scoreConfidence(
   parsed: ParsedVoiceResult,
   transcript: string,
-  lang: 'ta' | 'en',
 ): ConfidenceBreakdown {
   const text = transcript.toLowerCase();
 
@@ -475,7 +472,7 @@ export const parseVoiceInput = (
     };
 
     // Attach confidence score
-    partial.confidence = scoreConfidence(partial, transcript, lang);
+    partial.confidence = scoreConfidence(partial, transcript);
 
     if (weight !== null || fish || buyer) {
       results.push(partial);

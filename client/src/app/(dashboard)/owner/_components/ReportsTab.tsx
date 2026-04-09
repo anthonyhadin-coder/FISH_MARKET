@@ -64,7 +64,7 @@ export function ReportsTab({ date, setDate }: ReportsTabProps) {
             if (boatsList.length > 0 && !selectedBoat) {
                 setSelectedBoat(String(boatsList[0].id));
             }
-        } catch (err) {
+        } catch (err: unknown) {
             toast('Failed to load analytics', 'error');
         } finally {
             setAnalyticsLoading(false);
@@ -319,7 +319,7 @@ export function ReportsTab({ date, setDate }: ReportsTabProps) {
                                             <Tooltip 
                                                 contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                                 labelStyle={{ fontWeight: 900, color: '#0f172a', marginBottom: '8px' }}
-                                                formatter={(value: any) => [`₹${Number(value).toLocaleString('en-IN')}`, ''] as any}
+                                                formatter={(value: unknown) => [`₹${Number(value || 0).toLocaleString('en-IN')}`, '']}
                                             />
                                             <Area type="monotone" dataKey="sales" name="Gross Sales" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
                                             <Area type="monotone" dataKey="expenses" name="Expenses" stroke="#f43f5e" strokeWidth={3} fillOpacity={1} fill="url(#colorExpenses)" />
@@ -370,7 +370,7 @@ export function ReportsTab({ date, setDate }: ReportsTabProps) {
                                                     cursor={{ fill: '#f8fafc' }}
                                                     contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                                     labelStyle={{ fontWeight: 900, color: '#0f172a', marginBottom: '8px' }}
-                                                    formatter={(value: any) => [`₹${Number(value).toLocaleString('en-IN')}`, ''] as any}
+                                                    formatter={(value: unknown) => [`₹${Number(value || 0).toLocaleString('en-IN')}`, '']}
                                                 />
                                                 <Bar dataKey="profit" name="Net Profit" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
                                             </BarChart>

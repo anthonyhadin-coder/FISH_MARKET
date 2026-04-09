@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -9,7 +9,8 @@ import { NotificationProvider } from '@/contexts/NotificationContext';
 export default function AgentLayout({ children }: { children: React.ReactNode }) {
     const { user, isLoading } = useAuth();
     const router = useRouter();
-    const [isAuthorized, setIsAuthorized] = useState(false);
+
+    const isAuthorized = !isLoading && user && (user.role === 'agent' || user.role === 'admin');
 
     useEffect(() => {
         if (!isLoading) {
@@ -17,8 +18,6 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                 router.push('/login');
             } else if (user.role !== 'agent' && user.role !== 'admin') {
                 router.push(user.role === 'owner' ? '/owner' : '/');
-            } else {
-                setIsAuthorized(true);
             }
         }
     }, [user, isLoading, router]);

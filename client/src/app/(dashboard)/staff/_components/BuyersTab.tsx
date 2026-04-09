@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { fetchBuyers, createBuyer, recordBuyerPayment, Buyer, fetchBuyerHistory } from '@/lib/api/agentApi';
 import { shareToWhatsApp } from '@/lib/whatsapp';
+import { SaleRow, Payment } from '@/lib/types';
 import { fmt, T_AGENT, dispDate } from '../SharedUI';
 import { useToast } from '@/components/ui/Toast';
 
@@ -31,7 +32,7 @@ export function BuyersTab({ lang }: { lang: string }) {
     const [historyModal, setHistoryModal] = useState<{ 
         isOpen: boolean; 
         buyer: Buyer | null; 
-        data: { sales: any[], transactions: any[] } | null;
+        data: { sales: SaleRow[], transactions: Payment[] } | null;
         loading: boolean;
     }>({ isOpen: false, buyer: null, data: null, loading: false });
 
@@ -116,7 +117,7 @@ export function BuyersTab({ lang }: { lang: string }) {
         } finally { setSaving(false); }
     };
 
-    const totalOutstanding = buyers.reduce((sum, b) => sum + Number(b.balance), 0);
+    const totalOutstanding = buyers.reduce((sum, b) => sum + Number(b.balance || 0), 0);
 
     const getWAMsg = (b: Buyer) => {
         return t.buyers.waMsg
@@ -151,7 +152,7 @@ export function BuyersTab({ lang }: { lang: string }) {
         }));
 
         return [...saleItems, ...paymentItems].sort((a, b) => 
-            new Date(b.date).getTime() - new Date(a.date).getTime()
+            new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime()
         );
     }, [historyModal.data]);
 
@@ -226,9 +227,9 @@ export function BuyersTab({ lang }: { lang: string }) {
                                         <p className="text-[11px] font-black text-ocean-600 uppercase tracking-widest mb-1">Total Sales</p>
                                         <p className="text-xl font-black text-ocean-950">{fmt(historyModal.buyer.totalSales, t.fields.unitCurrency)}</p>
                                     </div>
-                                    <div className={`p-4 rounded-2xl border-2 ${historyModal.buyer.balance > 0 ? 'bg-coral-50 border-coral-200 text-coral-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
+                                    <div className={`p-4 rounded-2xl border-2 ${(historyModal.buyer.balance || 0) > 0 ? 'bg-coral-50 border-coral-200 text-coral-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
                                         <p className="text-[11px] font-black opacity-60 uppercase tracking-widest mb-1">Balance</p>
-                                        <p className="text-xl font-black">{fmt(historyModal.buyer.balance, t.fields.unitCurrency)}</p>
+                                        <p className="text-xl font-black">{fmt(historyModal.buyer.balance || 0, t.fields.unitCurrency)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -247,7 +248,7 @@ export function BuyersTab({ lang }: { lang: string }) {
                                 ) : (
                                     <div className="space-y-8 relative">
                                         <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-100" />
-                                        {combinedHistory.map((item: any) => (
+                                        {combinedHistory.map((item: { type: string; id: string; date: string | undefined; description?: string; sub?: string; amount?: number; amountPaid?: number }) => (
                                             <div key={item.id} className="relative pl-14 group">
                                                 <div className={`absolute left-0 w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 z-10 
                                                     ${item.type === 'sale' ? 'bg-gray-900 text-white shadow-lg' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-100'}`}>
@@ -256,7 +257,7 @@ export function BuyersTab({ lang }: { lang: string }) {
                                                 <div className="flex flex-col">
                                                     <div className="flex justify-between items-baseline mb-1">
                                                         <h4 className="font-black text-ocean-950 tracking-tight">{item.description}</h4>
-                                                        <span className="text-[11px] font-black text-ocean-500 uppercase">{dispDate(item.date)}</span>
+                                                        <span className="text-[11px] font-black text-ocean-500 uppercase">{dispDate(item.date ?? '')}</span>
                                                     </div>
                                                     <p className="text-xs text-ocean-600 mb-2 font-black">{item.sub}</p>
                                                     <p className={`text-lg font-black ${item.type === 'sale' ? 'text-ocean-900' : 'text-emerald-700'}`}>
@@ -296,7 +297,7 @@ export function BuyersTab({ lang }: { lang: string }) {
                             </div>
                             <div className="mb-6 bg-ocean-50 border border-ocean-100 rounded-xl p-4 text-center">
                                 <p className="text-sm font-medium text-ocean-700 mb-1">{paymentModal.buyer.name}&apos;s {t.buyers.balance}</p>
-                                <p className="text-2xl font-bold text-coral-400">{fmt(paymentModal.buyer.balance, t.fields.unitCurrency)}</p>
+                                <p className="text-2xl font-bold text-coral-400">{fmt(paymentModal.buyer.balance || 0, t.fields.unitCurrency)}</p>
                             </div>
                             <div className="space-y-4">
                                 <label className="block text-xs font-bold text-ocean-700 uppercase tracking-widest mb-2">{t.buyers.amtReceived.replace('{sym}', t.fields.unitCurrency)}</label>
@@ -381,8 +382,8 @@ export function BuyersTab({ lang }: { lang: string }) {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <span className={`text-sm font-black px-3 py-1.5 rounded-lg ${b.balance > 0 ? 'bg-coral-500/10 text-coral-600' : 'bg-emerald-500/10 text-emerald-700'}`}>
-                                                {b.balance > 0 ? fmt(Number(b.balance), t.fields.unitCurrency) : t.buyers.settled}
+                                            <span className={`text-sm font-black px-3 py-1.5 rounded-lg ${(b.balance || 0) > 0 ? 'bg-coral-500/10 text-coral-600' : 'bg-emerald-500/10 text-emerald-700'}`}>
+                                                {(b.balance || 0) > 0 ? fmt(Number(b.balance), t.fields.unitCurrency) : t.buyers.settled}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
@@ -403,7 +404,7 @@ export function BuyersTab({ lang }: { lang: string }) {
                                                 >
                                                     <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
                                                 </button>
-                                                {Number(b.balance) > 0 && (
+                                                {(Number(b.balance) || 0) > 0 && (
                                                     <Button variant="outline" className="py-1.5 px-4 text-xs font-bold border-green-500/30 text-green-400 hover:bg-green-500/10"
                                                         onClick={() => { setPaymentAmount(''); setPaymentModal({ isOpen: true, buyer: b }); }}>
                                                         {t.buyers.payBtn}

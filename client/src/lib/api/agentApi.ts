@@ -8,15 +8,8 @@ export const agentLinks = [
     { href: '/agent/history',     icon: History,         label: 'Sales History' },
 ];
 
-export interface Buyer {
-    id: number;
-    name: string;
-    phone: string;
-    created_at: string;
-    totalSales: number;
-    totalPaid: number;
-    balance: number;
-}
+import { Buyer } from '@/lib/types';
+export type { Buyer };
 
 export const fetchBuyers = () =>
     api.get<Buyer[]>('/buyers').then(r => r.data);

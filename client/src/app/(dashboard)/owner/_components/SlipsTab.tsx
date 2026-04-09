@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateBoatSlipPDF } from '@/lib/pdfService';
 import { X } from 'lucide-react';
+import { ApiError } from '@/lib/types';
 
 const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 const dispDate = (d: string) => {
@@ -62,8 +63,8 @@ export function SlipsTab() {
             const res = await api.get('/slips');
             setSlips(res.data || []);
         } catch (err: unknown) {
-            const e = err as { response?: { data?: { message?: string } } };
-            toast(e.response?.data?.message || "Failed to fetch slips", "error");
+            const error = err as ApiError;
+            toast(error.response?.data?.message || "Failed to fetch slips", "error");
         } finally {
             setLoading(false);
         }
@@ -123,8 +124,9 @@ export function SlipsTab() {
                 settled: slip.slip_data.settled
             }, lang as 'ta' | 'en');
 
-        } catch (err: any) {
-            toast(err.response?.data?.message || "Failed to approve slip", "error");
+        } catch (err: unknown) {
+            const error = err as ApiError;
+            toast(error.response?.data?.message || "Failed to approve slip", "error");
         } finally {
             setSubmitting(false);
         }
@@ -144,8 +146,9 @@ export function SlipsTab() {
             setRejectingId(null);
             setRejectReason("");
             toast("Slip Rejected", "error");
-        } catch (err: any) {
-            toast(err.response?.data?.message || "Failed to reject slip", "error");
+        } catch (err: unknown) {
+            const error = err as ApiError;
+            toast(error.response?.data?.message || "Failed to reject slip", "error");
         } finally {
             setSubmitting(false);
         }

@@ -103,10 +103,10 @@ export const fetchBoatWeeklyReport = (boatId: string) =>
     api.get<BoatReportResponse>('/admin/reports/boat-weekly', { params: { boatId } }).then(r => r.data);
 
 export const fetchFleetWeeklyReport = () =>
-    api.get<any[]>('/admin/reports/fleet-weekly').then(r => r.data);
+    api.get<BoatHistory[]>('/admin/reports/fleet-weekly').then(r => r.data);
 
 export const fetchOwnerBoatWeeklyReport = (boatId: string, weekStart: string, weekEnd: string) =>
-    api.get<any>('/reports/boat/owner-weekly', { params: { boat_id: boatId, week_start: weekStart, week_end: weekEnd } }).then(r => r.data);
+    api.get<unknown>('/reports/boat/owner-weekly', { params: { boat_id: boatId, week_start: weekStart, week_end: weekEnd } }).then(r => r.data);
 
 export const fetchAgentBoatWeeklyReport = (boatId: string, weekStart: string, weekEnd: string) =>
-    api.get<any>('/reports/boat/agent-weekly', { params: { boat_id: boatId, week_start: weekStart, week_end: weekEnd } }).then(r => r.data);
+    api.get<unknown>('/reports/boat/agent-weekly', { params: { boat_id: boatId, week_start: weekStart, week_end: weekEnd } }).then(r => r.data);

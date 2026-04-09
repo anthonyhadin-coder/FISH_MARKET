@@ -2,30 +2,13 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { offlineStorage } from '@/lib/offlineStorage';
-
-export interface Boat {
-    id: number;
-    name: string;
-    owner_id: number;
-    agent_id: number;
-    ownerPhone?: string;
-}
-
-export interface DailyReport {
-    date: string;
-    totalSales: number;
-    totalExpenses: number;
-    expenseBreakdown?: { type: string; total: number; notes?: string }[];
-    boatPayments: number;
-    cashWithAgent: number;
-    boatProfit: number;
-}
+import { Boat, DailyReport, Buyer, ApiError } from '@/lib/types';
 
 interface AgentContextType {
     boats: Boat[];
     selectedBoat: Boat | null;
     setSelectedBoat: (boat: Boat | null) => void;
-    buyers: any[];
+    buyers: Buyer[];
     dailyReport: DailyReport | null;
     refreshDailyReport: () => Promise<void>;
     refreshBoats: () => Promise<void>;
@@ -54,7 +37,7 @@ export const AgentProvider = ({ children }: { children: React.ReactNode }) => {
     const selectedBoatRef = useRef(selectedBoat);
     useEffect(() => { selectedBoatRef.current = selectedBoat; }, [selectedBoat]);
 
-    const [buyers, setBuyers] = useState<any[]>([]);
+    const [buyers, setBuyers] = useState<Buyer[]>([]);
 
     const fetchBoats = useCallback(async () => {
         setIsLoading(true);
@@ -67,7 +50,7 @@ export const AgentProvider = ({ children }: { children: React.ReactNode }) => {
                 setSelectedBoat(cachedBoat || res.data[0]);
             }
         } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
+            const error = err as ApiError;
             setError(error.response?.data?.message || 'Failed to fetch boats');
         } finally {
             setIsLoading(false);
@@ -79,7 +62,7 @@ export const AgentProvider = ({ children }: { children: React.ReactNode }) => {
             const res = await api.get('/buyers');
             setBuyers(res.data);
         } catch (err) {
-            console.error("Failed to fetch buyers", err);
+            console.error("Failed to fetch buyers", err instanceof Error ? err.message : err);
         }
     }, []);
 
@@ -90,7 +73,7 @@ export const AgentProvider = ({ children }: { children: React.ReactNode }) => {
             setDailyReport(res.data);
             setError(null);
         } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
+            const error = err as ApiError;
             setError(error.response?.data?.message || 'Failed to fetch daily report');
         }
     }, [selectedBoat]);
@@ -104,15 +87,15 @@ export const AgentProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         setIsSyncing(true);
-        // Global Sync
         
         for (const item of pending) {
             try {
                 await offlineStorage.updateStatus(item.id!, 'syncing');
-                // Mapping payload types to API endpoints
-                const data = item.data as any;
-                const { type, payload } = data;
-                const id = data.id || data.buyerId;
+                // Use record type for generic payload mapping
+                const data = (item.data || {}) as Record<string, unknown>;
+                const type = data.type as string;
+                const payload = data.payload as unknown; // payload can be many shapes
+                const id = (data.id || data.buyerId) as string | number;
 
                 if (type === 'sale') await api.post('/sales', payload);
                 else if (type === 'payment') await api.post('/boat-payments', payload);
@@ -120,12 +103,12 @@ export const AgentProvider = ({ children }: { children: React.ReactNode }) => {
                 else if (type === 'delete-sale') await api.delete(`/sales/${id}`);
                 else if (type === 'delete-payment') await api.delete(`/boat-payments/${id}`);
                 else if (type === 'buyer') await api.post('/buyers', payload);
-                else if (type === 'buyer-payment') await api.post(`/buyers/${id}/payments`, { amount: (item.data as any).amount });
+                else if (type === 'buyer-payment') await api.post(`/buyers/${id}/payments`, { amount: data.amount });
                 else if (type === 'add-boat') await api.post('/boats', payload);
                 
                 await offlineStorage.removeSale(item.id!);
             } catch (err) {
-                console.error("Global sync failed for item", item.id, err);
+                console.error("Global sync failed for item", item.id, err instanceof Error ? err.message : err);
                 await offlineStorage.updateStatus(item.id!, 'failed', "Sync error");
             }
         }
@@ -166,14 +149,14 @@ export const AgentProvider = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         if (user && user.role === 'agent') {
-            fetchBoats();
-            fetchBuyers();
+            void fetchBoats();
+            void fetchBuyers();
         }
     }, [user, fetchBoats, fetchBuyers]);
 
     useEffect(() => {
         if (selectedBoat) {
-            refreshDailyReport();
+            void refreshDailyReport();
         } else {
             setDailyReport(null);
         }

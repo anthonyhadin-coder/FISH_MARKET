@@ -12,14 +12,16 @@ import { loginT } from '@/lib/loginTranslations';
 import api from '@/lib/api';
 import '../login/login.css';
 import { VoiceInput } from '@/components/voice/VoiceInput';
+import { ParsedVoiceResult } from '@/lib/voice/voiceParser';
+import { User as UserType } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/Input';
+import { ApiError } from '@/lib/types';
 
 type RegisterState = 'idle' | 'loading' | 'success' | 'error';
 type UserRole = 'AGENT' | 'OWNER' | 'BUYER';
 
 export default function RegisterPage() {
-  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -27,7 +29,11 @@ export default function RegisterPage() {
   const [showPass, setShowPass] = useState(false);
   const [state, setState] = useState<RegisterState>('idle');
   const [error, setError] = useState('');
-  const [isOffline, setIsOffline] = useState(false);
+  
+  // Use lazy initializer for initial state derived from window/navigator
+  const [isOffline, setIsOffline] = useState(() => 
+    typeof navigator !== 'undefined' && !navigator.onLine
+  );
 
   const { errors, clearAllErrors, formRef, getInputProps } = useFormErrors();
 
@@ -39,20 +45,18 @@ export default function RegisterPage() {
   const currentLang = (lang === 'ta' || lang === 'en') ? lang : 'en';
   const t = loginT[currentLang];
 
-  useEffect(() => { setMounted(true); }, []);
-
   // Redirect if already logged in (client-side backup to middleware)
   useEffect(() => {
-    if (mounted && user) {
+    if (user) {
       router.push(`/${user.role === 'admin' ? 'owner' : user.role}`);
     }
-  }, [mounted, user, router]);
+  }, [user, router]);
 
   // Offline detection
   useEffect(() => {
     const onOnline  = () => setIsOffline(false);
     const onOffline = () => setIsOffline(true);
-    if (typeof navigator !== 'undefined' && !navigator.onLine) setIsOffline(true);
+    
     window.addEventListener('online',  onOnline);
     window.addEventListener('offline', onOffline);
     return () => {
@@ -73,7 +77,7 @@ export default function RegisterPage() {
     handleRoleSelect,
   } = useGoogleAuth();
 
-  const handleSuccessFlash = useCallback(async (userData: any) => {
+  const handleSuccessFlash = useCallback(async (userData: UserType) => {
     setState('success');
     await new Promise(r => setTimeout(r, 1200));
     login(userData);
@@ -95,21 +99,13 @@ export default function RegisterPage() {
         role: role.toUpperCase() 
       });
       await handleSuccessFlash(res.data.user);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as ApiError;
       setState('error');
-      setError(err.response?.data?.message || 'Registration failed. Try again.');
+      setError(error.response?.data?.message || 'Registration failed. Try again.');
     }
   };
 
-  if (!mounted) {
-    return (
-      <div className="login-bg min-h-screen flex items-center justify-center">
-         <div className="wave-bars">
-           {[1,2,3,4,5].map(i => <span key={i} />)}
-         </div>
-      </div>
-    );
-  }
 
   return (
     <div className="login-bg flex flex-col items-center justify-center min-h-screen px-4 py-10">
@@ -145,7 +141,7 @@ export default function RegisterPage() {
           <VoiceInput 
             variant="card-integrated"
             lang={currentLang} 
-            onParsedResult={(res) => {
+            onParsedResult={(res: ParsedVoiceResult[]) => {
               res.forEach(item => {
                 if (item.command === 'save') {
                   const btn = document.querySelector('button[type="submit"]') as HTMLButtonElement;

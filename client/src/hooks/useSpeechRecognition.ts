@@ -32,8 +32,39 @@ interface SpeechRecognitionOptions {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// HOOK
+// TYPES FOR SPEECH RECOGNITION (Global)
 // ─────────────────────────────────────────────────────────────────
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: {
+    length: number;
+    [index: number]: {
+      isFinal: boolean;
+      length: number;
+      [index: number]: {
+        transcript: string;
+        confidence: number;
+      };
+    };
+  };
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+
+interface SpeechRecognitionInstance extends EventTarget {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  maxAlternatives: number;
+  start(): void;
+  stop(): void;
+  onstart: (() => void) | null;
+  onspeechstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((err: SpeechRecognitionErrorEvent) => void) | null;
+}
 
 export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
   const [isListening,       setIsListening]       = useState(false);
@@ -41,9 +72,8 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
   const [dbLevel,           setDbLevel]           = useState(0);
   const [isTooNoisy,        setIsTooNoisy]        = useState(false);
 
-  const recognitionRef   = useRef<any>(null);
+  const recognitionRef   = useRef<SpeechRecognitionInstance | null>(null);
   const audioContextRef  = useRef<AudioContext | null>(null);
-  const analyserRef      = useRef<AnalyserNode | null>(null);
   const streamRef        = useRef<MediaStream | null>(null);
   const audioBlobRef     = useRef<Blob | null>(null);
   const mediaRecRef      = useRef<MediaRecorder | null>(null);
@@ -76,8 +106,6 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
     const NOISE_THRESHOLD = 60;
     const NOISE_SAMPLES = 5;
     const noiseSamples: number[] = [];
-    let noiseToastShown = false;
-
     const checkVolume = () => {
       if (!recognitionRef.current) return;
       analyser.getByteFrequencyData(dataArray);
@@ -101,9 +129,6 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
           lastNoiseToastRef.current = now;
           options.onNoiseGate?.(avg);
         }
-      } else {
-        // Optional: clear timer if noise stops
-        // lastNoiseToastRef.current = 0;
       }
     };
     
@@ -142,7 +167,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
       });
       const topResult  = parsed[0];
       if (topResult) {
-        const confidence = scoreConfidence(topResult, transcript, lang);
+        const confidence = scoreConfidence(topResult, transcript);
         options.onResult(parsed);
         options.onConfidence?.(confidence);
       }
@@ -157,10 +182,11 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
 
   // ── Pick best result across ALL alternatives ──────────────────
   const pickBestResult = useCallback((
-    event: any,
+    event: SpeechRecognitionEvent,
     lang: 'ta' | 'en',
   ): BestResult | null => {
-    const alternatives = Array.from(event.results[0]) as any[];
+    const results = event.results as unknown as SpeechRecognitionResultList;
+    const alternatives = Array.from(results[0]) as unknown as SpeechRecognitionAlternative[];
     let best: BestResult | null = null;
     let bestScore = -1;
 
@@ -177,7 +203,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
       const saleResult = parsed.find(r => r.type === 'SALE') ?? parsed[0];
       if (!saleResult) continue;
 
-      const scored = scoreConfidence(saleResult, transcript, lang);
+      const scored = scoreConfidence(saleResult, transcript);
       if (scored.total > bestScore) {
         bestScore = scored.total;
         best = { transcript, parsed, confidence: scored };
@@ -208,8 +234,8 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
   // ── Start ─────────────────────────────────────────────────────
   const startListening = async () => {
     const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+      (window as Window & typeof globalThis & { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown }).SpeechRecognition ||
+      (window as Window & typeof globalThis & { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown }).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       options.onError('Browser does not support Speech Recognition');
@@ -245,7 +271,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
         /* MediaRecorder optional — Whisper fallback just won't work */
       }
 
-      const recognition = new SpeechRecognition();
+      const recognition = new window.webkitSpeechRecognition() as SpeechRecognitionInstance;
       currentLangRef.current = options.lang === 'ta' ? 'ta-IN' : 'en-IN';
       recognition.lang           = currentLangRef.current;
       recognition.interimResults = true;
@@ -265,7 +291,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
       };
 
       // ── onresult: pick best across ALL alternatives ────────────
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
 
         let interim = '';
@@ -318,7 +344,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
       };
 
       // ── onerror: Tamil fails → retry English → Whisper ────────
-      recognition.onerror = async (err: any) => {
+      recognition.onerror = async (err: SpeechRecognitionErrorEvent) => {
         if (err.error === 'no-speech') {
           if (currentLangRef.current === 'ta-IN') {
             // Retry in English

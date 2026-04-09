@@ -1,0 +1,27 @@
+﻿
+  71 |   useEffect(() => {                                                                                             
+                                                                                                                       
+   react-hooks/set-state-in-effect
+  90 |                                                                                                                 
+                           react-hooks/set-state-in-effect
+  104 |                                                                                                                
+                                                          react-hooks/set-state-in-effect
+  112 |     return () => {  react-hooks/set-state-in-effect
+  45 |   useEffect(() => {                                                                                             
+                                                                                     react-hooks/set-state-in-effect
+  58 |     return () => {  react-hooks/set-state-in-effect
+  22 |     }, [user, isLoading, router]);  react-hooks/set-state-in-effect
+   82:11  warning  The 'addRow' function makes the dependencies of useCallback Hook (at line 210) change on every 
+render. To fix this, wrap the definition of 'addRow' in its own useCallback() Hook  react-hooks/exhaustive-deps
+  227:32  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+  24 |     }, [user, isLoading, router]);  react-hooks/set-state-in-effect
+  18 |             {label && (  react-hooks/purity
+  58 |     const startTimer = useCallback(() => {  react-hooks/purity
+  72 |     }, [fetchApiNotifications]);                                                                                
+                                                                                                
+react-hooks/set-state-in-effect
+  104 |                 type: 'success'                                                                                
+                                     react-hooks/set-state-in-effect
+  122 |                         type: 'info'  react-hooks/set-state-in-effect
+
+

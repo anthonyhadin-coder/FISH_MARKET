@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Send, CheckCircle2, Loader2, RotateCcw } from 'lucide-react';
 import api from '@/lib/api';
 import { useToast } from '@/components/ui/Toast';
+import { ApiError } from '@/lib/types';
 
 // ── Types ─────────────────────────────────────────────────────────
 type SendStatus = 'idle' | 'loading' | 'sent' | 'error';
@@ -69,9 +70,10 @@ export function SendToOwnerButton({ boatId, boatName, reportDate, onSuccess, lan
       toast(t.successMsg(res.data.owner_name, res.data.total_amount), 'success');
       onSuccess?.(res.data.report_id, res.data.total_amount);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as ApiError;
       setStatus('error');
-      const msg = err.response?.data?.message || t.failed;
+      const msg = error.response?.data?.message || t.failed;
       toast(msg, 'error');
       // Auto-reset after 4 seconds so they can retry
       setTimeout(() => setStatus('idle'), 4000);
