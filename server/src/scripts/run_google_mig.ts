@@ -12,7 +12,7 @@ async function addCol(query: string) {
 
 async function runSQL() {
     try {
-        console.log('Running add_google_auth.sql (safe mode)...');
+        console.log('Running 002_add_google_auth.sql (safe mode)...');
         
         await addCol('ALTER TABLE users ADD COLUMN google_id VARCHAR(255) UNIQUE NULL;');
         await addCol('ALTER TABLE users ADD COLUMN google_email VARCHAR(255) NULL;');
@@ -28,7 +28,7 @@ async function runSQL() {
             }
         }
 
-        console.log('Successfully ran add_google_auth migration.');
+        console.log('Successfully ran 002_add_google_auth migration.');
     } catch (e) {
         console.error('SQL execution failed:', e);
     } finally {

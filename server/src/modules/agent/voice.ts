@@ -54,8 +54,6 @@ export const transcribeAudio = catchAsync(async (req: AuthRequest, res: Response
     // Placeholder for actual AI transcription (Whisper/Google)
     // We simulate it here until API keys are provided.
     
-    console.log(`Received audio for transcription: ${file.size} bytes`);
-    
     // Logic for Whisper API would go here:
     // const response = await openai.audio.transcriptions.create({ file: file.buffer, model: "whisper-1" });
     

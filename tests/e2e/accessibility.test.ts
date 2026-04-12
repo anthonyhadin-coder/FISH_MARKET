@@ -4,7 +4,14 @@ import { injectAxe, checkA11y } from 'axe-playwright';
 test.describe('Accessibility (WCAG 2.1 AA)', () => {
   test('Home Page should be accessible', async ({ page }: { page: Page }) => {
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('main', { state: 'attached', timeout: 10000 });
+    await page.waitForTimeout(2000); // Allow dynamic components to settle
     await injectAxe(page);
+    try {
+      const results = await new (require('axe-playwright')).AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      require('fs').writeFileSync('axe-violations.json', JSON.stringify(results.violations, null, 2));
+    } catch(e) {}
     await checkA11y(page, undefined, {
       detailedReport: true,
       detailedReportOptions: { html: true },

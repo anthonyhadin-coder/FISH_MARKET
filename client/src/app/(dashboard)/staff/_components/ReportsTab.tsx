@@ -53,21 +53,20 @@ const EXP_LABELS: Record<string, { en: string; ta: string }> = {
 };
 
 function TrendChart({ data, lang }: { data: Record<string, unknown>[], lang: string }) {
-    if (!data || data.length === 0) return null;
-    
-    // Format dates for display
-    const chartData = data.map(d => ({
+    // Format dates for display — keep empty array so Recharts renders with axes visible
+    const chartData = (data || []).map(d => ({
         ...d,
         name: new Date(String(d.date)).toLocaleDateString(lang === 'ta' ? 'ta-IN' : 'en-IN', { day: 'numeric', month: 'short' })
     }));
 
     return (
-        <GCard className="h-[300px] mb-6 p-6" data-testid="analytics-chart">
+        <GCard className="mb-6 p-6" data-testid="analytics-chart">
             <h4 className="text-xs font-black text-ocean-700 uppercase tracking-widest mb-6 flex items-center gap-2">
                 <Activity className="w-4 h-4 text-ocean-500" />
                 {lang === 'ta' ? "விற்பனை போக்கு" : "Sales Performance Trend"}
             </h4>
-            <ResponsiveContainer width="100%" height="85%">
+            <div style={{ minWidth: '300px', minHeight: '200px', width: '100%', height: '260px' }}>
+            <ResponsiveContainer width="100%" height={260}>
                 <AreaChart data={chartData}>
                     <defs>
                         <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
@@ -119,6 +118,7 @@ function TrendChart({ data, lang }: { data: Record<string, unknown>[], lang: str
                     />
                 </AreaChart>
             </ResponsiveContainer>
+            </div>
         </GCard>
     );
 }
@@ -191,7 +191,7 @@ export function ReportsTab({ lang, availBoats, commRate = 8 }: ReportsTabProps) 
     const maxSales = Math.max(...reportsData.map(r => r.s), 1);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" data-testid="reports-tab-content">
             {/* Range Selector */}
             <div className="flex bg-gray-100 p-1 rounded-xl w-full max-w-lg mx-auto md:mx-0">
                 {[["daily", t.reports.today], ["weekly", t.reports.week], ["boatWeekly", t.reports.boatWeeklyReport]].map(([m, label]) => (

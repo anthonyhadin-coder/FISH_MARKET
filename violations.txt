@@ -1,0 +1,91 @@
+
+Running 5 tests using 4 workers
+
+[1A[2K[1/5] [setup] › tests\e2e\auth.setup.ts:7:6 › create agent auth state via localStorage injection
+[1A[2K[2/5] [Desktop Chrome] › tests\e2e\accessibility.test.ts:5:7 › Accessibility (WCAG 2.1 AA) › Home Page should be accessible
+[1A[2K[3/5] [Desktop Chrome] › tests\e2e\accessibility.test.ts:18:7 › Accessibility (WCAG 2.1 AA) › Voice Entry Tab should have proper contrast and tab order
+[1A[2K[4/5] [Mobile Pixel 5] › tests\e2e\accessibility.test.ts:5:7 › Accessibility (WCAG 2.1 AA) › Home Page should be accessible
+[1A[2K[5/5] [Mobile Pixel 5] › tests\e2e\accessibility.test.ts:18:7 › Accessibility (WCAG 2.1 AA) › Voice Entry Tab should have proper contrast and tab order
+[1A[2K[Desktop Chrome] › tests\e2e\accessibility.test.ts:5:7 › Accessibility (WCAG 2.1 AA) › Home Page should be accessible
+┌─────────┬─────────────────────┬────────────┬─────────────────────────────────────────────────────┬───────┐
+│ (index) │ id                  │ impact     │ description                                         │ nodes │
+├─────────┼─────────────────────┼────────────┼─────────────────────────────────────────────────────┼───────┤
+│ 0       │ [32m'landmark-one-main'[39m │ [32m'moderate'[39m │ [32m'Ensure the document has a main landmark'[39m           │ [33m1[39m     │
+│ 1       │ [32m'region'[39m            │ [32m'moderate'[39m │ [32m'Ensure all page content is contained by landmarks'[39m │ [33m5[39m     │
+└─────────┴─────────────────────┴────────────┴─────────────────────────────────────────────────────┴───────┘
+
+[1A[2K┌─────────┬──────────────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬────────────┐
+│ (index) │ target                   │ html                                                                                                                                                                                                                                     │ violations │
+├─────────┼──────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────┤
+│ 0       │ [32m'["html"]'[39m               │ [32m'<html lang="en">'[39m                                                                                                                                                                                                                       │ [32m'[0]'[39m      │
+│ 1       │ [32m'[".bottom-2"]'[39m          │ [32m'<div class="fixed bottom-2 right-2 text-[10px] font-black text-ocean-300 pointer-events-none z-50 tracking-widest uppercase opacity-50 mix-blend-multiply">BETA v0.9</div>'[39m                                                             │ [32m'[1]'[39m      │
+│ 2       │ [32m'[".inline-flex"]'[39m       │ [32m'<div role="group" class="inline-flex items-center gap-2 px-4 py-2 bg-ocean-900/50 border border-ocean-800 rounded-full text-ocean-400 text-xs font-bold uppercase tracking-widest mb-6" aria-label="The Next-Gen Digital Fish Market">'[39m │ [32m'[1]'[39m      │
+│ 3       │ [32m'["h1"]'[39m                 │ [32m'<h1 class="text-6xl md:text-8xl font-black text-white leading-[0.9] mb-8">REVOLUTIONIZE <br><span class="text-ocean-500">THE CATCH.</span></h1>'[39m                                                                                        │ [32m'[1]'[39m      │
+│ 4       │ [32m'[".mb-10"]'[39m             │ [32m'<p class="text-xl text-ocean-300 mb-10 max-w-lg leading-relaxed">A complete ecosystem for Boat Owners, Market Agents, and Fish Buyers. Track sales, manage expenses, and maximize your maritime profits.</p>'[39m                           │ [32m'[1]'[39m      │
+│ 5       │ [32m'[".pt-20 > .relative"]'[39m │ [32m'<div class="relative" style="opacity:0;transform:scale(0.8)">'[39m                                                                                                                                                                          │ [32m'[1]'[39m      │
+└─────────┴──────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴────────────┘
+
+[1A[2K[Mobile Pixel 5] › tests\e2e\accessibility.test.ts:5:7 › Accessibility (WCAG 2.1 AA) › Home Page should be accessible
+┌─────────┬─────────────────────┬────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬───────┐
+│ (index) │ id                  │ impact     │ description                                                                                                      │ nodes │
+├─────────┼─────────────────────┼────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────┤
+│ 0       │ [32m'color-contrast'[39m    │ [32m'serious'[39m  │ [32m'Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds'[39m │ [33m1[39m     │
+│ 1       │ [32m'landmark-one-main'[39m │ [32m'moderate'[39m │ [32m'Ensure the document has a main landmark'[39m                                                                        │ [33m1[39m     │
+│ 2       │ [32m'region'[39m            │ [32m'moderate'[39m │ [32m'Ensure all page content is contained by landmarks'[39m                                                              │ [33m5[39m     │
+└─────────┴─────────────────────┴────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴───────┘
+
+[1A[2K┌─────────┬──────────────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬────────────┐
+│ (index) │ target                   │ html                                                                                                                                                                                                                                     │ violations │
+├─────────┼──────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────┤
+│ 0       │ [32m'[".bottom-2"]'[39m          │ [32m'<div class="fixed bottom-2 right-2 text-[10px] font-black text-ocean-300 pointer-events-none z-50 tracking-widest uppercase opacity-50 mix-blend-multiply">BETA v0.9</div>'[39m                                                             │ [32m'[0,2]'[39m    │
+│ 1       │ [32m'["html"]'[39m               │ [32m'<html lang="en">'[39m                                                                                                                                                                                                                       │ [32m'[1]'[39m      │
+│ 2       │ [32m'[".inline-flex"]'[39m       │ [32m'<div role="group" class="inline-flex items-center gap-2 px-4 py-2 bg-ocean-900/50 border border-ocean-800 rounded-full text-ocean-400 text-xs font-bold uppercase tracking-widest mb-6" aria-label="The Next-Gen Digital Fish Market">'[39m │ [32m'[2]'[39m      │
+│ 3       │ [32m'["h1"]'[39m                 │ [32m'<h1 class="text-6xl md:text-8xl font-black text-white leading-[0.9] mb-8">REVOLUTIONIZE <br><span class="text-ocean-500">THE CATCH.</span></h1>'[39m                                                                                        │ [32m'[2]'[39m      │
+│ 4       │ [32m'[".mb-10"]'[39m             │ [32m'<p class="text-xl text-ocean-300 mb-10 max-w-lg leading-relaxed">A complete ecosystem for Boat Owners, Market Agents, and Fish Buyers. Track sales, manage expenses, and maximize your maritime profits.</p>'[39m                           │ [32m'[2]'[39m      │
+│ 5       │ [32m'[".pt-20 > .relative"]'[39m │ [32m'<div class="relative" style="opacity:0;transform:scale(0.8)">'[39m                                                                                                                                                                          │ [32m'[2]'[39m      │
+└─────────┴──────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴────────────┘
+
+[1A[2K[Desktop Chrome] › tests\e2e\accessibility.test.ts:18:7 › Accessibility (WCAG 2.1 AA) › Voice Entry Tab should have proper contrast and tab order
+No accessibility violations detected!
+
+[1A[2K[Mobile Pixel 5] › tests\e2e\accessibility.test.ts:18:7 › Accessibility (WCAG 2.1 AA) › Voice Entry Tab should have proper contrast and tab order
+No accessibility violations detected!
+
+[1A[2K  1) [Mobile Pixel 5] › tests\e2e\accessibility.test.ts:5:7 › Accessibility (WCAG 2.1 AA) › Home Page should be accessible 
+
+    AssertionError: 3 accessibility violations were detected
+
+    3 !== 0
+
+        at testResultDependsOnViolations (C:\coding_program_files\FISH_MARKET\node_modules\axe-playwright\dist\utils.js:16:26)
+        at C:\coding_program_files\FISH_MARKET\node_modules\axe-playwright\dist\index.js:143:51
+        at fulfilled (C:\coding_program_files\FISH_MARKET\node_modules\axe-playwright\dist\index.js:28:58)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\accessibility-Accessibilit-9cea9-e-Page-should-be-accessible-Mobile-Pixel-5\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\accessibility-Accessibilit-9cea9-e-Page-should-be-accessible-Mobile-Pixel-5\error-context.md
+
+
+[1A[2K  2) [Desktop Chrome] › tests\e2e\accessibility.test.ts:5:7 › Accessibility (WCAG 2.1 AA) › Home Page should be accessible 
+
+    AssertionError: 2 accessibility violations were detected
+
+    2 !== 0
+
+        at testResultDependsOnViolations (C:\coding_program_files\FISH_MARKET\node_modules\axe-playwright\dist\utils.js:16:26)
+        at C:\coding_program_files\FISH_MARKET\node_modules\axe-playwright\dist\index.js:143:51
+        at fulfilled (C:\coding_program_files\FISH_MARKET\node_modules\axe-playwright\dist\index.js:28:58)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\accessibility-Accessibilit-9cea9-e-Page-should-be-accessible-Desktop-Chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\accessibility-Accessibilit-9cea9-e-Page-should-be-accessible-Desktop-Chrome\error-context.md
+
+
+[1A[2K  2 failed
+    [Desktop Chrome] › tests\e2e\accessibility.test.ts:5:7 › Accessibility (WCAG 2.1 AA) › Home Page should be accessible 
+    [Mobile Pixel 5] › tests\e2e\accessibility.test.ts:5:7 › Accessibility (WCAG 2.1 AA) › Home Page should be accessible 
+  3 passed (17.0s)

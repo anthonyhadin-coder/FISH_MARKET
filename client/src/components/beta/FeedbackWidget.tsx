@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 export const FeedbackWidget = () => {
     const [open, setOpen] = useState(false);
     return (
-        <div className="fixed bottom-4 left-4 z-50">
+        <aside aria-label="Feedback" className="fixed bottom-4 left-4 z-50">
             <button 
                 onClick={() => setOpen(!open)} 
                 className="w-10 h-10 bg-coral-500 text-white rounded-full shadow-lg shadow-coral-500/30 flex items-center justify-center hover:scale-105 transition-transform"
@@ -21,6 +21,6 @@ export const FeedbackWidget = () => {
                     </a>
                 </div>
             )}
-        </div>
+        </aside>
     );
 };

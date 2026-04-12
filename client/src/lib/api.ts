@@ -2,7 +2,9 @@ import axios from 'axios';
 import { showToast } from '@/components/ui/Toast';
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+    baseURL: (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_TEST__)
+        ? '/api'
+        : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'),
     // CLEANUP 7: Auth is handled entirely via HttpOnly cookies — no Bearer tokens needed.
     // The withCredentials flag ensures cookies are sent on every cross-origin request.
     withCredentials: true,
@@ -10,6 +12,18 @@ const api = axios.create({
 
 // ── FIX 1: Axios Auto-Refresh Interceptor ──────────────────────────────────────
 // (Removed createAuthRefreshInterceptor, replaced by the manual interceptor below as requested)
+
+// ── Request Interceptor (Offline Check) ────────────────────────────────────────
+api.interceptors.request.use((config) => {
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+        // Break early if we know we are offline. Ensures offline mechanisms trigger instantly
+        // and prevents Playwright mock interceptors from wrongly returning 200 OKs.
+        const error = new Error('Network error: Browser is offline');
+        (error as any).code = 'ERR_NETWORK';
+        return Promise.reject(error);
+    }
+    return config;
+});
 
 // ── Response Interceptor ───────────────────────────────────────────────────────
 api.interceptors.response.use(

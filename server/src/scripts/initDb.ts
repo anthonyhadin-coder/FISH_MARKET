@@ -63,6 +63,17 @@ const initDb = async () => {
       );
     `);
 
+    // Buyers Table (Must be created before sales because sales references buyers)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS buyers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        phone VARCHAR(20),
+        balance_due DECIMAL(12,2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Sales Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS sales (
@@ -121,17 +132,6 @@ const initDb = async () => {
         FOREIGN KEY (agent_id) REFERENCES users(id) ON DELETE SET NULL,
         INDEX idx_boat_payments_date (date),
         INDEX idx_boat_payments_boat (boat_id, date)
-      );
-    `);
-
-    // Buyers Table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS buyers (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        phone VARCHAR(20),
-        balance_due DECIMAL(12,2) DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
@@ -247,6 +247,7 @@ const initDb = async () => {
 
   } catch (err) {
     console.error('Error initializing database:', err);
+    process.exit(1);
   } finally {
     await pool.end();
   }

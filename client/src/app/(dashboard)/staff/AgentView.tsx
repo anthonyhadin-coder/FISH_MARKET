@@ -85,9 +85,9 @@ export default function AgentDashboard() {
             ]);
             setDailySales(salesRes.data || []);
             setPayments(paymentsRes.data || []);
-        } catch (err: unknown) {
-            const error = err as ApiError;
-            console.error("Failed to fetch daily data", error);
+        } catch (err: any) {
+            console.error("Failed to fetch daily data details:", err.message, err.code, err.response?.status);
+            toast("Data error", "error");
         }
     }, [selectedBoat, dateKey]);
 
@@ -111,15 +111,21 @@ export default function AgentDashboard() {
         };
 
         setFieldErrors({});
+        console.log("addRow called with payload:", payload);
         try {
             await api.post('/sales', payload);
+            console.log("Sale recorded successfully");
             toast("Sale recorded", "success");
             fetchDailyData();
             setNR({fish:"", weight: "", rate: "", buyer: "", paid: ""}); 
         } catch (err: unknown) {
             const error = err as ApiError;
-            if (!navigator.onLine) {
+            console.error("addRow API failed:", error.message, error.code, "isOnline:", navigator.onLine);
+            // Check navigator.onLine or if the error indicates a network failure
+            if (!navigator.onLine || error.code === 'ERR_NETWORK' || !error.response) {
+                    console.log("Saving row to offline storage...");
                     await offlineStorage.addPendingSale({ type: 'sale', payload });
+                    console.log("Row saved offline");
                     toast("Saved offline", "info");
                     setNR({fish:"", weight: "", rate: "", buyer: "", paid: ""}); 
                     fetchDailyData();

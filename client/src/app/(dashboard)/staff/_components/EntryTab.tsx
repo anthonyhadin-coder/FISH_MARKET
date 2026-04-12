@@ -318,7 +318,7 @@ export function EntryTab({
                                 <Label data-testid="fish-label" c={t.fields.fish} style={{color: (fieldErrors.fishName || fieldErrors.fish) ? G.red : G.muted, marginBottom:0}}/>
                                 <VoiceInput lang={lang as 'ta' | 'en'} onParsedResult={onVoiceResult} targetField="fish" fishList={fishList} buyerList={buyers.map(b=>b.name)} />
                             </div>
-                            <input ref={fishRef} style={{...inp, borderColor: (fieldErrors.fishName || fieldErrors.fish) ? G.red : G.text}} placeholder={t.fields.fishPlaceholder} value={newRow.fish}
+                            <input ref={fishRef} data-testid="input-fish" style={{...inp, borderColor: (fieldErrors.fishName || fieldErrors.fish) ? G.red : G.text}} placeholder={t.fields.fishPlaceholder} value={newRow.fish}
                                 onChange={e=>{setNR(p=>({...p,fish:e.target.value}));setSug(fishList.filter((f:string)=>f.toLowerCase().startsWith(e.target.value.toLowerCase())).slice(0,6));}}
                                 onKeyDown={e=>{if(e.key==="Tab"||e.key==="Enter"){e.preventDefault();document.getElementById("wt")?.focus();}}}/>
                             {suggest.length>0 && (
@@ -337,7 +337,7 @@ export function EntryTab({
                                 <Label c={t.fields.weight} style={{color: fieldErrors.weight ? G.red : G.muted, marginBottom:0}}/>
                                 <VoiceInput lang={lang as 'ta' | 'en'} onParsedResult={onVoiceResult} targetField="weight" fishList={fishList} buyerList={buyers.map(b=>b.name)} />
                             </div>
-                            <input id="wt" style={{...inp,textAlign:"right", borderColor: fieldErrors.weight ? G.red : G.text}} type="number" placeholder={t.fields.unitKg} value={newRow.weight}
+                            <input id="wt" data-testid="input-weight" style={{...inp,textAlign:"right", borderColor: fieldErrors.weight ? G.red : G.text}} type="number" placeholder={t.fields.unitKg} value={newRow.weight}
                                 onChange={e=>setNR(p=>({...p,weight:e.target.value}))}
                                 onKeyDown={e=>{if(e.key==="Tab"||e.key==="Enter"){e.preventDefault();document.getElementById("rt")?.focus();}}}/>
                         </div>
@@ -346,7 +346,7 @@ export function EntryTab({
                                 <Label c={t.fields.rate} style={{color: fieldErrors.rate ? G.red : G.muted, marginBottom:0}}/>
                                 <VoiceInput lang={lang as 'ta' | 'en'} onParsedResult={onVoiceResult} targetField="rate" fishList={fishList} buyerList={buyers.map(b=>b.name)} />
                             </div>
-                            <input id="rt" style={{...inp,textAlign:"right", borderColor: fieldErrors.rate ? G.red : G.text}} type="number" placeholder={t.fields.unitCurrency} value={newRow.rate}
+                            <input id="rt" data-testid="input-rate" style={{...inp,textAlign:"right", borderColor: fieldErrors.rate ? G.red : G.text}} type="number" placeholder={t.fields.unitCurrency} value={newRow.rate}
                                 onChange={e=>setNR(p=>({...p,rate:e.target.value}))}
                                 onKeyDown={e=>{if(e.key==="Tab"||e.key==="Enter"){e.preventDefault();document.getElementById("by")?.focus();}}}/>
                         </div>
@@ -355,7 +355,7 @@ export function EntryTab({
                                 <Label c={t.fields.buyer} style={{color: (fieldErrors.buyerName || fieldErrors.buyer) ? G.red : G.muted, marginBottom:0}}/>
                                 <VoiceInput variant="minimal" lang={lang as 'ta' | 'en'} onParsedResult={onVoiceResult} targetField="buyer" fishList={fishList} buyerList={buyers.map(b=>b.name)} />
                             </div>
-                            <input id="by" style={{...inp, borderColor: (fieldErrors.buyerName || fieldErrors.buyer) ? G.red : G.text}} placeholder={t.fields.buyerPlaceholder} value={newRow.buyer}
+                            <input id="by" data-testid="input-buyer" style={{...inp, borderColor: (fieldErrors.buyerName || fieldErrors.buyer) ? G.red : G.text}} placeholder={t.fields.buyerPlaceholder} value={newRow.buyer}
                                 onChange={e=>setNR(p=>({...p,buyer:e.target.value}))}
                                 onKeyDown={e=>{if(e.key==="Tab"||e.key==="Enter"){e.preventDefault();document.getElementById("pd")?.focus();}}}/>
                         </div>
@@ -370,7 +370,7 @@ export function EntryTab({
                                 <Label c={t.fields.paid} style={{marginBottom:0}}/>
                                 <VoiceInput variant="minimal" lang={lang as 'ta' | 'en'} onParsedResult={onVoiceResult} targetField="paid" fishList={fishList} buyerList={buyers.map(b=>b.name)} />
                             </div>
-                            <input id="pd" style={{...inp, textAlign:"right", borderColor: G.text}} type="number" placeholder={t.fields.unitCurrency} value={newRow.paid}
+                            <input id="pd" data-testid="input-paid" style={{...inp, textAlign:"right", borderColor: G.text}} type="number" placeholder={t.fields.unitCurrency} value={newRow.paid}
                                 onChange={e=>setNR(p=>({...p,paid:e.target.value}))}
                                 onKeyDown={e=>{if(e.key==="Enter")addRow();}}/>
                         </div>

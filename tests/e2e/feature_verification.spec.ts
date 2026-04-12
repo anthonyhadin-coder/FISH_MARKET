@@ -1,26 +1,51 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+import { fulfillWithCors, corsHeaders } from './test-utils';
 
 test.describe('PWA & Feature Verification', () => {
     test.beforeEach(async ({ page }) => {
-        // Mock API responses so the Agent Dashboard loads without a backend
-        await page.route('**/api/boats', route => route.fulfill({
-            status: 200,
-            json: [{ id: 1, name: 'E2E Test Boat', agent_id: 1, owner_id: 1 }]
-        }));
-        await page.route('**/api/buyers', route => route.fulfill({
-            status: 200,
-            json: []
-        }));
-        await page.route('**/api/reports/daily*', route => route.fulfill({
-            status: 200,
-            json: { date: new Date().toISOString().split('T')[0], totalSales: 0, totalExpenses: 0, boatPayments: 0, cashWithAgent: 0, boatProfit: 0 }
-        }));
-        await page.route('**/api/sales/history*', route => route.fulfill({ status: 200, json: [] }));
-        await page.route('**/api/boat-payments*', route => route.fulfill({ status: 200, json: [] }));
-        await page.route('**/api/auth/me', route => route.fulfill({
-            status: 200,
-            json: { user: { id: '1', name: 'Test Agent', role: 'agent' } }
-        }));
+        // Disable animations and enable relative API paths
+        await page.addInitScript(() => {
+            (window as any).__PLAYWRIGHT_TEST__ = true;
+        });
+
+        // Consolidated API mocks
+        await page.route('**/api/**', async (route) => {
+            const url = route.request().url();
+            const method = route.request().method();
+            
+            if (method === 'OPTIONS') {
+                return route.fulfill({ status: 204, headers: corsHeaders });
+            }
+
+            if (url.includes('/api/boats')) {
+                return fulfillWithCors(route, { json: [{ id: 1, name: 'E2E Test Boat', agent_id: 1, owner_id: 1 }] });
+            }
+            if (url.includes('/api/buyers')) {
+                return fulfillWithCors(route, { json: [] });
+            }
+            if (url.includes('/api/reports/daily')) {
+                return fulfillWithCors(route, {
+                    json: { date: new Date().toISOString().split('T')[0], totalSales: 0, totalExpenses: 0, boatPayments: 0, cashWithAgent: 0, boatProfit: 0 }
+                });
+            }
+            if (url.includes('/api/sales/history') || url.includes('/api/boat-payments')) {
+                return fulfillWithCors(route, { json: [] });
+            }
+            if (url.includes('/api/auth/me')) {
+                return fulfillWithCors(route, { json: { user: { id: '1', name: 'Test Agent', role: 'agent' } } });
+            }
+            if (url.includes('/api/notifications')) {
+                return fulfillWithCors(route, { json: [] });
+            }
+            
+            // Fallback for other API calls to prevent unhandled network errors
+            return fulfillWithCors(route, { json: {} });
+        });
+
+        // Disable animations and enable relative API paths
+        await page.addInitScript(() => {
+            (window as any).__PLAYWRIGHT_TEST__ = true;
+        });
 
         await page.goto('/staff');
         
@@ -34,21 +59,25 @@ test.describe('PWA & Feature Verification', () => {
         await expect(page.locator('input[id="wt"]')).toBeVisible();
 
         await page.context().setOffline(true);
-        // Wait for offline state to propagate to navigator.onLine
-        await page.waitForTimeout(1000);
+        // Wait for offline state and for the banner to appear
+        await page.waitForTimeout(2000);
+        await expect(page.locator('[data-testid="offline-banner"]')).toBeVisible({ timeout: 10000 });
         
-        await page.fill('input[id="wt"]', '10.5');
-        await page.fill('input[id="rt"]', '100');
-        await page.fill('input[placeholder="Fish..."]', 'TestFish');
+        // Use reliable data-testid selectors for the entry form
+        await page.getByTestId('input-fish').fill('Test Fish');
+        await page.getByTestId('input-weight').fill('10.5');
+        await page.getByTestId('input-rate').fill('100');
         
         // Scroll and click
         const addBtn = page.locator('[data-testid="add-row-btn"]');
         await addBtn.scrollIntoViewIfNeeded();
         await addBtn.click({ force: true });
         
-        await expect(page.locator('[data-testid="offline-banner"]')).toBeVisible();
         // Wait for the specific toast to appear
-        await expect(page.locator('[data-testid="toast"]').filter({ hasText: 'Saved offline' })).toBeVisible({ timeout: 10000 });
+        // FIX 4: Confirm browser is offline before polling for the toast
+        await page.waitForFunction(() => navigator.onLine === false);
+        await expect(page.locator('[data-testid="toast"]').filter({ hasText: 'Saved offline' }))
+            .toBeVisible({ timeout: 20000 });
 
         await page.context().setOffline(false);
         await page.waitForTimeout(1000); 

@@ -23,12 +23,12 @@ export default function LandingPage() {
   const t = T[currentLang];
 
   return (
-    <div className="min-h-screen bg-ocean-950 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+    <main className="min-h-screen bg-ocean-950 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
       {/* Navigation */}
-      <nav className="max-w-7xl mx-auto px-6 py-8 flex items-center justify-between">
+      <nav aria-label="Main navigation" className="max-w-7xl mx-auto px-6 py-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-ocean-600 rounded-xl flex items-center justify-center shadow-lg shadow-ocean-600/20">
-            <Fish className="w-6 h-6 text-white" />
+            <Fish className="w-6 h-6 text-white" aria-hidden="true" />
           </div>
           <span className="text-2xl font-black text-white tracking-tighter">{t.appName}</span>
         </div>
@@ -36,6 +36,7 @@ export default function LandingPage() {
           <Button 
             variant="ghost" 
             className="text-ocean-200 hover:bg-white/5"
+            aria-label={lang === 'en' ? 'Switch to Tamil' : 'Switch to English'}
             onClick={() => setLang(lang === 'en' ? 'ta' : 'en')}
           >
             {lang === 'en' ? 'தமிழ்' : 'English'}
@@ -56,8 +57,8 @@ export default function LandingPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-ocean-900/50 border border-ocean-800 rounded-full text-ocean-400 text-xs font-bold uppercase tracking-widest mb-6">
-            <Anchor className="w-4 h-4" />
+          <div role="group" className="inline-flex items-center gap-2 px-4 py-2 bg-ocean-900/50 border border-ocean-800 rounded-full text-ocean-400 text-xs font-bold uppercase tracking-widest mb-6" aria-label={t.nextGenMarket}>
+            <Anchor className="w-4 h-4" aria-hidden="true" />
             {t.nextGenMarket}
           </div>
           <h1 className="text-6xl md:text-8xl font-black text-white leading-[0.9] mb-8">
@@ -99,12 +100,12 @@ export default function LandingPage() {
               height={400}
               className="rounded-2xl w-full h-[400px] object-cover"
             />
-            <div className="absolute -bottom-8 -right-8 glass p-6 rounded-2xl border-ocean-500/30 shadow-2xl">
+            <div role="group" className="absolute -bottom-8 -right-8 glass p-6 rounded-2xl border-ocean-500/30 shadow-2xl" aria-label={`${t.todaySale}: ₹45.2k`}>
               <div className="flex items-center gap-4 mb-2">
-                <TrendingUp className="w-8 h-8 text-green-400" />
+                <TrendingUp className="w-8 h-8 text-green-400" aria-hidden="true" />
                 <div>
-                  <p className="text-2xl font-black text-white">₹45.2k</p>
-                  <p className="text-[10px] font-bold text-ocean-500 uppercase">{t.todaySale}</p>
+                  <p className="text-2xl font-black text-white" aria-hidden="true">₹45.2k</p>
+                  <p className="text-[10px] font-bold text-ocean-500 uppercase" aria-hidden="true">{t.todaySale}</p>
                 </div>
               </div>
             </div>
@@ -113,11 +114,11 @@ export default function LandingPage() {
       </section>
 
       {/* Features Grid */}
-      <section className="bg-ocean-900/30 py-32 px-6">
+      <section aria-label="Features" className="bg-ocean-900/30 py-32 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
             <h2 className="text-4xl font-black text-white mb-4 italic">{t.builtForEveryRole}</h2>
-            <div className="w-20 h-1 bg-ocean-500 mx-auto" />
+            <div className="w-20 h-1 bg-ocean-500 mx-auto" role="presentation" />
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
@@ -138,9 +139,9 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-20 border-t border-white/5 text-center">
+      <footer aria-label="Site footer" className="py-20 border-t border-white/5 text-center">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-8 h-8 bg-ocean-800 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-ocean-800 rounded-lg flex items-center justify-center" aria-hidden="true">
             <Fish className="w-4 h-4 text-white" />
           </div>
           <span className="text-xl font-bold text-white uppercase tracking-tighter">{t.appName} OS</span>
@@ -152,7 +153,7 @@ export default function LandingPage() {
         </div>
         <p className="text-ocean-700 text-sm italic">© 2026 {t.appName}. {t.footerTagline}</p>
       </footer>
-    </div>
+    </main>
   );
 }
 

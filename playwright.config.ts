@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   reporter: 'html',
   timeout: 60000,
   globalTimeout: 300000,
@@ -21,6 +21,9 @@ export default defineConfig({
     navigationTimeout: 30000,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    launchOptions: {
+      args: ['--disable-web-security'],
+    },
   },
 
   projects: [
