@@ -30,6 +30,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# local build artifacts / scratch
+build_output.txt
+*.build_output.txt
+
 # env files (can opt-in for committing if needed)
 .env*
 
