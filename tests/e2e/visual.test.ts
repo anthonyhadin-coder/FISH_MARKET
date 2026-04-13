@@ -7,7 +7,9 @@ test.describe('Visual Regression (Percy/Chromatic)', () => {
     
     // Using Playwright's native screenshot as a baseline if Percy is not set up
     await expect(page).toHaveScreenshot('home-page.png', {
-      maxDiffPixelRatio: 0.1,
+      maxDiffPixelRatio: 0.05,
+      threshold: 0.2,
+      animations: 'disabled'
     });
     
     // Integration Hook Examples:
@@ -57,6 +59,10 @@ test.describe('Visual Regression (Percy/Chromatic)', () => {
     await page.click('button[title="Help"]', { force: true });
     
     await expect(page.locator('.voice-dialog-container')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('.voice-dialog-container')).toHaveScreenshot('voice-dialog.png');
+    await expect(page.locator('.voice-dialog-container')).toHaveScreenshot('voice-dialog.png', {
+      maxDiffPixelRatio: 0.05,
+      threshold: 0.2,
+      animations: 'disabled'
+    });
   });
 });

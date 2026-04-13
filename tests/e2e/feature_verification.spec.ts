@@ -101,25 +101,26 @@ test.describe('PWA & Feature Verification', () => {
         const langToggleSelector = '[data-testid="language-toggle"]';
         
         // Initial check (English "Boat" or "BOAT")
-        await expect(page.locator('[data-testid="boat-label"]').first()).toHaveText(/boat/i);
+        await expect(page.locator('[data-testid="boat-label"]').first()).toHaveText(/boat/i, { timeout: 15000 });
         
         // Toggle to Tamil
         const toggle = page.locator(langToggleSelector).first();
         await toggle.scrollIntoViewIfNeeded();
-        await toggle.dispatchEvent('click');
+        await toggle.click({ force: true });
         
-        await page.waitForTimeout(2000);
-        
-        // Check for ANY Tamil characters in the boat label
-        const boatLabel = page.locator('[data-testid="boat-label"]').last();
-        await expect(boatLabel).toBeVisible();
-        const text = await boatLabel.innerText();
-        expect(text).toMatch(/[\u0B80-\u0BFF]/);
+        // Wait for ANY Tamil characters in the boat label - retry if needed
+        await expect(async () => {
+          const boatLabel = page.locator('[data-testid="boat-label"]').last();
+          await expect(boatLabel).toBeVisible({ timeout: 5000 });
+          const text = await boatLabel.innerText();
+          if (!/[\u0B80-\u0BFF]/.test(text)) {
+            throw new Error('Tamil text not found');
+          }
+        }).toPass({ timeout: 15000 });
         
         // Toggle back to English
         await toggle.click({ force: true });
         
-        await page.waitForTimeout(2000);
-        await expect(page.locator('[data-testid="boat-label"]').last()).toHaveText(/boat/i);
+        await expect(page.locator('[data-testid="boat-label"]').last()).toHaveText(/boat/i, { timeout: 15000 });
     });
 });

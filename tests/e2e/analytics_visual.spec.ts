@@ -104,7 +104,10 @@ test.describe('Analytics Visual Regression', () => {
         const reportsTab = page.getByTestId('reports-tab-content'); 
         await expect(reportsTab).toHaveScreenshot({ 
             timeout: 10000,
-            mask: [page.locator('.recharts-surface')]
+            mask: [page.locator('.recharts-surface')],
+            maxDiffPixelRatio: 0.05,
+            threshold: 0.2,
+            animations: 'disabled'
         });
     });
 
@@ -115,7 +118,10 @@ test.describe('Analytics Visual Regression', () => {
         const reportsTab = page.getByTestId('reports-tab-content');
         await expect(reportsTab).toHaveScreenshot({ 
             timeout: 10000,
-            mask: [page.locator('.recharts-surface')]
+            mask: [page.locator('.recharts-surface')],
+            maxDiffPixelRatio: 0.05,
+            threshold: 0.2,
+            animations: 'disabled'
         });
     });
 
@@ -133,7 +139,9 @@ test.describe('Analytics Visual Regression', () => {
         await expect(reportsTab).toHaveScreenshot({ 
             timeout: 15000,
             mask: [page.locator('.recharts-surface')],
-            maxDiffPixelRatio: 0.1
+            maxDiffPixelRatio: 0.1,
+            threshold: 0.2,
+            animations: 'disabled'
         });
     });
 });

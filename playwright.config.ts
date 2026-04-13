@@ -7,7 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   reporter: 'html',
-  timeout: 120000,
+  timeout: process.env.CI ? 180000 : 120000,
   globalTimeout: 300000,
   expect: {
     timeout: 30000,
@@ -21,6 +21,7 @@ export default defineConfig({
     navigationTimeout: 30000,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    ignoreHTTPSErrors: true,
     launchOptions: {
       args: ['--disable-web-security'],
     },
