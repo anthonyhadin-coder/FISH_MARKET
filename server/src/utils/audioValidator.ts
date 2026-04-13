@@ -14,8 +14,8 @@ export const transcribeRateLimiter = rateLimit({
         // Ensure we return a string and handle potential IPv6 identification
         return String(key);
     },
-    // Explicitly disable the IPv6 check warning if we are providing a valid string key
-    validate: { xForwardedForHeader: false },
+    // Explicitly disable validation checks that cause synchronous crashes
+    validate: false,
 });
 
 export const validateAudioFile = (req: Request, res: Response, next: NextFunction) => {
