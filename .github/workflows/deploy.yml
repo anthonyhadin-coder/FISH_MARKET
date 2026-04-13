@@ -68,8 +68,18 @@ jobs:
   deploy-server:
     name: 🚀 Deploy Server → VPS (PM2)
     runs-on: ubuntu-latest
+    if: ${{ secrets.SSH_HOST != '' }}
 
     steps:
+      - name: Check SSH secrets
+        run: |
+          if [ -z "${{ secrets.SSH_HOST }}" ]; then
+            echo "⚠️ SSH_HOST not configured. Skipping VPS deploy."
+            echo "Add SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY to GitHub Secrets."
+            exit 0
+          fi
+          echo "✅ SSH secrets found, proceeding with deploy."
+
       - name: Checkout code
         uses: actions/checkout@v4
 
