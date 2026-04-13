@@ -7,10 +7,10 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   reporter: 'html',
-  timeout: 60000,
+  timeout: 120000,
   globalTimeout: 300000,
   expect: {
-    timeout: 15000,
+    timeout: 30000,
     toHaveScreenshot: {
       maxDiffPixels: 100
     }

@@ -178,11 +178,14 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:5000/api
 
       - name: Start server in background
-        run: cd server && npm run dev &
+        run: |
+          cd server
+          npm run dev > /tmp/server.log 2>&1 &
+          echo "Server PID: $!"
         env:
           NODE_ENV: test
           PORT: 5000
-          DB_HOST: localhost
+          DB_HOST: 127.0.0.1
           DB_PORT: 3306
           DB_NAME: fish_market_test
           DB_USER: root
@@ -190,6 +193,20 @@ jobs:
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-jwt-secret-for-ci
           JWT_REFRESH_SECRET: test-refresh-secret-for-ci
+          GOOGLE_CLIENT_ID: test-google-client-id
+          GOOGLE_CLIENT_SECRET: test-google-client-secret
+          WEB_PUSH_PUBLIC_KEY: test-vapid-public-key
+          WEB_PUSH_PRIVATE_KEY: test-vapid-private-key
+
+      - name: Debug server startup logs
+        run: |
+          sleep 8
+          echo "=== Checking if server process is running ==="
+          ps aux | grep node || echo "NO NODE PROCESS FOUND"
+          echo "=== Checking port 5000 ==="
+          curl -v http://localhost:5000/health || echo "HEALTH CHECK FAILED"
+          echo "=== Server logs ==="
+          cat /tmp/server.log 2>/dev/null || echo "No server log file found"
 
       - name: Start client in background
         run: cd client && npm start &
@@ -198,7 +215,13 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:5000/api
 
       - name: Wait for server to be ready
-        run: npx wait-on http://localhost:5000/health --timeout 120000
+        run: |
+          echo "Waiting for server at http://localhost:5000/health..."
+          npx wait-on http://localhost:5000/health \
+            --timeout 120000 \
+            --interval 2000 \
+            --verbose \
+            || (echo "=== SERVER CRASHED — LOGS ===" && cat /tmp/server.log && exit 1)
 
       - name: Wait for client to be ready
         run: npx wait-on http://localhost:3000 --timeout 120000
