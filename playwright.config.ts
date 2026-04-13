@@ -51,10 +51,22 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: 'npm run dev',
-    cwd: 'client',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      command: 'cd server && npm run dev',
+      url: 'http://localhost:5000/health',
+      timeout: 120000,
+      reuseExistingServer: !process.env.CI,
+      env: {
+        NODE_ENV: 'test',
+        PORT: '5000',
+      }
+    },
+    {
+      command: 'cd client && npm start',
+      url: 'http://localhost:3000',
+      timeout: 120000,
+      reuseExistingServer: !process.env.CI,
+    }
+  ],
 });

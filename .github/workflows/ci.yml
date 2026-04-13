@@ -119,7 +119,6 @@ jobs:
     name: 🎭 Playwright E2E Tests
     runs-on: ubuntu-latest
     needs: [lint-and-test-client, lint-and-test-server]
-    # Only run E2E on push to main/dev, not on every PR to save minutes
     if: github.event_name == 'push'
 
     services:
@@ -131,17 +130,17 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost"
+          --health-cmd="mysqladmin ping"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
 
       redis:
-        image: redis:7-alpine
+        image: redis:7
         ports:
           - 6379:6379
         options: >-
-          --health-cmd "redis-cli ping"
+          --health-cmd="redis-cli ping"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -154,53 +153,66 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-
-      - name: Install root dependencies
-        run: npm ci
+          cache: 'npm'
+          cache-dependency-path: |
+            client/package-lock.json
+            server/package-lock.json
 
       - name: Install client dependencies
-        run: npm ci
-        working-directory: client
+        run: cd client && npm ci
 
       - name: Install server dependencies
-        run: npm ci
-        working-directory: server
+        run: cd server && npm ci
 
       - name: Install Playwright browsers (Chromium only for speed)
-        run: npx playwright install --with-deps chromium
+        run: cd client && npx playwright install --with-deps chromium
 
       - name: Initialize Test Database
-        run: npx -y tsx src/scripts/initDb.ts
-        working-directory: server
+        run: cd server && npx -y tsx src/scripts/initDb.ts
         env:
           DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/fish_market_test
+
+      - name: Build client
+        run: cd client && npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5000/api
 
       - name: Start server in background
-        run: npm run dev &
-        working-directory: server
+        run: cd server && npm run dev &
         env:
-          NODE_ENV: e2e
-          DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/fish_market_test
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: ci-test-jwt-secret-minimum-32-characters
-          JWT_REFRESH_SECRET: ci-test-refresh-secret-minimum-32-chars
+          NODE_ENV: test
           PORT: 5000
-          ALLOWED_ORIGINS: http://localhost:3000
+          DB_HOST: localhost
+          DB_PORT: 3306
+          DB_NAME: fish_market_test
+          DB_USER: root
+          DB_PASSWORD: testpassword
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-jwt-secret-for-ci
+          JWT_REFRESH_SECRET: test-refresh-secret-for-ci
+
+      - name: Start client in background
+        run: cd client && npm start &
+        env:
+          PORT: 3000
+          NEXT_PUBLIC_API_URL: http://localhost:5000/api
 
       - name: Wait for server to be ready
-        run: npx wait-on http://localhost:5000/health --timeout 60000
+        run: npx wait-on http://localhost:5000/health --timeout 120000
+
+      - name: Wait for client to be ready
+        run: npx wait-on http://localhost:3000 --timeout 120000
 
       - name: Run Playwright E2E tests
-        run: npx playwright test --project="Desktop Chrome"
+        run: cd client && npx playwright test
         env:
-          CI: true
-          NEXT_PUBLIC_API_URL: http://localhost:5000/api
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID: test-client-id
+          BASE_URL: http://localhost:3000
+          API_URL: http://localhost:5000/api
 
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report/
-          retention-days: 14
+          path: client/playwright-report/
+          retention-days: 7

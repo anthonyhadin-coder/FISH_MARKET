@@ -64,13 +64,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.get('/health', async (req, res) => {
-    try {
-        await pool.query('SELECT 1');
-        res.json({ status: 'OK', database: 'connected', version: '1.2.0' });
-    } catch (_err) {
-        res.status(503).json({ status: 'ERROR', database: 'disconnected' });
-    }
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        service: 'deep-ocean-fish-market-api'
+    });
 });
 
 import authRoutes from './modules/auth/auth';
