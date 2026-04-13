@@ -56,7 +56,7 @@ export default defineConfig({
       command: 'cd server && npm run dev',
       url: 'http://127.0.0.1:5000/health',
       timeout: 120000,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
       env: {
         NODE_ENV: 'test',
         PORT: '5000',
@@ -66,7 +66,7 @@ export default defineConfig({
       command: 'cd client && npm start',
       url: 'http://127.0.0.1:3000',
       timeout: 120000,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
     }
   ],
 });
