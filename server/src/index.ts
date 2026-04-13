@@ -104,7 +104,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use(errorHandler);
 
 if (process.env.NODE_ENV !== 'test' || (process.env.NODE_ENV as string) === 'e2e') {
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
         console.log(`Server running on port ${PORT}`);
     });
 }
