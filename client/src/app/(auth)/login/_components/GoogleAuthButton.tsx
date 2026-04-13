@@ -1,4 +1,4 @@
-"use client";
+import React, { useState, useEffect } from 'react';
 import { GoogleLogin, useGoogleOneTapLogin } from '@react-oauth/google';
 import { Loader2, WifiOff } from 'lucide-react';
 import { loginT } from '@/lib/loginTranslations';
@@ -27,6 +27,11 @@ export default function GoogleAuthButton({
   onError,
 }: GoogleAuthButtonProps) {
   const t = loginT[lang];
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // We strictly use "popup" mode because "redirect" requires a backend callback endpoint
   // that we do not currently have implemented. Popup-blocked state is handled below.
@@ -38,6 +43,16 @@ export default function GoogleAuthButton({
       onError();
     }
   };
+
+  // Detect if we should use redirect flow (Mobile or Standalone PWA)
+  const [useRedirect, setUseRedirect] = useState(false);
+  useEffect(() => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    if (isMobile || isStandalone) setUseRedirect(true);
+  }, []);
+
+  if (!mounted) return null;
 
   if (isOffline) {
     return (
@@ -77,7 +92,7 @@ export default function GoogleAuthButton({
           shape="rectangular"
           size="large"
           text="signin_with"
-          ux_mode="popup"
+          ux_mode={useRedirect ? 'redirect' : 'popup'}
           width="380"
         />
       </div>

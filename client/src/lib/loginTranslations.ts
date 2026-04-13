@@ -70,6 +70,16 @@ export interface LoginTranslation {
   dontHaveAccount: string;
   errorLocked: string;
   errorInvalid: string;
+  // OTP Flow
+  useOtp: string;
+  usePassword: string;
+  sendOtp: string;
+  verifyingOtp: string;
+  enterOtp: string;
+  otpSent: string;
+  resendOtp: string;
+  resendIn: string;
+  invalidOtp: string;
 }
 
 export const loginT: Record<'en' | 'ta', LoginTranslation> = {
@@ -131,6 +141,15 @@ export const loginT: Record<'en' | 'ta', LoginTranslation> = {
     dontHaveAccount: "Don't have an account?",
     errorLocked: 'Too many attempts. Please wait before retrying.',
     errorInvalid: 'Invalid phone number or password.',
+    useOtp: 'Sign in with OTP',
+    usePassword: 'Sign in with Password',
+    sendOtp: 'Send OTP',
+    verifyingOtp: 'Verifying OTP…',
+    enterOtp: 'Enter 6-digit OTP',
+    otpSent: 'OTP sent to your phone',
+    resendOtp: 'Resend OTP',
+    resendIn: 'Resend in [s]s',
+    invalidOtp: 'Invalid or expired OTP',
   },
   ta: {
     appName: 'மீன் சந்தை',
@@ -190,5 +209,14 @@ export const loginT: Record<'en' | 'ta', LoginTranslation> = {
     dontHaveAccount: 'கணக்கு இல்லையா?',
     errorLocked: 'அதிக முயற்சிகள். சிறிது நேரம் காத்திருங்கள்.',
     errorInvalid: 'தவறான கைபேசி எண் அல்லது கடவுச்சொல்.',
+    useOtp: 'OTP மூலம் உள்நுழைக',
+    usePassword: 'கடவுச்சொல் மூலம் உள்நுழைக',
+    sendOtp: 'OTP அனுப்புக',
+    verifyingOtp: 'OTP சரிபார்க்கிறது…',
+    enterOtp: '6-இலக்க OTP-ஐ உள்ளிடவும்',
+    otpSent: 'உங்கள் கைபேசிக்கு OTP அனுப்பப்பட்டது',
+    resendOtp: 'மீண்டும் அனுப்புக',
+    resendIn: '[s] வினாடியில் மீண்டும் அனுப்புக',
+    invalidOtp: 'தவறான அல்லது காலாவதியான OTP',
   },
 };

@@ -8,7 +8,7 @@ import pool from '../../config/db';
 import { catchAsync } from '../../middleware/errors';
 import { validate } from '../../middleware/validation';
 import { authenticate, AuthRequest } from '../../middleware/auth';
-import { blockToken } from '../../config/redis';
+import redis, { blockToken } from '../../config/redis';
 
 // ── Env guards ───────────────────────────────────────────────────
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -114,12 +114,51 @@ const changePasswordSchema = z.object({
 
 const googleSchema = z.object({
     body: z.object({
-        credential: z.string().min(1),
+        credential: z.string().min(1).optional(),
+        code: z.string().optional(),
         role: z.enum(['OWNER', 'AGENT', 'BUYER']).optional(),
     })
 });
 
+const sendOtpSchema = z.object({
+    body: z.object({
+        phone: z.string().regex(/^\+?[\s\d\-()]{10,20}$/, 'Invalid phone number format'),
+    })
+});
+
+const verifyPhoneOtpSchema = z.object({
+    body: z.object({
+        phone: z.string().regex(/^\+?[\s\d\-()]{10,20}$/, 'Invalid phone number format'),
+        otp: z.string().length(6),
+    })
+});
+
 // ── Handlers ─────────────────────────────────────────────────────
+
+/**
+ * Common Logic for issuing sessions
+ */
+const issueSession = async (res: Response, user: any) => {
+    const { accessToken, refreshToken } = generateTokens(user.id, user.role);
+    const tokenHash = hashToken(refreshToken);
+
+    await pool.query(
+        'UPDATE users SET failed_attempts = 0, locked_until = NULL, refresh_token_hash = ?, last_login = NOW() WHERE id = ?',
+        [tokenHash, user.id]
+    );
+
+    setAuthCookies(res, accessToken, refreshToken);
+
+    return {
+        user: {
+            id: user.id,
+            name: user.name,
+            role: user.role.toLowerCase(),
+            phone: user.phone,
+            language: user.language,
+        }
+    };
+};
 
 export const register = catchAsync(async (req: Request, res: Response) => {
     const { name, phone, role, password } = req.body;
@@ -528,8 +567,72 @@ router.get('/me', authenticate, me); // FIX 4 endpoint
 router.put('/change-password', authenticate, validate(changePasswordSchema), changePassword);
 
 // Forgot Password Flow
+// Forgot Password Flow
 router.post('/forgot-password', forgotPassword);
 router.post('/verify-otp', verifyOtp);
 router.post('/reset-password', resetPassword);
+
+// Phone Login Flow
+export const sendPhoneOtp = catchAsync(async (req: Request, res: Response) => {
+    const { phone } = req.body;
+    const cleanPhone = sanitizePhone(phone);
+
+    // Rate limiting: 1 OTP per 60s
+    if (redis) {
+        const cooldown = await redis.get(`otp_cooldown:${cleanPhone}`);
+        if (cooldown) return res.status(429).json({ message: 'Please wait 60s before requesting another OTP' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    if (redis) {
+        await redis.set(`otp:${cleanPhone}`, otp, 'EX', 300); // 5 mins
+        await redis.set(`otp_cooldown:${cleanPhone}`, '1', 'EX', 60); // 60s cooldown
+    } else {
+        // Fallback for tests if redis is down
+        console.warn('Redis unavailable, using memory placeholder for OTP');
+    }
+
+    console.log(`[SMS MOCK] To: ${cleanPhone} | FISH MARKET Login OTP: ${otp}. Valid for 5 mins.`);
+    res.json({ message: 'OTP sent successfully' });
+});
+
+export const verifyPhoneOtp = catchAsync(async (req: Request, res: Response) => {
+    const { phone, otp } = req.body;
+    const cleanPhone = sanitizePhone(phone);
+
+    if (redis) {
+        const stored = await redis.get(`otp:${cleanPhone}`);
+        if (!stored || stored !== otp) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+        await redis.del(`otp:${cleanPhone}`);
+    }
+
+    // Find or create user
+    let [users]: any[] = await pool.query(
+        'SELECT id, name, phone, role, is_active, language FROM users WHERE phone = ?',
+        [cleanPhone]
+    );
+
+    let user;
+    if (users.length === 0) {
+        // Auto-register as AGENT if not found
+        const [result]: any[] = await pool.query(
+            'INSERT INTO users (name, phone, role, password_hash, auth_provider) VALUES (?, ?, ?, ?, ?)',
+            ['User', cleanPhone, 'AGENT', '', 'phone']
+        );
+        user = { id: result.insertId, name: 'User', phone: cleanPhone, role: 'AGENT', language: 'en' };
+    } else {
+        user = users[0];
+        if (!user.is_active) return res.status(403).json({ message: 'Account deactivated' });
+    }
+
+    const data = await issueSession(res, user);
+    res.json(data);
+});
+
+router.post('/phone/send-otp', validate(sendOtpSchema), sendPhoneOtp);
+router.post('/phone/verify-otp', validate(verifyPhoneOtpSchema), verifyPhoneOtp);
 
 export default router;

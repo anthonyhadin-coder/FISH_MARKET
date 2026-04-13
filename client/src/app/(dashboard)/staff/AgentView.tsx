@@ -111,10 +111,8 @@ export default function AgentDashboard() {
         };
 
         setFieldErrors({});
-        console.log("addRow called with payload:", payload);
         try {
             await api.post('/sales', payload);
-            console.log("Sale recorded successfully");
             toast("Sale recorded", "success");
             fetchDailyData();
             setNR({fish:"", weight: "", rate: "", buyer: "", paid: ""}); 
@@ -123,9 +121,7 @@ export default function AgentDashboard() {
             console.error("addRow API failed:", error.message, error.code, "isOnline:", navigator.onLine);
             // Check navigator.onLine or if the error indicates a network failure
             if (!navigator.onLine || error.code === 'ERR_NETWORK' || !error.response) {
-                    console.log("Saving row to offline storage...");
                     await offlineStorage.addPendingSale({ type: 'sale', payload });
-                    console.log("Row saved offline");
                     toast("Saved offline", "info");
                     setNR({fish:"", weight: "", rate: "", buyer: "", paid: ""}); 
                     fetchDailyData();

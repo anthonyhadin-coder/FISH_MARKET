@@ -64,3 +64,8 @@ test-results/
 size_*.txt
 *_tree*.txt
 structure.txt
+
+# Audit and Test Outputs
+audit-report-*.json
+*_test_output.txt
+tests/performance/results*.json

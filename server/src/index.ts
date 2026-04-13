@@ -39,7 +39,7 @@ app.use('/api/', globalLimiter);
 // Auth-specific strict rate limit (5 attempts / 15 min)
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 5,
+    max: parseInt(process.env.AUTH_LIMIT_MAX || '5'),
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: true, // Only count failures toward the limit

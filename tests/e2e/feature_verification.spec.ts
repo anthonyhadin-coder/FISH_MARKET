@@ -94,28 +94,30 @@ test.describe('PWA & Feature Verification', () => {
     });
 
     test('should switch languages', async ({ page }) => {
+        // - [x] Run final E2E check (Accessibility + Feature)
+        // - [x] Fix language switch regression (Mobile Pixel 5 flakiness)
+        
         // Find the toggle button
         const langToggleSelector = '[data-testid="language-toggle"]';
         
         // Initial check (English "Boat" or "BOAT")
         await expect(page.locator('[data-testid="boat-label"]').first()).toHaveText(/boat/i);
         
-        // Toggle to Tamil - use evaluate click to bypass any stability issues with AnimatePresence
-        await page.evaluate((sel) => {
-            (document.querySelectorAll(sel)[0] as HTMLElement)?.click();
-        }, langToggleSelector);
+        // Toggle to Tamil
+        const toggle = page.locator(langToggleSelector).first();
+        await toggle.scrollIntoViewIfNeeded();
+        await toggle.dispatchEvent('click');
         
         await page.waitForTimeout(2000);
         
         // Check for ANY Tamil characters in the boat label
         const boatLabel = page.locator('[data-testid="boat-label"]').last();
+        await expect(boatLabel).toBeVisible();
         const text = await boatLabel.innerText();
         expect(text).toMatch(/[\u0B80-\u0BFF]/);
         
         // Toggle back to English
-        await page.evaluate((sel) => {
-            (document.querySelectorAll(sel)[0] as HTMLElement)?.click();
-        }, langToggleSelector);
+        await toggle.click({ force: true });
         
         await page.waitForTimeout(2000);
         await expect(page.locator('[data-testid="boat-label"]').last()).toHaveText(/boat/i);

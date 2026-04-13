@@ -33,17 +33,16 @@ type LoginState =
   | 'sessionExpired';
 
 function LoginContent() {
+  const [loginState, setLoginState]   = useState<LoginState>('idle');
+  const [loginMethod, setLoginMethod] = useState<'password' | 'otp'>('password');
+  const [otpStep, setOtpStep]         = useState<'phone' | 'verify'>('phone');
+  const [otp, setOtp]                 = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
+
+  const [error, setError]             = useState('');
   const [phone, setPhone]             = useState('');
   const [password, setPassword]       = useState('');
   const [showPass, setShowPass]       = useState(false);
-  
-  // Use lazy initializer for initial state derived from window/navigator
-  const [loginState, setLoginState]   = useState<LoginState>(() => {
-    if (typeof navigator !== 'undefined' && !navigator.onLine) return 'offline';
-    return 'idle';
-  });
-
-  const [error, setError]             = useState('');
   const [retryAfter, setRetryAfter]   = useState(0);   
   const [cooldown, setCooldown]       = useState(0);   
 
@@ -89,18 +88,24 @@ function LoginContent() {
       setError('Google sign-in failed. Please try again or use phone/password.');
     }
 
-    if (errorParam) {
+    const credParam = searchParams?.get('credential');
+    if (credParam && loginState === 'idle') {
+      handleGoogleSuccess(credParam);
+    }
+
+    if (errorParam || credParam) {
       router.replace('/login', { scroll: false });
     }
-  }, [searchParams, router, loginState]);
+  }, [searchParams, router, loginState, handleGoogleSuccess]);
+
+  // Initial client-side checks
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setLoginState('offline');
+    }
+  }, []);
 
   // Session expired detection
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('reason') === 'session-expired' && loginState !== 'sessionExpired') {
-      setLoginState('sessionExpired');
-    }
-  }, [loginState]);
 
   // Offline detection
   useEffect(() => {
@@ -127,6 +132,13 @@ function LoginContent() {
     return () => clearInterval(id);
   }, [cooldown]);
 
+  // Resend timer
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const id = setInterval(() => setResendTimer(s => s - 1), 1000);
+    return () => clearInterval(id);
+  }, [resendTimer]);
+
   // Account lockout countdown
   useEffect(() => {
     if (retryAfter <= 0) return;
@@ -143,9 +155,45 @@ function LoginContent() {
     return () => clearInterval(id);
   }, [retryAfter]);
 
+  const handleSendOtp = async () => {
+    if (!phone) return;
+    setLoginState('loading');
+    setError('');
+    try {
+      await api.post('/auth/phone/send-otp', { phone });
+      setOtpStep('verify');
+      setResendTimer(60);
+      setLoginState('idle');
+    } catch (err) {
+      setLoginState('error');
+      setError('Failed to send OTP. Please try again.');
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) return;
+    setLoginState('loading');
+    setError('');
+    try {
+      const res = await api.post('/auth/phone/verify-otp', { phone, otp });
+      setLoginState('success');
+      await new Promise(r => setTimeout(r, 1000));
+      login(res.data.user);
+    } catch (err) {
+      setLoginState('error');
+      setError(t.invalidOtp);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loginState === 'loading' || loginState === 'locked') return;
+
+    if (loginMethod === 'otp') {
+      if (otpStep === 'phone') handleSendOtp();
+      else handleVerifyOtp();
+      return;
+    }
 
     setLoginState('loading');
     setError('');
@@ -257,7 +305,22 @@ function LoginContent() {
             onError={handleGoogleError}
           />
 
-          {/* Divider */}
+          {/* Login Method Tabs */}
+          <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 mt-6">
+            <button
+              onClick={() => { setLoginMethod('password'); setLoginState('idle'); }}
+              className={`flex-1 py-2.5 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all ${loginMethod === 'password' ? 'bg-white text-ocean-950 shadow-lg' : 'text-white/40 hover:text-white'}`}
+            >
+              Password
+            </button>
+            <button
+              onClick={() => { setLoginMethod('otp'); setLoginState('idle'); }}
+              className={`flex-1 py-2.5 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all ${loginMethod === 'otp' ? 'bg-white text-ocean-950 shadow-lg' : 'text-white/40 hover:text-white'}`}
+            >
+              OTP
+            </button>
+          </div>
+
           <div className="flex items-center gap-4 my-6">
             <div className="ocean-divider flex-1" />
             <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--white-secondary)' }}>
@@ -267,80 +330,143 @@ function LoginContent() {
           </div>
 
           <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
-            {/* Phone */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black uppercase tracking-widest ml-1" style={{ color: 'var(--white-secondary)' }}>
-                {t.phoneLabel}
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--white-secondary)' }} />
-                <input
-                  type="tel"
-                  placeholder={t.phonePlaceholder}
-                  value={phone}
-                  {...getInputProps('phone')}
-                  onChange={e => {
-                    setPhone(e.target.value.replace(/[^\d+]/g, ''));
-                    getInputProps('phone').onChange();
-                    if (loginState !== 'typing') setLoginState('typing');
-                  }}
-                  className={`ocean-input w-full rounded-2xl pl-10 pr-4 font-semibold ${errors.phone ? '!border-red-500 !shadow-[0_0_15px_rgba(239,68,68,0.2)]' : ''}`}
-                  style={{ height: '52px' }}
-                  required
-                />
-              </div>
-              {errors.phone && (
-                <p id="phone-error" className="text-red-400 text-xs mt-1 ml-1 font-bold animate-in fade-in duration-200">
-                  {errors.phone}
-                </p>
-              )}
-            </div>
+            {loginMethod === 'password' ? (
+              <>
+                {/* Phone */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-black uppercase tracking-widest ml-1" style={{ color: 'var(--white-secondary)' }}>
+                    {t.phoneLabel}
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--white-secondary)' }} />
+                    <input
+                      type="tel"
+                      placeholder={t.phonePlaceholder}
+                      value={phone}
+                      {...getInputProps('phone')}
+                      onChange={e => {
+                        setPhone(e.target.value.replace(/[^\d+]/g, ''));
+                        getInputProps('phone').onChange();
+                        if (loginState !== 'typing') setLoginState('typing');
+                      }}
+                      className={`ocean-input w-full rounded-2xl pl-10 pr-4 font-semibold ${errors.phone ? '!border-red-500 !shadow-[0_0_15px_rgba(239,68,68,0.2)]' : ''}`}
+                      style={{ height: '52px' }}
+                      required
+                    />
+                  </div>
+                  {errors.phone && (
+                    <p id="phone-error" className="text-red-400 text-xs mt-1 ml-1 font-bold animate-in fade-in duration-200">
+                      {errors.phone}
+                    </p>
+                  )}
+                </div>
 
-            {/* Password */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between ml-1">
-                <label className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--white-secondary)' }}>
-                  {t.passwordLabel}
-                </label>
-                <button 
-                  type="button" 
-                  className="text-[10px] font-black uppercase tracking-widest hover:text-white" 
-                  style={{ color: 'var(--teal-glow)' }}
-                  onClick={() => router.push('/forgot-password')}
-                >
-                  {t.forgotPassword}
-                </button>
+                {/* Password */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between ml-1">
+                    <label className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--white-secondary)' }}>
+                      {t.passwordLabel}
+                    </label>
+                    <button 
+                      type="button" 
+                      className="text-[10px] font-black uppercase tracking-widest hover:text-white" 
+                      style={{ color: 'var(--teal-glow)' }}
+                      onClick={() => router.push('/forgot-password')}
+                    >
+                      {t.forgotPassword}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--white-secondary)' }} />
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      placeholder={t.passwordPlaceholder}
+                      value={password}
+                      {...getInputProps('password')}
+                      onChange={e => {
+                        setPassword(e.target.value);
+                        getInputProps('password').onChange();
+                        if (loginState !== 'typing') setLoginState('typing');
+                      }}
+                      className={`ocean-input w-full rounded-2xl pl-10 pr-12 font-semibold ${errors.password ? '!border-red-500 !shadow-[0_0_15px_rgba(239,68,68,0.2)]' : ''}`}
+                      style={{ height: '52px' }}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(!showPass)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                    >
+                      {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p id="password-error" className="text-red-400 text-xs mt-1 ml-1 font-bold animate-in fade-in duration-200">
+                      {errors.password}
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : (
+              /* OTP FLOW */
+              <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                {otpStep === 'phone' ? (
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-black uppercase tracking-widest ml-1" style={{ color: 'var(--white-secondary)' }}>
+                      {t.phoneLabel}
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--white-secondary)' }} />
+                      <input
+                        type="tel"
+                        placeholder={t.phonePlaceholder}
+                        value={phone}
+                        onChange={e => setPhone(e.target.value.replace(/[^\d+]/g, ''))}
+                        className="ocean-input w-full rounded-2xl pl-10 pr-4 font-semibold"
+                        style={{ height: '52px' }}
+                        required
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                      <label className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--white-secondary)' }}>
+                        {t.enterOtp}
+                      </label>
+                      <button 
+                        type="button" 
+                        className="text-[10px] font-black uppercase" 
+                        style={{ color: 'var(--teal-glow)' }}
+                        onClick={() => setOtpStep('phone')}
+                      >
+                         Change Phone
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      placeholder="0 0 0 0 0 0"
+                      value={otp}
+                      onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+                      className="ocean-input w-full rounded-2xl text-center text-2xl tracking-[0.5em] font-black"
+                      style={{ height: '64px' }}
+                      autoFocus
+                    />
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        disabled={resendTimer > 0}
+                        onClick={handleSendOtp}
+                        className="text-[10px] font-black uppercase tracking-widest disabled:opacity-40"
+                      >
+                        {resendTimer > 0 ? t.resendIn.replace('[s]', String(resendTimer)) : t.resendOtp}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--white-secondary)' }} />
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  placeholder={t.passwordPlaceholder}
-                  value={password}
-                  {...getInputProps('password')}
-                  onChange={e => {
-                    setPassword(e.target.value);
-                    getInputProps('password').onChange();
-                    if (loginState !== 'typing') setLoginState('typing');
-                  }}
-                  className={`ocean-input w-full rounded-2xl pl-10 pr-12 font-semibold ${errors.password ? '!border-red-500 !shadow-[0_0_15px_rgba(239,68,68,0.2)]' : ''}`}
-                  style={{ height: '52px' }}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
-                >
-                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {errors.password && (
-                <p id="password-error" className="text-red-400 text-xs mt-1 ml-1 font-bold animate-in fade-in duration-200">
-                  {errors.password}
-                </p>
-              )}
-            </div>
+            )}
 
             {/* Submit */}
             <button
@@ -353,7 +479,9 @@ function LoginContent() {
                   <div className="wave-bars">
                     {[1,2,3,4,5].map(i => <span key={i} />)}
                   </div>
-                  <span className="uppercase tracking-widest font-black">Signing in…</span>
+                  <span className="uppercase tracking-widest font-black">
+                    {loginMethod === 'otp' && otpStep === 'phone' ? t.sendOtp : t.loginLoading}
+                  </span>
                 </>
               ) : loginState === 'locked' ? (
                 <>
@@ -363,7 +491,9 @@ function LoginContent() {
               ) : (
                 <>
                   <ArrowRight className="w-4 h-4" />
-                  <span className="uppercase tracking-widest font-black">{t.loginBtn}</span>
+                  <span className="uppercase tracking-widest font-black">
+                    {loginMethod === 'otp' ? (otpStep === 'phone' ? t.sendOtp : t.loginBtn) : t.loginBtn}
+                  </span>
                 </>
               )}
             </button>
