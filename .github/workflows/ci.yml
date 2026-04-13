@@ -41,7 +41,7 @@ jobs:
         run: npm run test
         env:
           CI: true
-          NEXT_PUBLIC_API_URL: http://localhost:5000/api
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api
           NEXT_PUBLIC_GOOGLE_CLIENT_ID: test-client-id
 
   # ─────────────────────────────────────────────
@@ -63,7 +63,7 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost"
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -106,11 +106,11 @@ jobs:
           CI: true
           NODE_ENV: test
           DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/fish_market_test
-          REDIS_URL: redis://localhost:6379
+          REDIS_URL: redis://127.0.0.1:6379
           JWT_SECRET: ci-test-jwt-secret-minimum-32-characters
           JWT_REFRESH_SECRET: ci-test-refresh-secret-minimum-32-chars
           PORT: 5000
-          ALLOWED_ORIGINS: http://localhost:3000
+          ALLOWED_ORIGINS: http://127.0.0.1:3000
 
   # ─────────────────────────────────────────────
   # JOB 3: Playwright E2E Tests
@@ -175,7 +175,7 @@ jobs:
       - name: Build client
         run: cd client && npm run build
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:5000/api
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api
 
       - name: Start server in background
         run: |
@@ -190,7 +190,7 @@ jobs:
           DB_NAME: fish_market_test
           DB_USER: root
           DB_PASSWORD: testpassword
-          REDIS_URL: redis://localhost:6379
+          REDIS_URL: redis://127.0.0.1:6379
           JWT_SECRET: test-jwt-secret-for-ci
           JWT_REFRESH_SECRET: test-refresh-secret-for-ci
           GOOGLE_CLIENT_ID: test-google-client-id
@@ -204,7 +204,7 @@ jobs:
           echo "=== Checking if server process is running ==="
           ps aux | grep node || echo "NO NODE PROCESS FOUND"
           echo "=== Checking port 5000 ==="
-          curl -v http://localhost:5000/health || echo "HEALTH CHECK FAILED"
+          curl -v http://127.0.0.1:5000/health || echo "HEALTH CHECK FAILED"
           echo "=== Server logs ==="
           cat /tmp/server.log 2>/dev/null || echo "No server log file found"
 
@@ -212,25 +212,25 @@ jobs:
         run: cd client && npm start &
         env:
           PORT: 3000
-          NEXT_PUBLIC_API_URL: http://localhost:5000/api
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api
 
       - name: Wait for server to be ready
         run: |
-          echo "Waiting for server at http://localhost:5000/health..."
-          npx wait-on http://localhost:5000/health \
+          echo "Waiting for server at http://127.0.0.1:5000/health..."
+          npx wait-on http://127.0.0.1:5000/health \
             --timeout 120000 \
             --interval 2000 \
             --verbose \
             || (echo "=== SERVER CRASHED — LOGS ===" && cat /tmp/server.log && exit 1)
 
       - name: Wait for client to be ready
-        run: npx wait-on http://localhost:3000 --timeout 120000
+        run: npx wait-on http://127.0.0.1:3000 --timeout 120000
 
       - name: Run Playwright E2E tests
         run: cd client && npx playwright test
         env:
-          BASE_URL: http://localhost:3000
-          API_URL: http://localhost:5000/api
+          BASE_URL: http://127.0.0.1:3000
+          API_URL: http://127.0.0.1:5000/api
 
       - name: Upload Playwright report
         if: always()
