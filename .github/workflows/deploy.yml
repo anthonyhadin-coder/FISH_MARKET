@@ -29,17 +29,16 @@ jobs:
           cache: 'npm'
           cache-dependency-path: client/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: client
-
-      - name: Build Next.js app
-        run: npm run build
-        working-directory: client
+      - name: Test Next.js build before Vercel deploy
+        run: |
+          cd client
+          npm ci
+          npm run build
+          echo "✅ Build passed locally — proceeding to Vercel deploy"
         env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
-          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:5000
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'placeholder' }}
+          NODE_ENV: production
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
