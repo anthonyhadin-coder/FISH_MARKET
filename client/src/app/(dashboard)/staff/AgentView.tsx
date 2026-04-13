@@ -327,6 +327,7 @@ export default function AgentDashboard() {
                     <button 
                         onClick={() => setLang(lang === 'en' ? 'ta' : 'en')}
                         data-testid="language-toggle"
+                        aria-label={lang === 'en' ? 'Switch to Tamil' : 'ஆங்கிலத்திற்கு மாறவும்'}
                         className="bg-gray-100/50 hover:bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-black transition-colors"
                     >
                         {lang === 'en' ? 'தமிழ்' : 'EN'}
@@ -344,6 +345,7 @@ export default function AgentDashboard() {
                     <div className="relative">
                         <button 
                             onClick={() => setShowNotifs(!showNotifs)}
+                            aria-label={lang === 'ta' ? 'அறிவிப்புகள்' : 'Notifications'}
                             className="p-2.5 rounded-xl hover:bg-gray-100 transition-all relative group"
                         >
                             <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-ocean-600 fill-ocean-50' : 'text-gray-400'}`} />
@@ -396,6 +398,7 @@ export default function AgentDashboard() {
 
                     <button 
                         onClick={handleLogout}
+                        aria-label={t.logout}
                         className="p-2.5 rounded-xl text-coral-500 hover:bg-coral-50 transition-all group"
                         title={t.logout}
                     >
@@ -423,6 +426,7 @@ export default function AgentDashboard() {
                                 : 'text-gray-400 hover:text-ocean-600 hover:bg-white hover:shadow-md'
                         }`}
                         title={tab.label}
+                        aria-label={tab.label}
                     >
                         <span className="text-xl md:text-2xl transition-transform group-hover:scale-110">{tab.icon}</span>
                         <span className="text-[10px] md:hidden mt-1 font-bold">{tab.label}</span>
@@ -434,7 +438,8 @@ export default function AgentDashboard() {
             </nav>
 
             {/* Main Content Area */}
-            <main className="pt-24 pb-24 md:pb-12 md:pl-28 px-6 md:px-12 max-w-7xl mx-auto min-h-screen">
+            <main role="main" className="pt-24 pb-24 md:pb-12 md:pl-28 px-6 md:px-12 max-w-7xl mx-auto min-h-screen">
+                <h1 className="sr-only">{t.appName} - {t.tabs[activeTab]}</h1>
                 <div className="space-y-8">
                     {/* Top Bar: Boat Selector & Date */}
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">

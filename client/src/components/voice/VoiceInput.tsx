@@ -110,6 +110,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
           <button
             onClick={isListening ? stopListening : startListening}
             title={isListening ? "Stop" : "Voice Entry"}
+            aria-label={isListening ? (lang === 'ta' ? 'குரல் பதிவை நிறுத்து' : 'Stop listening') : (lang === 'ta' ? 'குரல் பதிவைத் தொடங்கு' : 'Start voice entry')}
             style={{
               width: 44,
               height: 44,

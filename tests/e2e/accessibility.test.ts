@@ -26,6 +26,12 @@ test.describe('Accessibility (WCAG 2.1 AA)', () => {
   test('Voice Entry Tab should have proper contrast and tab order', async ({ page }: { page: Page }) => {
     await page.route('**/api/auth/me', route => route.fulfill({ status: 200, json: { user: { id: '1', name: 'Test Agent', role: 'agent' } } }));
     await page.goto('/staff'); // Adjust based on routing
+    
+    // Explicitly wait for main landmark and page title to ensure hydration
+    await page.waitForSelector('main[role="main"] h1', { state: 'visible', timeout: 15000 });
+    await page.waitForSelector('header', { state: 'visible' });
+    await page.waitForTimeout(1000);
+
     await injectAxe(page);
     
     // Check general accessibility but skip contrast for the complex dark theme

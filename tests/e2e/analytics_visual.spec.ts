@@ -5,8 +5,8 @@ test.describe('Analytics Visual Regression', () => {
     
     test.beforeEach(async ({ page }) => {
         // Mock API responses for stability
-        // Mock ALL API calls to prevent any unhandled network timeouts
-        await page.route('**/api/**', async route => {
+        // Use a broader interceptor to ensure all /api/ calls are caught
+        await page.route(url => url.toString().includes('/api/'), async route => {
             const url = route.request().url();
             const method = route.request().method();
             console.log(`INTERCEPTED API CALL: [${method}] ${url}`);
@@ -15,9 +15,12 @@ test.describe('Analytics Visual Regression', () => {
                 return route.fulfill({ status: 204, headers: corsHeaders });
             }
 
+            // Standard Auth mock
             if (url.includes('/auth/me')) {
                 return fulfillWithCors(route, { json: { user: { id: '1', name: 'Test Agent', role: 'agent' } } });
             }
+
+            // Reports / Trends
             if (url.includes('/reports')) {
                 if (url.includes('trends')) {
                     const deterministicTrends = [
@@ -50,20 +53,20 @@ test.describe('Analytics Visual Regression', () => {
                     }
                 });
             }
+
+            // Core Dashboard entities
             if (url.includes('/boats')) {
                 return fulfillWithCors(route, { json: [ { id: 1, name: 'Sea King' }, { id: 2, name: 'Ocean Pearl' } ] });
             }
             if (url.includes('/buyers')) {
                 return fulfillWithCors(route, { json: [ { id: 1, name: 'Ravi' } ] });
             }
-            if (url.includes('/sales') || url.includes('/payments') || url.includes('/history')) {
-                return fulfillWithCors(route, { json: [] });
-            }
             if (url.includes('/notifications')) {
-                return fulfillWithCors(route, { json: [] });
+                return fulfillWithCors(route, { json: { notifications: [] } }); // NotificationContext expects { notifications: [] }
             }
             
-            return fulfillWithCors(route, { json: {} });
+            // Generic catch-all for other sales/payments/history/sync
+            return fulfillWithCors(route, { json: [] });
         });
 
         // Disable Recharts animations by setting the window flag
