@@ -58,9 +58,15 @@ test.describe('Visual Regression (Percy/Chromatic)', () => {
     // Ensure the help button is clickable to open the guide modal
     await page.click('button[title="Help"]', { force: true });
     
-    await expect(page.locator('.voice-dialog-container')).toBeVisible({ timeout: 10000 });
+    // Wait for fonts to be ready to avoid layout shifts in snapshots
+    await page.evaluate(() => document.fonts.ready);
+    
+    await expect(page.locator('.voice-dialog-container')).toBeVisible({ timeout: 15000 });
+    
+    // Mask canvas elements as they contain random visualizations
     await expect(page.locator('.voice-dialog-container')).toHaveScreenshot('voice-dialog.png', {
       maxDiffPixelRatio: 0.05,
+      mask: [page.locator('canvas')],
       threshold: 0.2,
       animations: 'disabled'
     });

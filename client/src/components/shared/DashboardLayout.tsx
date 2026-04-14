@@ -126,7 +126,7 @@ export const DashboardLayout = ({ children, title, roleLinks }: {
                 <header className="px-10 py-6 flex items-center justify-between sticky top-0 z-20 bg-white/70 backdrop-blur-xl border-b border-ocean-50 shadow-sm shadow-ocean-500/5 mb-10">
                     <div className="flex items-center gap-4">
                         <div className="w-1 h-8 bg-gradient-to-b from-ocean-500 to-ocean-800 rounded-full" />
-                        <h2 className="text-2xl font-black text-ocean-950 tracking-tight uppercase italic">{title}</h2>
+                        <h1 className="text-2xl font-black text-ocean-950 tracking-tight uppercase italic">{title}</h1>
                     </div>
                     <div className="flex items-center gap-4">
                         <button 

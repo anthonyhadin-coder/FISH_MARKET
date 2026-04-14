@@ -310,9 +310,9 @@ export default function AgentDashboard() {
                         <span className="text-white font-bold text-xl">F</span>
                     </div>
                     <div>
-                        <h1 className="text-xl md:text-2xl font-black tracking-tight text-ocean-950">
-                            {t.appName}
-                        </h1>
+                    <div className="text-xl md:text-2xl font-black tracking-tight text-ocean-950">
+                        {t.appName}
+                    </div>
                         <p className="text-[10px] font-bold text-ocean-500 uppercase tracking-widest leading-none mt-0.5">{t.tagline}</p>
                     </div>
                 </div>

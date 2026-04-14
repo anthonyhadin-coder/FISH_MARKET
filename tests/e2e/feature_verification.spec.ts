@@ -50,8 +50,8 @@ test.describe('PWA & Feature Verification', () => {
         await page.goto('/staff');
         
         await expect(page).toHaveURL(/.*staff/);
-        // Wait for header to load
-        await expect(page.locator('h1')).toBeVisible();
+        // Wait for header to load - use exact name to avoid strict mode violation with sr-only h1
+        await expect(page.getByRole('heading', { name: 'Fish Market Ledger', exact: true })).toBeVisible();
     });
 
     test('should show offline indicator and sync notification', async ({ page }) => {

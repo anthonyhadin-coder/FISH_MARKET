@@ -28,7 +28,8 @@ test.describe('Accessibility (WCAG 2.1 AA)', () => {
     await page.goto('/staff'); // Adjust based on routing
     
     // Explicitly wait for main landmark and page title to ensure hydration
-    await page.waitForSelector('main[role="main"] h1', { state: 'visible', timeout: 15000 });
+    // Use 'attached' because sr-only h1 is not 'visible' according to Playwright
+    await page.waitForSelector('main[role="main"] h1', { state: 'attached', timeout: 15000 });
     await page.waitForSelector('header', { state: 'visible' });
     await page.waitForTimeout(1000);
 

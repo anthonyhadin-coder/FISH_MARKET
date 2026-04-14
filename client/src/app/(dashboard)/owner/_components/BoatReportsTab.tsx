@@ -273,7 +273,7 @@ export function BoatReportsTab() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
                     {/* Summary Header for Print */}
                     <div className="hidden print:block text-center mb-12 border-b-2 border-ocean-900 pb-8">
-                        <h1 className="text-4xl font-black text-ocean-900 uppercase tracking-tighter mb-2">{t.appName}</h1>
+                        <div className="text-4xl font-black text-ocean-900 uppercase tracking-tighter mb-2">{t.appName}</div>
                         <h2 className="text-xl font-bold text-ocean-600 uppercase tracking-widest">
                             {report.boatName} — {period === 'weekly' ? t.weekly : period === 'monthly' ? `${selectedMonth}/${selectedYear}` : selectedYear} {t.reportTab}
                         </h2>

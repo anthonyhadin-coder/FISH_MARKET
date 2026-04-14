@@ -7,17 +7,40 @@ test.describe('Analytics Visual Regression', () => {
         // Mock API responses for stability
         // Use a broader interceptor to ensure all /api/ calls are caught
         await page.route(url => url.toString().includes('/api/'), async route => {
-            const url = route.request().url();
-            const method = route.request().method();
-            console.log(`INTERCEPTED API CALL: [${method}] ${url}`);
+            const request = route.request();
+            const url = request.url();
+            const method = request.method();
+            // Get origin for CORS
+            const origin = request.headers().origin || 'http://localhost:3000';
+            
+            console.log(`INTERCEPTED API CALL: [${method}] ${url} | Origin: ${origin}`);
             
             if (method === 'OPTIONS') {
-                return route.fulfill({ status: 204, headers: corsHeaders });
+                return route.fulfill({ 
+                    status: 204, 
+                    headers: {
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true',
+                        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+                        'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Requested-With'
+                    }
+                });
             }
+
+            // Helper to fulfill with CORS
+            const fulfillWithCorsLocal = (data: any) => route.fulfill({
+                status: 200,
+                headers: {
+                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Credentials': 'true',
+                    'Content-Type': 'application/json'
+                },
+                json: data
+            });
 
             // Standard Auth mock
             if (url.includes('/auth/me')) {
-                return fulfillWithCors(route, { json: { user: { id: '1', name: 'Test Agent', role: 'agent' } } });
+                return fulfillWithCorsLocal({ user: { id: '1', name: 'Test Agent', role: 'agent' } });
             }
 
             // Reports / Trends
@@ -39,61 +62,51 @@ test.describe('Analytics Visual Regression', () => {
                         { date: '2026-03-22', sales: 6500, expenses: 1300 },
                         { date: '2026-03-23', sales: 7500, expenses: 1700 }
                     ];
-                    return fulfillWithCors(route, { json: deterministicTrends });
+                    return fulfillWithCorsLocal(deterministicTrends);
                 }
-                return fulfillWithCors(route, {
-                    json: {
-                        totalSales: 15000,
-                        totalExpenses: 2500,
-                        expenseBreakdown: [
-                            { type: 'diesel', amount: 1200 },
-                            { type: 'ice', amount: 800 },
-                            { type: 'van', amount: 500 }
-                        ]
-                    }
+                return fulfillWithCorsLocal({
+                    totalSales: 15000,
+                    totalExpenses: 2500,
+                    expenseBreakdown: [
+                        { type: 'diesel', amount: 1200 },
+                        { type: 'ice', amount: 800 },
+                        { type: 'van', amount: 500 }
+                    ]
                 });
             }
 
             // Core Dashboard entities
             if (url.includes('/boats')) {
-                return fulfillWithCors(route, { json: [ { id: 1, name: 'Sea King' }, { id: 2, name: 'Ocean Pearl' } ] });
+                return fulfillWithCorsLocal([ { id: 1, name: 'Sea King' }, { id: 2, name: 'Ocean Pearl' } ]);
             }
             if (url.includes('/buyers')) {
-                return fulfillWithCors(route, { json: [ { id: 1, name: 'Ravi' } ] });
+                return fulfillWithCorsLocal([ { id: 1, name: 'Ravi' } ]);
             }
             if (url.includes('/notifications')) {
-                return fulfillWithCors(route, { json: { notifications: [] } }); // NotificationContext expects { notifications: [] }
+                return fulfillWithCorsLocal({ notifications: [] }); 
             }
             
             // Generic catch-all for other sales/payments/history/sync
-            return fulfillWithCors(route, { json: [] });
+            return fulfillWithCorsLocal([]);
         });
 
-        // Disable Recharts animations by setting the window flag
+        // Disable Recharts animations
         await page.addInitScript(() => {
             (window as any).__PLAYWRIGHT_TEST__ = true;
         });
 
-        // Log browser console to test output
-        page.on('console', msg => console.log('BROWSER CONSOLE:', msg.text()));
-        page.on('pageerror', error => console.error('BROWSER ERROR:', error.message));
-
-        // Navigation (Auth is handled by storageState from setup project)
+        // Navigation
         await page.goto('/staff');
         
-        // Dismiss Next.js error overlay if present
-        const overlay = page.locator('nextjs-portal');
-        if (await overlay.isVisible()) {
-            await page.keyboard.press('Escape');
-            await overlay.waitFor({ state: 'hidden' });
-        }
-
-        // Wait for hydration by ensuring default tab content is visible and interactive
-        await expect(page.getByTestId('input-fish')).toBeVisible();
-        await page.waitForTimeout(500); // Wait for React concurrent mode flush
+        // Wait for hydration by ensuring the sr-only heading is attached
+        await page.waitForSelector('main[role="main"] h1', { state: 'attached', timeout: 30000 });
+        await page.waitForTimeout(1000); // Allow React state to settle
         
         // Navigate to Reports Tab
         await page.locator('[data-testid="reports-tab"]').click({ force: true });
+        
+        // Wait for Reports content to be visible
+        await expect(page.getByTestId('reports-tab-content')).toBeVisible({ timeout: 15000 });
         
         // Give Recharts time to measure and inject SVG
         await page.waitForTimeout(3000);
