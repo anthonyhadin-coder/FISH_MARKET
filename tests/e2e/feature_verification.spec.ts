@@ -6,6 +6,19 @@ test.describe('PWA & Feature Verification', () => {
         // Set up universal API mocks
         await setupUniversalMocking(page);
 
+        await page.route('**/api/buyers**', route =>
+          route.fulfill({ status: 200, contentType: 'application/json',
+            body: JSON.stringify([{ id: 1, name: 'Test Buyer' }]) })
+        );
+        await page.route('**/api/notifications**', route =>
+          route.fulfill({ status: 200, contentType: 'application/json',
+            body: JSON.stringify([]) })
+        );
+        await page.route('**/api/boats**', route =>
+          route.fulfill({ status: 200, contentType: 'application/json',
+            body: JSON.stringify([{ id: 1, name: 'Boat 1', registrationNumber: 'TN-001' }]) })
+        );
+
         await page.goto('/staff');
         await expect(page).toHaveURL(/.*staff/);
 
