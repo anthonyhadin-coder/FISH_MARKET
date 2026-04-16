@@ -121,8 +121,8 @@ export default function AgentDashboard() {
             console.error("addRow API failed:", error.message, error.code, "isOnline:", navigator.onLine);
             // Check navigator.onLine or if the error indicates a network failure
             if (!navigator.onLine || error.code === 'ERR_NETWORK' || !error.response) {
-                    await offlineStorage.addPendingSale({ type: 'sale', payload });
-                    toast("Saved offline", "info");
+                await offlineStorage.addPendingSale({ type: 'sale', payload });
+                toast("Saved offline", "info");
                     setNR({fish:"", weight: "", rate: "", buyer: "", paid: ""}); 
                     fetchDailyData();
                 } else {
@@ -310,9 +310,9 @@ export default function AgentDashboard() {
                         <span className="text-white font-bold text-xl">F</span>
                     </div>
                     <div>
-                    <div className="text-xl md:text-2xl font-black tracking-tight text-ocean-950">
+                    <h2 data-testid="dashboard-heading" className="text-xl md:text-2xl font-black tracking-tight text-ocean-950">
                         {t.appName}
-                    </div>
+                    </h2>
                         <p className="text-[10px] font-bold text-ocean-500 uppercase tracking-widest leading-none mt-0.5">{t.tagline}</p>
                     </div>
                 </div>

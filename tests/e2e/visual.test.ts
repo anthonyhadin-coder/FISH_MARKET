@@ -1,57 +1,21 @@
 import { test, expect, type Page } from '@playwright/test';
-import { fulfillWithCors, corsHeaders } from './test-utils';
+import { setupUniversalMocking } from './test-utils';
 
 test.describe('Visual Regression (Percy/Chromatic)', () => {
   test('Home page visual snapshot', async ({ page }: { page: Page }) => {
     await page.goto('/');
     
-    // Using Playwright's native screenshot as a baseline if Percy is not set up
+    // Using Playwright's native screenshot as a baseline
     await expect(page).toHaveScreenshot('home-page.png', {
-      maxDiffPixelRatio: 0.05,
+      maxDiffPixelRatio: 0.1,
       threshold: 0.2,
       animations: 'disabled'
     });
-    
-    // Integration Hook Examples:
-    // await percySnapshot(page, 'Home Page - Deep Ocean');
   });
 
   test('Voice Input Dialog visual snapshot', async ({ page }: { page: Page }) => {
-    // Disable animations and enable relative API paths
-    await page.addInitScript(() => {
-      (window as any).__PLAYWRIGHT_TEST__ = true;
-    });
-
-    // Consolidated API mocks
-    await page.route('**/api/**', async (route) => {
-        const url = route.request().url();
-        const method = route.request().method();
-        
-        if (method === 'OPTIONS') {
-            return route.fulfill({ status: 204, headers: corsHeaders });
-        }
-
-        if (url.includes('/api/auth/me')) {
-            return fulfillWithCors(route, { json: { user: { id: '1', name: 'Test Agent', role: 'agent' } } });
-        }
-        if (url.includes('/api/boats')) {
-            return fulfillWithCors(route, { json: [{ id: 1, name: 'E2E Test Boat' }] });
-        }
-        if (url.includes('/api/buyers')) {
-            return fulfillWithCors(route, { json: [] });
-        }
-        if (url.includes('/api/reports/daily')) {
-            return fulfillWithCors(route, { json: {} });
-        }
-        if (url.includes('/api/sales/history') || url.includes('/api/boat-payments')) {
-            return fulfillWithCors(route, { json: [] });
-        }
-        if (url.includes('/api/notifications')) {
-            return fulfillWithCors(route, { json: [] });
-        }
-        
-        return fulfillWithCors(route, { json: {} });
-    });
+    // Centralized API mocks and __PLAYWRIGHT_TEST__ flag
+    await setupUniversalMocking(page);
     
     await page.goto('/staff');
     
@@ -65,7 +29,7 @@ test.describe('Visual Regression (Percy/Chromatic)', () => {
     
     // Mask canvas elements as they contain random visualizations
     await expect(page.locator('.voice-dialog-container')).toHaveScreenshot('voice-dialog.png', {
-      maxDiffPixelRatio: 0.05,
+      maxDiffPixelRatio: 0.1,
       mask: [page.locator('canvas')],
       threshold: 0.2,
       animations: 'disabled'

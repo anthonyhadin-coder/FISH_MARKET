@@ -1,57 +1,16 @@
-import { test, expect, Page } from '@playwright/test';
-import { fulfillWithCors, corsHeaders } from './test-utils';
+import { test, expect } from '@playwright/test';
+import { setupUniversalMocking } from './test-utils';
 
 test.describe('PWA & Feature Verification', () => {
     test.beforeEach(async ({ page }) => {
-        // Disable animations and enable relative API paths
-        await page.addInitScript(() => {
-            (window as any).__PLAYWRIGHT_TEST__ = true;
-        });
-
-        // Consolidated API mocks
-        await page.route('**/api/**', async (route) => {
-            const url = route.request().url();
-            const method = route.request().method();
-            
-            if (method === 'OPTIONS') {
-                return route.fulfill({ status: 204, headers: corsHeaders });
-            }
-
-            if (url.includes('/api/boats')) {
-                return fulfillWithCors(route, { json: [{ id: 1, name: 'E2E Test Boat', agent_id: 1, owner_id: 1 }] });
-            }
-            if (url.includes('/api/buyers')) {
-                return fulfillWithCors(route, { json: [] });
-            }
-            if (url.includes('/api/reports/daily')) {
-                return fulfillWithCors(route, {
-                    json: { date: new Date().toISOString().split('T')[0], totalSales: 0, totalExpenses: 0, boatPayments: 0, cashWithAgent: 0, boatProfit: 0 }
-                });
-            }
-            if (url.includes('/api/sales/history') || url.includes('/api/boat-payments')) {
-                return fulfillWithCors(route, { json: [] });
-            }
-            if (url.includes('/api/auth/me')) {
-                return fulfillWithCors(route, { json: { user: { id: '1', name: 'Test Agent', role: 'agent' } } });
-            }
-            if (url.includes('/api/notifications')) {
-                return fulfillWithCors(route, { json: [] });
-            }
-            
-            // Fallback for other API calls to prevent unhandled network errors
-            return fulfillWithCors(route, { json: {} });
-        });
-
-        // Disable animations and enable relative API paths
-        await page.addInitScript(() => {
-            (window as any).__PLAYWRIGHT_TEST__ = true;
-        });
+        // Consolidated API mocks and __PLAYWRIGHT_TEST__ flag
+        await setupUniversalMocking(page);
 
         await page.goto('/staff');
         
         await expect(page).toHaveURL(/.*staff/);
-        // Wait for header to load - use exact name to avoid strict mode violation with sr-only h1
-        await expect(page.getByRole('heading', { name: 'Fish Market Ledger', exact: true })).toBeVisible();
+        // Wait for unique heading to avoid hydration/strict-mode issues
+        await expect(page.getByTestId('dashboard-heading')).toBeVisible({ timeout: 15000 });
     });
 
     test('should show offline indicator and sync notification', async ({ page }) => {
@@ -73,8 +32,7 @@ test.describe('PWA & Feature Verification', () => {
         await addBtn.scrollIntoViewIfNeeded();
         await addBtn.click({ force: true });
         
-        // Wait for the specific toast to appear
-        // FIX 4: Confirm browser is offline before polling for the toast
+        // Confirm browser is offline before polling for the toast
         await page.waitForFunction(() => navigator.onLine === false);
         await expect(page.locator('[data-testid="toast"]').filter({ hasText: 'Saved offline' }))
             .toBeVisible({ timeout: 20000 });
@@ -94,10 +52,6 @@ test.describe('PWA & Feature Verification', () => {
     });
 
     test('should switch languages', async ({ page }) => {
-        // - [x] Run final E2E check (Accessibility + Feature)
-        // - [x] Fix language switch regression (Mobile Pixel 5 flakiness)
-        
-        // Find the toggle button
         const langToggleSelector = '[data-testid="language-toggle"]';
         
         // Initial check (English "Boat" or "BOAT")
@@ -108,7 +62,7 @@ test.describe('PWA & Feature Verification', () => {
         await toggle.scrollIntoViewIfNeeded();
         await toggle.click({ force: true });
         
-        // Wait for ANY Tamil characters in the boat label - retry if needed
+        // Wait for ANY Tamil characters in the boat label
         await expect(async () => {
           const boatLabel = page.locator('[data-testid="boat-label"]').last();
           await expect(boatLabel).toBeVisible({ timeout: 5000 });
@@ -120,7 +74,6 @@ test.describe('PWA & Feature Verification', () => {
         
         // Toggle back to English
         await toggle.click({ force: true });
-        
         await expect(page.locator('[data-testid="boat-label"]').last()).toHaveText(/boat/i, { timeout: 15000 });
     });
 });

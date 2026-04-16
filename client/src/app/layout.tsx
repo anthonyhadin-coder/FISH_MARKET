@@ -50,7 +50,9 @@ export default function RootLayout({
               <ToastProvider>
                 <BetaWatermark />
                 {children}
-                <FeedbackWidget />
+                <aside aria-label="Feedback and Support">
+                  <FeedbackWidget />
+                </aside>
               </ToastProvider>
             </AuthProvider>
           </LanguageProvider>

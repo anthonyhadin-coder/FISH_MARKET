@@ -16,7 +16,7 @@ export default defineConfig({
     }
   },
   use: {
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL: 'http://localhost:3000',
     actionTimeout: 15000,
     navigationTimeout: 30000,
     trace: 'on-first-retry',
@@ -55,7 +55,7 @@ export default defineConfig({
   webServer: [
     {
       command: 'cd server && npm run dev',
-      url: 'http://127.0.0.1:5000/health',
+      url: 'http://localhost:5000/health',
       timeout: 120000,
       reuseExistingServer: true,
       env: {
@@ -64,8 +64,8 @@ export default defineConfig({
       }
     },
     {
-      command: 'cd client && npm start',
-      url: 'http://127.0.0.1:3000',
+      command: 'cd client && npm run dev',
+      url: 'http://localhost:3000',
       timeout: 120000,
       reuseExistingServer: true,
     }
