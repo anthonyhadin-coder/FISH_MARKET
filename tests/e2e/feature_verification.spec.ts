@@ -3,77 +3,84 @@ import { setupUniversalMocking } from './test-utils';
 
 test.describe('PWA & Feature Verification', () => {
     test.beforeEach(async ({ page }) => {
-        // Consolidated API mocks and __PLAYWRIGHT_TEST__ flag
+        // Set up universal API mocks
         await setupUniversalMocking(page);
 
         await page.goto('/staff');
-        
         await expect(page).toHaveURL(/.*staff/);
-        // Wait for unique heading to avoid hydration/strict-mode issues
+
+        // Wait for the dashboard to be fully mounted
         await expect(page.getByTestId('dashboard-heading')).toBeVisible({ timeout: 15000 });
+
+        // Select the first boat so EntryTab renders (boat-btn comes from AgentView boat selector)
+        await page.waitForSelector('[data-testid="boat-btn"]', { timeout: 10000 });
+        await page.locator('[data-testid="boat-btn"]').first().click();
+
+        // Confirm entry tab rendered (boat-label is in EntryTab and confirms boat is selected)
+        await expect(page.locator('[data-testid="boat-label"]').first()).toBeVisible({ timeout: 10000 });
     });
 
     test('should show offline indicator and sync notification', async ({ page }) => {
-        // Ensure EntryTab is visible before going offline
-        await expect(page.locator('input[id="wt"]')).toBeVisible();
+        // Entry form should be visible (boat was selected in beforeEach)
+        await expect(page.locator('input[id="wt"]')).toBeVisible({ timeout: 10000 });
 
         await page.context().setOffline(true);
-        // Wait for offline state and for the banner to appear
-        await page.waitForTimeout(2000);
+
+        // Wait for the offline banner to appear
         await expect(page.locator('[data-testid="offline-banner"]')).toBeVisible({ timeout: 10000 });
-        
-        // Use reliable data-testid selectors for the entry form
+
+        // Fill the entry form
         await page.getByTestId('input-fish').fill('Test Fish');
         await page.getByTestId('input-weight').fill('10.5');
         await page.getByTestId('input-rate').fill('100');
-        
-        // Scroll and click
+
+        // Submit
         const addBtn = page.locator('[data-testid="add-row-btn"]');
         await addBtn.scrollIntoViewIfNeeded();
         await addBtn.click({ force: true });
-        
-        // Confirm browser is offline before polling for the toast
+
+        // Confirm offline and wait for the "Saved offline" toast
         await page.waitForFunction(() => navigator.onLine === false);
         await expect(page.locator('[data-testid="toast"]').filter({ hasText: 'Saved offline' }))
             .toBeVisible({ timeout: 20000 });
 
         await page.context().setOffline(false);
-        await page.waitForTimeout(1000); 
+        await page.waitForTimeout(500);
     });
 
     test('should generate PDF', async ({ page }) => {
-        // Switch to reports/slip tab
+        // Switch to slip tab (boat is already selected from beforeEach)
         await page.click('[data-testid="slip-tab"]', { force: true });
-        await page.waitForTimeout(1000); // Wait for AnimatePresence
-        
+
+        // Wait for AnimatePresence transition and for the PDF button to appear
         const pdfBtn = page.locator('[data-testid="download-pdf-btn"]').first();
-        await expect(pdfBtn).toBeVisible();
+        await expect(pdfBtn).toBeVisible({ timeout: 15000 });
         await pdfBtn.click({ force: true });
     });
 
     test('should switch languages', async ({ page }) => {
         const langToggleSelector = '[data-testid="language-toggle"]';
-        
-        // Initial check (English "Boat" or "BOAT")
+
+        // boat-label exists in EntryTab — shows "Boat" label text in English
         await expect(page.locator('[data-testid="boat-label"]').first()).toHaveText(/boat/i, { timeout: 15000 });
-        
+
         // Toggle to Tamil
         const toggle = page.locator(langToggleSelector).first();
         await toggle.scrollIntoViewIfNeeded();
         await toggle.click({ force: true });
-        
-        // Wait for ANY Tamil characters in the boat label
+
+        // Wait for Tamil characters to appear in the boat label
         await expect(async () => {
-          const boatLabel = page.locator('[data-testid="boat-label"]').last();
-          await expect(boatLabel).toBeVisible({ timeout: 5000 });
-          const text = await boatLabel.innerText();
-          if (!/[\u0B80-\u0BFF]/.test(text)) {
-            throw new Error('Tamil text not found');
-          }
+            const boatLabel = page.locator('[data-testid="boat-label"]').first();
+            await expect(boatLabel).toBeVisible({ timeout: 5000 });
+            const text = await boatLabel.innerText();
+            if (!/[\u0B80-\u0BFF]/.test(text)) {
+                throw new Error(`Tamil text not found in boat label, got: "${text}"`);
+            }
         }).toPass({ timeout: 15000 });
-        
-        // Toggle back to English
+
+        // Toggle back to English and verify
         await toggle.click({ force: true });
-        await expect(page.locator('[data-testid="boat-label"]').last()).toHaveText(/boat/i, { timeout: 15000 });
+        await expect(page.locator('[data-testid="boat-label"]').first()).toHaveText(/boat/i, { timeout: 15000 });
     });
 });

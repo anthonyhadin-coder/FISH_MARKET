@@ -440,6 +440,18 @@ export default function AgentDashboard() {
             {/* Main Content Area */}
             <main role="main" className="pt-24 pb-24 md:pb-12 md:pl-28 px-6 md:px-12 max-w-7xl mx-auto min-h-screen">
                 <h1 className="sr-only">{t.appName} - {t.tabs[activeTab]}</h1>
+
+                {/* Offline Banner */}
+                {!isOnline && (
+                    <div
+                        data-testid="offline-banner"
+                        className="mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-amber-800 text-sm font-medium"
+                    >
+                        <span>📴</span>
+                        <span>{lang === 'ta' ? 'நீங்கள் ஆஃப்லைனில் உள்ளீர்கள் — மாற்றங்கள் ஒத்திசைக்கப்படும்' : 'You are offline — changes will sync when reconnected'}</span>
+                    </div>
+                )}
+
                 <div className="space-y-8">
                     {/* Top Bar: Boat Selector & Date */}
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
@@ -447,6 +459,7 @@ export default function AgentDashboard() {
                             {boats.map((boat) => (
                                 <button
                                     key={boat.id}
+                                    data-testid="boat-btn"
                                     onClick={() => setSelectedBoat(boat)}
                                     className={`px-4 py-2 rounded-xl whitespace-nowrap text-sm font-bold transition-all ${
                                         selectedBoat?.id === boat.id
