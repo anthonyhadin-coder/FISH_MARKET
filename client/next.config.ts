@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   // Pin the workspace root so Next.js/Turborepo does NOT traverse up past
   // this directory when resolving node_modules (fixes "C:\node_modules doesn't exist")
   outputFileTracingRoot: path.join(__dirname),
+  output: 'standalone',
+  poweredByHeader: false,
+  compress: true,
+  productionBrowserSourceMaps: false,
   experimental: {},
   images: {
     remotePatterns: [

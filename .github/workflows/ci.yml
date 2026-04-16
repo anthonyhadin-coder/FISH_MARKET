@@ -270,3 +270,15 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  deploy:
+    name: 🚀 Deploy to Production
+    needs: [lint-and-test-client, lint-and-test-server, e2e-tests]
+    if: github.ref == 'refs/heads/main' && success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy Placeholder
+        run: echo "Deploying to Production..."

@@ -33,7 +33,7 @@ test.describe('PWA & Feature Verification', () => {
         await expect(page.locator('[data-testid="boat-label"]').first()).toBeVisible({ timeout: 10000 });
     });
 
-    test('should show offline indicator and sync notification', async ({ page }) => {
+    test('@smoke should show offline indicator and sync notification', async ({ page }) => {
         // Entry form should be visible (boat was selected in beforeEach)
         await expect(page.locator('input[id="wt"]')).toBeVisible({ timeout: 10000 });
 

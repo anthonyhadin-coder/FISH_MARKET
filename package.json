@@ -9,7 +9,8 @@
     "test": "npm run test --prefix client && npm run test --prefix server",
     "test:e2e": "npx playwright test",
     "lint": "npm run lint --prefix client && npm run lint --prefix server",
-    "install:all": "npm install && npm install --prefix client && npm install --prefix server"
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server",
+    "smoke": "npx playwright test --grep @smoke --reporter=line"
   },
   "keywords": [],
   "author": "",

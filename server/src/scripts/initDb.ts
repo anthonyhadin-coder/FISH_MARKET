@@ -208,41 +208,59 @@ const initDb = async () => {
       );
     `);
 
+    // Production Indexes
+    console.log('Verifying/Adding indexes...');
+    try {
+      await pool.query(`CREATE INDEX idx_users_phone ON users(phone)`);
+    } catch (e: any) { if (e.code !== 'ER_DUP_KEYNAME') console.error(e); }
+    
+    try {
+      await pool.query(`CREATE INDEX idx_entries_created_at ON sales(created_at)`);
+    } catch (e: any) { if (e.code !== 'ER_DUP_KEYNAME') console.error(e); }
+    
+    try {
+      await pool.query(`CREATE INDEX idx_entries_boat_id ON sales(boat_id)`);
+    } catch (e: any) { if (e.code !== 'ER_DUP_KEYNAME') console.error(e); }
+
     console.log('Tables created successfully.');
 
-    // Seed dummy user
-    const [rows]: any = await pool.query(`SELECT * FROM users WHERE phone = ?`, ['9876543210']);
-    if (rows.length === 0) {
-      const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash('password123', salt);
-      const [result]: any = await pool.query(`
-        INSERT INTO users (name, phone, password_hash, role, language)
-        VALUES ('Ravi', '9876543210', ?, 'agent', 'tamil')
-      `, [hash]);
-      
-      const agentId = result.insertId;
-      console.log('Seed agent Ravi created with phone 9876543210 and password: password123');
+    if (process.env.NODE_ENV !== 'production') {
+      // Seed dummy user
+      const [rows]: any = await pool.query(`SELECT * FROM users WHERE phone = ?`, ['9876543210']);
+      if (rows.length === 0) {
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash('password123', salt);
+        const [result]: any = await pool.query(`
+          INSERT INTO users (name, phone, password_hash, role, language)
+          VALUES ('Ravi', '9876543210', ?, 'agent', 'tamil')
+        `, [hash]);
+        
+        const agentId = result.insertId;
+        console.log('Seed agent Ravi created with phone 9876543210 and password: password123');
 
-      // Seed boats
-      await pool.query(`INSERT INTO boats (name, agent_id) VALUES ('Sea King', ?)`, [agentId]);
-      await pool.query(`INSERT INTO boats (name, agent_id) VALUES ('Ocean Star', ?)`, [agentId]);
-      console.log('Seed boats created.');
-    } else {
-        console.log('Seed agent already exists.');
-    }
+        // Seed boats
+        await pool.query(`INSERT INTO boats (name, agent_id) VALUES ('Sea King', ?)`, [agentId]);
+        await pool.query(`INSERT INTO boats (name, agent_id) VALUES ('Ocean Star', ?)`, [agentId]);
+        console.log('Seed boats created.');
+      } else {
+          console.log('Seed agent already exists.');
+      }
 
-    // Seed owner user
-    const [ownerRows]: any = await pool.query(`SELECT * FROM users WHERE phone = ?`, ['1111111111']);
-    if (ownerRows.length === 0) {
-      const salt2 = await bcrypt.genSalt(10);
-      const hash2 = await bcrypt.hash('owner123', salt2);
-      await pool.query(`
-        INSERT INTO users (name, phone, password_hash, role, language)
-        VALUES ('Admin Owner', '1111111111', ?, 'owner', 'english')
-      `, [hash2]);
-      console.log('Seed owner created: phone=1111111111, password=owner123');
+      // Seed owner user
+      const [ownerRows]: any = await pool.query(`SELECT * FROM users WHERE phone = ?`, ['1111111111']);
+      if (ownerRows.length === 0) {
+        const salt2 = await bcrypt.genSalt(10);
+        const hash2 = await bcrypt.hash('owner123', salt2);
+        await pool.query(`
+          INSERT INTO users (name, phone, password_hash, role, language)
+          VALUES ('Admin Owner', '1111111111', ?, 'owner', 'english')
+        `, [hash2]);
+        console.log('Seed owner created: phone=1111111111, password=owner123');
+      } else {
+          console.log('Seed owner already exists.');
+      }
     } else {
-        console.log('Seed owner already exists.');
+        console.log('Skipping seed data in production environment.');
     }
 
   } catch (err) {
