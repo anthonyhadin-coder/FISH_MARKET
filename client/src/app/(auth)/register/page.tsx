@@ -18,6 +18,7 @@ import { VoiceInput } from '@/components/voice/VoiceInput';
 import { ParsedVoiceResult } from '@/lib/voice/voiceParser';
 import { User as UserType } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ApiError } from '@/lib/types';
 
 type RegisterState = 'idle' | 'loading' | 'success' | 'error';
@@ -469,9 +470,9 @@ export default function RegisterPage() {
         {/* ── Already have account ──────────────────────────── */}
         <div className="bottom-signin">
           {t.alreadyHaveAccount}{' '}
-          <button type="button" onClick={() => router.push('/login')}>
+          <Link href="/login">
             {t.loginBtn} <ArrowRight className="w-3 h-3 inline" />
-          </button>
+          </Link>
         </div>
 
       </div>

@@ -506,9 +506,9 @@ function LoginContent() {
         {/* Sign up link */}
         <div className="ll-bottom-link">
           {t.dontHaveAccount}{' '}
-          <button type="button" onClick={() => router.push('/register')}>
+          <Link href="/register">
             {t.createAccount} <ArrowRight className="w-3 h-3 inline" />
-          </button>
+          </Link>
         </div>
 
       </div>
