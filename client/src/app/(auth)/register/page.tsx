@@ -220,7 +220,7 @@ function RegisterContent() {
           </div>
 
           <div>
-            <label className="ll-label">{t.nameLabel}</label>
+            <label className="ll-label">{t.fullName}</label>
             <div className="relative">
               <User className="ll-input-icon" />
               <input
