@@ -465,10 +465,21 @@ export const forgotPassword = catchAsync(async (req: Request, res: Response) => 
     if (!phone) return res.status(400).json({ message: 'Phone number required' });
 
     const cleanPhone = sanitizePhone(phone);
+
+    // Rate limit: 1 forgot-password OTP per 60s per phone (prevents SMS spam / cost abuse)
+    if (redis) {
+        const cooldown = await redis.get(`forgot_cooldown:${cleanPhone}`);
+        if (cooldown) {
+            return res.status(429).json({ message: 'Please wait 60s before requesting another OTP' });
+        }
+    }
+
     const [rows]: any[] = await pool.query('SELECT id, name FROM users WHERE phone = ?', [cleanPhone]);
 
     if (rows.length === 0) {
-        return res.json({ message: 'If registered, OTP will be sent' }); // Don't reveal account existence
+        // Don't reveal account existence — but still set cooldown to prevent enumeration via timing
+        if (redis) await redis.set(`forgot_cooldown:${cleanPhone}`, '1', 'EX', 60);
+        return res.json({ message: 'If registered, OTP will be sent' });
     }
 
     const user = rows[0];
@@ -481,6 +492,9 @@ export const forgotPassword = catchAsync(async (req: Request, res: Response) => 
         'UPDATE users SET reset_otp_hash = ?, reset_otp_expiry = ? WHERE id = ?',
         [otpHash, expiry, user.id]
     );
+
+    // Set 60s cooldown AFTER successful generation
+    if (redis) await redis.set(`forgot_cooldown:${cleanPhone}`, '1', 'EX', 60);
 
     // Mock SMS sending (replace with actual provider in production)
     console.log(`[SMS MOCK] To: ${cleanPhone} | FISH MARKET OTP: ${otp}. Valid for 10 mins.`);
@@ -567,7 +581,6 @@ router.get('/me', authenticate, me); // FIX 4 endpoint
 router.put('/change-password', authenticate, validate(changePasswordSchema), changePassword);
 
 // Forgot Password Flow
-// Forgot Password Flow
 router.post('/forgot-password', forgotPassword);
 router.post('/verify-otp', verifyOtp);
 router.post('/reset-password', resetPassword);
@@ -597,16 +610,42 @@ export const sendPhoneOtp = catchAsync(async (req: Request, res: Response) => {
     res.json({ message: 'OTP sent successfully' });
 });
 
+const OTP_MAX_ATTEMPTS = 5;
+const OTP_LOCKOUT_SECONDS = 15 * 60; // 15 minutes
+
 export const verifyPhoneOtp = catchAsync(async (req: Request, res: Response) => {
     const { phone, otp } = req.body;
     const cleanPhone = sanitizePhone(phone);
 
     if (redis) {
+        // Brute-force protection: check lockout first
+        const lockKey = `otp_lock:${cleanPhone}`;
+        const attemptsKey = `otp_attempts:${cleanPhone}`;
+        const isLocked = await redis.get(lockKey);
+        if (isLocked) {
+            return res.status(429).json({ message: `Too many incorrect OTPs. Try again in ${OTP_LOCKOUT_SECONDS / 60} minutes.` });
+        }
+
         const stored = await redis.get(`otp:${cleanPhone}`);
         if (!stored || stored !== otp) {
-            return res.status(400).json({ message: 'Invalid or expired OTP' });
+            // Increment failed attempt counter
+            const attempts = await redis.incr(attemptsKey);
+            await redis.expire(attemptsKey, OTP_LOCKOUT_SECONDS);
+            if (attempts >= OTP_MAX_ATTEMPTS) {
+                await redis.set(lockKey, '1', 'EX', OTP_LOCKOUT_SECONDS);
+                await redis.del(attemptsKey);
+                await redis.del(`otp:${cleanPhone}`);
+                return res.status(429).json({ message: `Too many incorrect OTPs. Locked for ${OTP_LOCKOUT_SECONDS / 60} minutes.` });
+            }
+            return res.status(400).json({ message: 'Invalid or expired OTP', attemptsLeft: OTP_MAX_ATTEMPTS - attempts });
         }
+        // Correct OTP — clear all rate-limit keys
         await redis.del(`otp:${cleanPhone}`);
+        await redis.del(attemptsKey);
+        await redis.del(lockKey);
+    } else {
+        // Redis unavailable — skip brute-force check (dev/test only)
+        console.warn('[verifyPhoneOtp] Redis unavailable — OTP brute-force protection is inactive');
     }
 
     // Find or create user

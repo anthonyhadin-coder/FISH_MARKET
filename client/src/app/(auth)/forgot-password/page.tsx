@@ -1,10 +1,11 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Phone, Lock, KeyRound, ArrowRight, ArrowLeft } from 'lucide-react';
 import api from '@/lib/api';
 import { showToast } from '@/components/ui/Toast';
 import { ApiError } from '@/lib/types';
+import '../login/login.css';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -15,6 +16,14 @@ export default function ForgotPasswordPage() {
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
+
+  // Resend OTP countdown
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const id = setInterval(() => setResendTimer(s => s - 1), 1000);
+    return () => clearInterval(id);
+  }, [resendTimer]);
 
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +33,7 @@ export default function ForgotPasswordPage() {
       await api.post('/auth/forgot-password', { phone });
       showToast('OTP sent successfully', 'success');
       setStep(2);
+      setResendTimer(60);
     } catch (err: unknown) {
       const error = err as ApiError;
       showToast(error.response?.data?.message || 'Failed to send OTP', 'error');
@@ -147,6 +157,30 @@ export default function ForgotPasswordPage() {
                 {loading ? 'Verifying...' : 'Verify OTP'}
                 {!loading && <ArrowRight className="w-4 h-4" />}
               </button>
+              {/* Resend OTP */}
+              <div className="flex justify-center mt-3">
+                <button
+                  type="button"
+                  disabled={resendTimer > 0 || loading}
+                  onClick={async () => {
+                    if (resendTimer > 0 || loading) return;
+                    setLoading(true);
+                    try {
+                      await api.post('/auth/forgot-password', { phone });
+                      showToast('OTP resent successfully', 'success');
+                      setResendTimer(60);
+                    } catch (err: unknown) {
+                      const error = err as ApiError;
+                      showToast(error.response?.data?.message || 'Failed to resend OTP', 'error');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="text-xs font-bold text-cyan-400 disabled:opacity-40 uppercase tracking-wide"
+                >
+                  {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
+                </button>
+              </div>
             </form>
           )}
 
