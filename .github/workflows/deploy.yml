@@ -32,7 +32,7 @@ jobs:
       - name: Test Next.js build before Vercel deploy
         run: |
           cd client
-          npm ci
+          npm ci --include=dev
           npm run build
           echo "✅ Build passed locally — proceeding to Vercel deploy"
         env:
