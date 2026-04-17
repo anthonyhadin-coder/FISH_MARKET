@@ -248,20 +248,19 @@ export default function RegisterPage() {
             )}
           </AnimatePresence>
 
-          {/* Offline banner — only rendered after mount to avoid hydration mismatch */}
-          {mounted && (
-            <AnimatePresence>
-              {isOffline && (
-                <motion.div
-                  className="flex items-center gap-2 p-3 text-sm font-semibold mb-4 bg-blue-50 text-blue-600 rounded-lg border border-blue-100"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                >
-                  <WifiOff className="w-4 h-4" />
-                  <span>{t.offlineBanner}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          {/* Offline banner — gated by mounted AND isOffline (no AnimatePresence wrapper)
+              AnimatePresence caused Framer Motion to SSR-render the initial animation
+              state even when the condition was false, producing a hydration mismatch.
+              This matches the same pattern used in login/page.tsx. */}
+          {mounted && isOffline && (
+            <motion.div
+              className="flex items-center gap-2 p-3 text-sm font-semibold mb-4 bg-blue-50 text-blue-600 rounded-lg border border-blue-100"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <WifiOff className="w-4 h-4" />
+              <span>{t.offlineBanner}</span>
+            </motion.div>
           )}
 
           {/* Error banner */}
