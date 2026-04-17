@@ -1,10 +1,13 @@
 "use client";
-import { useState, useEffect, useCallback, useTransition } from 'react';
+import { useState, useEffect, useCallback, useTransition, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Globe, Eye, EyeOff, User, Phone, Lock, Ship, ArrowRight,
-  WifiOff, CloudOff, ShieldCheck, Zap, ChevronDown, Check
+  WifiOff, Check, ChevronDown, ShieldCheck
 } from 'lucide-react';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
@@ -13,40 +16,40 @@ import RoleSelectModal from '@/components/shared/RoleSelectModal';
 import { useFormErrors } from '@/hooks/useFormErrors';
 import { loginT } from '@/lib/loginTranslations';
 import api from '@/lib/api';
-import './register.css';
+// We import the new unified design system
+import '../login/login-light.css';
 import { VoiceInput } from '@/components/voice/VoiceInput';
 import { ParsedVoiceResult } from '@/lib/voice/voiceParser';
-import { User as UserType } from '@/lib/types';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ApiError } from '@/lib/types';
+import { User as UserType, ApiError } from '@/lib/types';
 
-type RegisterState = 'idle' | 'loading' | 'success' | 'error';
+type RegisterState = 'idle' | 'loading' | 'success' | 'error' | 'offline';
 type UserRole = 'AGENT' | 'OWNER' | 'BUYER';
 
-export default function RegisterPage() {
+function getFriendlyError(err: ApiError): string {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return 'You appear to be offline.';
+  const msg = err.response?.data?.message || '';
+  if (err.message === 'Network Error') return 'Cannot reach the server. Check your connection.';
+  if (msg) return msg;
+  return 'Registration failed. Please try again.';
+}
+
+function RegisterContent() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('AGENT');
   const [showPass, setShowPass] = useState(false);
+  
   const [state, setState] = useState<RegisterState>('idle');
   const [error, setError] = useState('');
-  // Guard: only show Google errors if the user has actually clicked the Google button
   const [googleClicked, setGoogleClicked] = useState(false);
-
-  // ── HYDRATION FIX: never read browser APIs during SSR ─────────
-  // Start as false / unmounted; update only after client hydrates.
   const [mounted, setMounted] = useState(false);
-  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
-    // Now we're safely on the client — read the real online status
     setMounted(true);
-    setIsOffline(!navigator.onLine);
-
-    const onOnline  = () => setIsOffline(false);
-    const onOffline = () => setIsOffline(true);
+    if (!navigator.onLine) setState('offline');
+    const onOnline  = () => setState(s => s === 'offline' ? 'idle' : s);
+    const onOffline = () => setState('offline');
     window.addEventListener('online',  onOnline);
     window.addEventListener('offline', onOffline);
     return () => {
@@ -64,7 +67,6 @@ export default function RegisterPage() {
   const currentLang = (lang === 'ta' || lang === 'en') ? lang : 'en';
   const t = loginT[currentLang];
 
-  // Redirect if already logged in
   useEffect(() => {
     if (user) {
       const r = user.role.toLowerCase();
@@ -75,7 +77,6 @@ export default function RegisterPage() {
     }
   }, [user, router]);
 
-  // Google OAuth hook
   const {
     isLoading: googleLoading,
     error: googleError,
@@ -88,7 +89,6 @@ export default function RegisterPage() {
     clearError: clearGoogleError,
   } = useGoogleAuth();
 
-  // Only surface Google errors if the user actually initiated the flow
   const visibleGoogleError = googleClicked ? googleError : null;
 
   const handleSuccessFlash = useCallback(async (userData: UserType) => {
@@ -97,7 +97,6 @@ export default function RegisterPage() {
     login(userData);
   }, [login]);
 
-  // ── Form submit → POST /auth/register ──────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (state === 'loading') return;
@@ -115,13 +114,11 @@ export default function RegisterPage() {
       });
       await handleSuccessFlash(res.data.user);
     } catch (err: unknown) {
-      const apiErr = err as ApiError;
       setState('error');
-      setError(apiErr.response?.data?.message || 'Registration failed. Please try again.');
+      setError(getFriendlyError(err as ApiError));
     }
   };
 
-  // Lang toggle handler — deferred so it doesn't conflict with router init
   const handleLangToggle = () => {
     startTransition(() => {
       setLang(lang === 'en' ? 'ta' : 'en');
@@ -129,94 +126,62 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="register-layout">
-      <div className="register-content">
+    <div className="login-light-content">
+      {/* ── Brand & Lang ─────────────────────────────────────────── */}
+      <div className="flex flex-col items-center mb-8">
+        <button
+          type="button"
+          onClick={handleLangToggle}
+          className="absolute top-4 right-4 ll-lang-btn z-50"
+          aria-label="Toggle language"
+        >
+          <Globe className="w-3.5 h-3.5 text-blue-600" />
+          {t.langToggle}
+          <ChevronDown className="w-3 h-3 text-slate-400" />
+        </button>
 
-        {/* ── Header ───────────────────────────────────────── */}
-        <div className="flex items-start justify-between mb-6">
-          <div className="brand-logo-container">
-            <div className="brand-icon">
-              <Ship className="w-8 h-8" />
-            </div>
-            <div>
-              <div className="brand-text-main">
-                {currentLang === 'ta' ? 'ஆழ் கடல்' : 'DEEP OCEAN'}
-              </div>
-              <div className="brand-text-sub">
-                {currentLang === 'ta' ? 'மீன் சந்தை' : 'FISH MARKET'}
-              </div>
-              <div className="brand-slogan">
-                {currentLang === 'ta'
-                  ? 'எளிமையானது. மீனவர்களுக்காக.'
-                  : 'Smart. Simple. Built for Fishermen.'}
-              </div>
-            </div>
-          </div>
+        <div className="ll-brand-icon mb-4">
+          <Ship className="w-7 h-7" />
+        </div>
+        <h1 className="ll-brand-name">
+          {currentLang === 'ta' ? 'ஆழ் கடல்' : 'DEEP OCEAN'}
+        </h1>
+        <h2 className="ll-brand-sub mb-1">
+          {currentLang === 'ta' ? 'சந்தை' : 'MARKET'}
+        </h2>
+        <p className="ll-brand-tag">
+          {currentLang === 'ta' ? 'எளிமையானது. மீனவர்களுக்காக.' : 'Smart. Simple. Built for Fishermen.'}
+        </p>
+      </div>
 
-          <button
-            type="button"
-            onClick={handleLangToggle}
-            className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-full px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm"
-            aria-label="Toggle language"
+      {/* ── Main form block ──────────────────────────────────────── */}
+      <div className="ll-card">
+
+        {/* Banners */}
+        {mounted && state === 'offline' && (
+          <motion.div
+            className="ll-offline-banner"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
           >
-            <Globe className="w-4 h-4 text-blue-600" />
-            {t.langToggle}
-            <ChevronDown className="w-3 h-3 text-slate-400" />
-          </button>
-        </div>
+            <WifiOff className="w-4 h-4" />
+            <span>{t.offlineBanner}</span>
+          </motion.div>
+        )}
 
-        {/* ── OR divider ────────────────────────────────────── */}
-        <div className="or-divider">
-          <span>{t.dividerOr}</span>
-        </div>
+        {(error || visibleGoogleError) && (
+          <div className="ll-error-banner">
+            <span className="flex-1">{error || visibleGoogleError}</span>
+            <button type="button" onClick={() => { setError(''); clearGoogleError(); }}>✕</button>
+          </div>
+        )}
 
-        {/* ── Role selection ────────────────────────────────── */}
-        <h2 className="text-[15px] font-bold text-slate-900 mb-3">
-          {t.selectRole}
+        <h2 className="text-[17px] font-black text-slate-800 mb-5 leading-tight uppercase tracking-wide">
+          {t.createAccount}
         </h2>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {/* Boat Agent */}
-          <button
-            type="button"
-            onClick={() => setRole('AGENT')}
-            className={`role-btn ${role === 'AGENT' ? 'active' : ''}`}
-          >
-            {role === 'AGENT' && (
-              <div className="role-check"><Check className="w-3 h-3" /></div>
-            )}
-            <div className="role-icon">
-              <User className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="role-title">{t.roleAgent.toUpperCase()}</div>
-              <div className="role-desc">{t.roleAgentDesc}</div>
-            </div>
-          </button>
-
-          {/* Market Owner */}
-          <button
-            type="button"
-            onClick={() => setRole('OWNER')}
-            className={`role-btn ${role === 'OWNER' ? 'active' : ''}`}
-          >
-            {role === 'OWNER' && (
-              <div className="role-check"><Check className="w-3 h-3" /></div>
-            )}
-            <div className="role-icon">
-              <Ship className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="role-title">{t.roleOwner.toUpperCase()}</div>
-              <div className="role-desc">{t.roleOwnerDesc}</div>
-            </div>
-          </button>
-        </div>
-
-        {/* ── Form card ─────────────────────────────────────── */}
-        <div className="register-card relative">
-
-          {/* Voice command — triggers form submit on "save" */}
+        {/* Voice Input Integration */}
+        <div className="mb-5">
           <VoiceInput
             variant="card-integrated"
             lang={currentLang}
@@ -229,255 +194,160 @@ export default function RegisterPage() {
               });
             }}
           />
+        </div>
 
-          {/* Success overlay */}
-          <AnimatePresence>
-            {state === 'success' && (
-              <motion.div
-                className="absolute inset-0 bg-white/95 rounded-xl z-50 flex flex-col items-center justify-center gap-3"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" noValidate>
+
+          {/* Role Selection Tabs */}
+          <div>
+            <label className="ll-label">{t.selectRole}</label>
+            <div className="ll-tabs">
+              <button
+                type="button"
+                onClick={() => setRole('AGENT')}
+                className={`ll-tab ${role === 'AGENT' ? 'active' : ''}`}
               >
-                <div className="w-16 h-16 bg-blue-50 border border-blue-200 text-blue-600 rounded-full flex items-center justify-center">
-                  <Check className="w-8 h-8" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-800">
-                  {currentLang === 'ta' ? 'கணக்கு உருவாக்கப்பட்டது!' : 'Account Created!'}
-                </h3>
-                <p className="text-sm font-medium text-slate-500">{t.redirecting}</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Offline banner — gated by mounted AND isOffline (no AnimatePresence wrapper)
-              AnimatePresence caused Framer Motion to SSR-render the initial animation
-              state even when the condition was false, producing a hydration mismatch.
-              This matches the same pattern used in login/page.tsx. */}
-          {mounted && isOffline && (
-            <motion.div
-              className="flex items-center gap-2 p-3 text-sm font-semibold mb-4 bg-blue-50 text-blue-600 rounded-lg border border-blue-100"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <WifiOff className="w-4 h-4" />
-              <span>{t.offlineBanner}</span>
-            </motion.div>
-          )}
-
-          {/* Error banner */}
-          {(error || visibleGoogleError) && (
-            <div className="flex items-center gap-3 p-3 text-sm font-semibold mb-4 bg-red-50 text-red-500 rounded-lg border border-red-100">
-              <span className="flex-1">{error || visibleGoogleError}</span>
-              <button type="button" onClick={() => { setError(''); clearGoogleError(); }}>✕</button>
-            </div>
-          )}
-
-          {/* ── Registration form ─────────────────────────── */}
-          <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" noValidate>
-
-            {/* Full Name */}
-            <div>
-              <label htmlFor="name" className="reg-label">
-                {currentLang === 'ta' ? 'முழு பெயர்' : 'FULL NAME'}
-              </label>
-              <div className="relative">
-                <User className="input-icon-left" />
-                <input
-                  type="text"
-                  autoComplete="name"
-                  placeholder={t.fullNamePlaceholder}
-                  value={name}
-                  {...getInputProps('name')}
-                  onChange={e => {
-                    setName(e.target.value);
-                    getInputProps('name').onChange();
-                  }}
-                  className={`reg-input ${errors.name ? 'border-red-400' : ''}`}
-                  required
-                  minLength={2}
-                />
-              </div>
-              {errors.name && (
-                <p className="text-xs text-red-500 mt-1 font-medium">{errors.name}</p>
-              )}
-            </div>
-
-            {/* Phone Number */}
-            <div>
-              <label htmlFor="phone" className="reg-label">
-                {currentLang === 'ta' ? 'கைபேசி எண்' : 'PHONE NUMBER'}
-              </label>
-              <div className="relative">
-                <Phone className="input-icon-left" />
-                <input
-                  type="tel"
-                  autoComplete="tel"
-                  placeholder={t.phonePlaceholder}
-                  value={phone}
-                  {...getInputProps('phone')}
-                  onChange={e => {
-                    setPhone(e.target.value.replace(/[^\d+\-\s()]/g, ''));
-                    getInputProps('phone').onChange();
-                  }}
-                  className={`reg-input pr-20 ${errors.phone ? 'border-red-400' : ''}`}
-                  required
-                />
-                {/* +91 badge */}
-                <div className="absolute right-0 top-0 h-full flex items-center px-3 text-slate-600 font-semibold text-sm border-l border-slate-200 pointer-events-none">
-                  +91 <ChevronDown className="w-3 h-3 ml-1 text-slate-400" />
-                </div>
-              </div>
-              {errors.phone && (
-                <p className="text-xs text-red-500 mt-1 font-medium">{errors.phone}</p>
-              )}
-            </div>
-
-            {/* Password */}
-            <div>
-              <label htmlFor="password" className="reg-label">
-                {currentLang === 'ta' ? 'கடவுச்சொல்' : 'PASSWORD'}
-              </label>
-              <div className="relative">
-                <Lock className="input-icon-left" />
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  placeholder={
-                    currentLang === 'ta'
-                      ? 'வலிமையான கடவுச்சொல் உருவாக்கவும்'
-                      : 'Create a strong password'
-                  }
-                  value={password}
-                  {...getInputProps('password')}
-                  onChange={e => {
-                    setPassword(e.target.value);
-                    getInputProps('password').onChange();
-                  }}
-                  className={`reg-input pr-12 ${errors.password ? 'border-red-400' : ''}`}
-                  required
-                  minLength={8}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  aria-label={showPass ? 'Hide password' : 'Show password'}
-                >
-                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {errors.password ? (
-                <p className="text-xs text-red-500 mt-1 font-medium">{errors.password}</p>
-              ) : (
-                <div className="pass-hint">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  {currentLang === 'ta'
-                    ? 'குறைந்தது 8 எழுத்துக்கள் தேவை'
-                    : 'Use at least 8 characters with letters and numbers'}
-                </div>
-              )}
-            </div>
-
-            {/* CREATE ACCOUNT button */}
-            <button
-              id="register-submit-btn"
-              type="submit"
-              disabled={state === 'loading'}
-              className="reg-submit-btn"
-            >
-              {state === 'loading' ? (
-                <span className="font-semibold tracking-wide animate-pulse">
-                  {currentLang === 'ta' ? 'உருவாக்குகிறது…' : 'CREATING ACCOUNT…'}
-                </span>
-              ) : (
-                <>
-                  <ArrowRight className="w-4 h-4" />
-                  {t.registerBtn.toUpperCase()}
-                </>
-              )}
-            </button>
-
-            {/* OR CONTINUE WITH */}
-            <div className="or-divider">
-              <span>
-                {currentLang === 'ta' ? 'அல்லது இதன் மூலம் தொடரவும்' : 'OR CONTINUE WITH'}
-              </span>
-            </div>
-
-            {/* Google OAuth — real button with popup/redirect detection */}
-            <div
-              className="w-full flex justify-center"
-              onClick={() => setGoogleClicked(true)}
-            >
-              <GoogleAuthButton
-                lang={currentLang}
-                isLoading={googleLoading}
-                isOffline={mounted ? isOffline : false}
-                popupBlocked={popupBlocked}
-                onSuccess={(credential) => {
-                  setGoogleClicked(true);
-                  handleGoogleSuccess(credential);
-                }}
-                onError={() => {
-                  // Only surface the error if user deliberately clicked
-                  if (googleClicked) handleGoogleError();
-                }}
-              />
-            </div>
-
-          </form>
-
-          {/* ── Feature badges ────────────────────────────── */}
-          <div className="features-grid">
-            <div className="feature-item">
-              <div className="feature-icon"><CloudOff className="w-4 h-4" /></div>
-              <div>
-                <div className="feature-title">
-                  {currentLang === 'ta' ? 'ஆஃப்லைன் பயன்பாடு' : 'Works Offline'}
-                </div>
-                <div className="feature-sub">
-                  {currentLang === 'ta' ? 'இணையம் இல்லாமல்' : 'No internet? No problem.'}
-                </div>
-              </div>
-            </div>
-
-            <div className="feature-item">
-              <div className="feature-icon"><ShieldCheck className="w-4 h-4" /></div>
-              <div>
-                <div className="feature-title">
-                  {currentLang === 'ta' ? 'பாதுகாப்பானது' : 'Secure & Reliable'}
-                </div>
-                <div className="feature-sub">
-                  {currentLang === 'ta' ? 'தரவு பாதுகாப்பானது' : 'Your data is always safe.'}
-                </div>
-              </div>
-            </div>
-
-            <div className="feature-item">
-              <div className="feature-icon"><Zap className="w-4 h-4" /></div>
-              <div>
-                <div className="feature-title">
-                  {currentLang === 'ta' ? 'வேகமானது' : 'Built for Speed'}
-                </div>
-                <div className="feature-sub">
-                  {currentLang === 'ta' ? 'வேகமாக, எளிமையாக' : 'Fast, easy and efficient.'}
-                </div>
-              </div>
+                {t.roleAgent}
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole('OWNER')}
+                className={`ll-tab ${role === 'OWNER' ? 'active' : ''}`}
+              >
+                {t.roleOwner}
+              </button>
             </div>
           </div>
+
+          <div>
+            <label className="ll-label">{t.nameLabel}</label>
+            <div className="relative">
+              <User className="ll-input-icon" />
+              <input
+                {...getInputProps('name')}
+                type="text"
+                placeholder={currentLang === 'ta' ? 'பெயர்' : 'Enter your name'}
+                value={name}
+                onChange={e => setName(e.target.value)}
+                className={`ll-input ${errors.name ? 'error' : ''}`}
+              />
+            </div>
+            {errors.name && <p className="text-[11px] text-red-500 font-bold mt-1.5">{errors.name}</p>}
+          </div>
+
+          <div>
+            <label className="ll-label">{t.phoneLabel}</label>
+            <div className="relative flex">
+              <div className="flex-none w-14 border border-r-0 border-slate-200 rounded-l-lg bg-slate-50 flex items-center justify-center text-sm font-bold text-slate-600">
+                +91
+              </div>
+              <div className="relative flex-1">
+                <Phone className="ll-input-icon !left-3" />
+                <input
+                  {...getInputProps('phone')}
+                  type="tel"
+                  maxLength={10}
+                  placeholder="00000 00000"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
+                  className={`ll-input !rounded-l-none !pl-10 ${errors.phone ? 'error' : ''}`}
+                />
+              </div>
+            </div>
+            {errors.phone && <p className="text-[11px] text-red-500 font-bold mt-1.5">{errors.phone}</p>}
+          </div>
+
+          <div>
+            <label className="ll-label">{t.passwordLabel}</label>
+            <div className="relative">
+              <Lock className="ll-input-icon" />
+              <input
+                {...getInputProps('password')}
+                type={showPass ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className={`ll-input ${errors.password ? 'error' : ''}`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+              >
+                {showPass ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
+              </button>
+            </div>
+            {errors.password && <p className="text-[11px] text-red-500 font-bold mt-1.5">{errors.password}</p>}
+          </div>
+
+          <button
+            type="submit"
+            disabled={state === 'loading'}
+            className="ll-submit-btn"
+          >
+            {state === 'loading' ? (
+              <>
+                <div className="ll-wave-bars">
+                  {[1,2,3,4,5].map(i => <span key={i} />)}
+                </div>
+                <span className="uppercase tracking-widest font-black text-sm">
+                  {currentLang === 'ta' ? 'உருவாக்குகிறது...' : 'CREATING...'}
+                </span>
+              </>
+            ) : t.createAccount}
+          </button>
+        </form>
+
+        <div className="ll-divider">
+          <span>{t.dividerOr}</span>
         </div>
 
-        {/* ── Already have account ──────────────────────────── */}
-        <div className="bottom-signin">
-          {t.alreadyHaveAccount}{' '}
-          <Link href="/login">
-            {t.loginBtn} <ArrowRight className="w-3 h-3 inline" />
-          </Link>
+        <div className="mt-5">
+          <GoogleAuthButton
+            lang={currentLang}
+            isLoading={googleLoading}
+            isOffline={mounted ? state === 'offline' : false}
+            popupBlocked={popupBlocked}
+            onSuccess={(credential) => {
+              setGoogleClicked(true);
+              handleGoogleSuccess(credential);
+            }}
+            onError={() => {
+              if (googleClicked) handleGoogleError();
+            }}
+          />
         </div>
 
+        <AnimatePresence>
+          {state === 'success' && (
+            <motion.div
+              className="ll-success-overlay"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <div className="w-16 h-16 bg-green-50 border border-green-200 text-green-500 rounded-full flex items-center justify-center">
+                <Check className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800">
+                {currentLang === 'ta' ? 'நல்வரவு!' : 'Welcome aboard!'}
+              </h3>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex items-center justify-center gap-2 mt-5 text-[11px] text-slate-400 font-medium">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          {t.securedBy}
+        </div>
       </div>
 
-      {/* Google OAuth role selection modal (for new Google users) */}
+      <div className="ll-bottom-link">
+        {t.alreadyHaveAccount}{' '}
+        <Link href="/login">
+          {t.loginBtn} <ArrowRight className="w-3 h-3 inline" />
+        </Link>
+      </div>
+
       <RoleSelectModal
         isOpen={needsRoleSelection}
         lang={currentLang}
@@ -485,6 +355,22 @@ export default function RegisterPage() {
         isLoading={googleLoading}
         onSelect={handleRoleSelect}
       />
+    </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <main className="login-light-layout">
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="ll-wave-bars">
+            {[1,2,3,4,5].map(i => <span key={i} style={{background:'#1D6AE5'}} />)}
+          </div>
+        </div>
+      }>
+        <RegisterContent />
+      </Suspense>
     </main>
   );
 }
