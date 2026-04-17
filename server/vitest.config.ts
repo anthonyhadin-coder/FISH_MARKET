@@ -21,7 +21,7 @@ export default defineConfig({
         branches: 80,
         statements: 80,
       },
-      exclude: ['node_modules/', 'src/tests/'],
+      exclude: ['node_modules/', 'src/db/seed.ts', 'src/scripts/'],
     },
   },
 });

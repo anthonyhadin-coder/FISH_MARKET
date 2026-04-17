@@ -19,9 +19,14 @@ if (process.env.DATABASE_URL) {
 // Construct DATABASE_URL from individual parameters if not set
 if (!process.env.DATABASE_URL) {
   console.log('[DB-Config] DATABASE_URL missing, attempting construction from individual parameters...');
-  const dbHost = process.env.DB_HOST || 'localhost';
+  
+  if (!process.env.DB_HOST || !process.env.DB_USER) {
+    throw new Error('FATAL: DATABASE_URL environment variable is missing, and no DB_HOST / DB_USER was provided.');
+  }
+
+  const dbHost = process.env.DB_HOST;
   const dbPort = process.env.DB_PORT || '3306';
-  const dbUser = process.env.DB_USER || 'root';
+  const dbUser = process.env.DB_USER;
   const dbPassword = process.env.DB_PASSWORD || '';
   const dbName = process.env.DB_NAME || 'fish_market';
 
@@ -30,10 +35,6 @@ if (!process.env.DATABASE_URL) {
   const encodedPassword = encodeURIComponent(dbPassword);
   
   process.env.DATABASE_URL = `mysql://${encodedUser}:${encodedPassword}@${dbHost}:${dbPort}/${dbName}`;
-}
-
-if (!process.env.DATABASE_URL) {
-  throw new Error('FATAL: DATABASE_URL environment variable is missing.');
 }
 
 const pool = mysql.createPool(process.env.DATABASE_URL);

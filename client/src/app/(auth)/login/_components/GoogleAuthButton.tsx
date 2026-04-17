@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleLogin, useGoogleOneTapLogin } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 import { Loader2, WifiOff } from 'lucide-react';
 import { loginT } from '@/lib/loginTranslations';
 import type { Language } from '@/lib/i18n';
@@ -29,8 +29,14 @@ export default function GoogleAuthButton({
   const t = loginT[lang];
   const [mounted, setMounted] = useState(false);
 
+  // Detect if we should use redirect flow (Mobile or Standalone PWA)
+  const [useRedirect, setUseRedirect] = useState(false);
+  
   useEffect(() => {
     setMounted(true);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    if (isMobile || isStandalone) setUseRedirect(true);
   }, []);
 
   // We strictly use "popup" mode because "redirect" requires a backend callback endpoint
@@ -43,14 +49,6 @@ export default function GoogleAuthButton({
       onError();
     }
   };
-
-  // Detect if we should use redirect flow (Mobile or Standalone PWA)
-  const [useRedirect, setUseRedirect] = useState(false);
-  useEffect(() => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    if (isMobile || isStandalone) setUseRedirect(true);
-  }, []);
 
   if (!mounted) return null;
 

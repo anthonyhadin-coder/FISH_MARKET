@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
-import { app } from '../index';
-import pool from '../config/db';
+import { app } from '../../index';
+import pool from '../../config/db';
 
 const mockConn = {
     beginTransaction: vi.fn(),

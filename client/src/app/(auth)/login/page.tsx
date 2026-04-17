@@ -285,31 +285,6 @@ function LoginContent() {
             </div>
           )}
 
-          {/* Google OAuth */}
-          <div
-            className="w-full flex justify-center mb-0"
-            onClick={() => setGoogleClicked(true)}
-          >
-            <GoogleAuthButton
-              lang={currentLang}
-              isLoading={googleLoading}
-              isOffline={mounted ? isOffline : false}
-              popupBlocked={popupBlocked}
-              onSuccess={(credential) => {
-                setGoogleClicked(true);
-                handleGoogleSuccess(credential);
-              }}
-              onError={() => {
-                if (googleClicked) handleGoogleError();
-              }}
-            />
-          </div>
-
-          {/* OR divider */}
-          <div className="ll-divider">
-            <span>{t.dividerOr}</span>
-          </div>
-
           {/* Method tabs: Password / OTP */}
           <div className="ll-tabs">
             <button
@@ -495,6 +470,31 @@ function LoginContent() {
               )}
             </button>
           </form>
+
+          {/* OR divider */}
+          <div className="ll-divider">
+            <span>{t.dividerOr}</span>
+          </div>
+
+          {/* Google OAuth */}
+          <div
+            className="w-full flex justify-center mb-0"
+            onClick={() => setGoogleClicked(true)}
+          >
+            <GoogleAuthButton
+              lang={currentLang}
+              isLoading={googleLoading}
+              isOffline={mounted ? isOffline : false}
+              popupBlocked={popupBlocked}
+              onSuccess={(credential) => {
+                setGoogleClicked(true);
+                handleGoogleSuccess(credential);
+              }}
+              onError={() => {
+                if (googleClicked) handleGoogleError();
+              }}
+            />
+          </div>
 
           {/* Security badge */}
           <div className="flex items-center justify-center gap-2 mt-5 text-[11px] text-slate-400 font-medium">

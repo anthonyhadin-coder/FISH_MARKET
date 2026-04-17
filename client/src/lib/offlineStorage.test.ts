@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { offlineStorage, PendingSaleData } from '../lib/offlineStorage';
+import { offlineStorage, PendingSaleData } from './offlineStorage';
 
 describe('offlineStorage robustness tests', () => {
     

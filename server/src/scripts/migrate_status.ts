@@ -1,4 +1,4 @@
-import pool from './src/core/db';
+import pool from '../config/db';
 
 async function migrate() {
   try {
