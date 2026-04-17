@@ -1,5 +1,6 @@
 import webpush from 'web-push';
 import pool from '../config/db';
+import { logger } from '../utils/logger';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -14,7 +15,7 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env
         process.env.VAPID_PRIVATE_KEY
     );
 } else {
-    console.warn('VAPID keys not found in environment. Push notifications will be disabled.');
+    logger.warn('VAPID keys not found in environment. Push notifications will be disabled.');
 }
 
 interface PushPayload {
@@ -43,7 +44,7 @@ export async function sendPushToUser(
         `, [userId]);
 
         if (!subscriptions || subscriptions.length === 0) {
-            console.log(`No active push subscriptions for user ${userId}`);
+            logger.info(`No active push subscriptions for user ${userId}`);
             return;
         }
 
@@ -77,7 +78,7 @@ export async function sendPushToUser(
                 } catch (err: any) {
                     // 410 Gone = subscription expired or 404 Not Found
                     if (err.statusCode === 410 || err.statusCode === 404) {
-                        console.log(`Subscription ${sub.id} expired. Deactivating...`);
+                        logger.info(`Subscription ${sub.id} expired. Deactivating...`);
                         await pool.query(
                             'UPDATE push_subscriptions SET is_active = false WHERE id = ?',
                             [sub.id]
@@ -89,9 +90,9 @@ export async function sendPushToUser(
         );
 
         const succeeded = results.filter(r => r.status === 'fulfilled').length;
-        console.log(`Push delivery for user ${userId}: ${succeeded}/${subscriptions.length} successful.`);
+        logger.info(`Push delivery for user ${userId}: ${succeeded}/${subscriptions.length} successful.`);
     } catch (err) {
-        console.error(`Failed to send push to user ${userId}:`, err);
+        logger.error(`Failed to send push to user ${userId}`, err);
     }
 }
 

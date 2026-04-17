@@ -1,11 +1,16 @@
 {
+  "id": "/",
   "name": "Fish Market Ledger",
   "short_name": "Fish Ledger",
   "description": "Smart Digital Accounts for Fishing Agents",
+  "lang": "ta",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0B1120",
   "theme_color": "#6366F1",
+  "categories": ["finance", "business", "productivity"],
   "icons": [
     {
       "src": "/icon-192.png",

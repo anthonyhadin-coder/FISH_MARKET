@@ -24,7 +24,7 @@ export const Input = ({ label, error, className, id, ...props }: InputProps) => 
             <input
                 id={inputId}
                 className={cn(
-                    "w-full px-4 py-2.5 bg-ocean-900/30 border border-ocean-800 rounded-xl text-ocean-50 placeholder:text-ocean-700 transition-all focus:outline-none focus:ring-2 focus:ring-ocean-500/30 focus:border-ocean-500",
+                    "w-full px-4 py-2.5 bg-ocean-900/50 border border-ocean-800 rounded-xl text-white placeholder:text-white/40 transition-all focus:outline-none focus:ring-2 focus:ring-ocean-500/30 focus:border-ocean-500",
                     error && "border-coral-500 focus:ring-coral-500/30 focus:border-coral-500",
                     className
                 )}

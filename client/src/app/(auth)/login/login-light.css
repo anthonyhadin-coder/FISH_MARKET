@@ -1,0 +1,364 @@
+/* ═══════════════════════════════════════════════════════════════════
+   login-light.css — Deep Ocean Fish Market - Bright Login Page
+   ═══════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* ── Layout ─────────────────────────────────────────────────────── */
+.login-light-layout {
+  min-height: 100svh;
+  background-color: #E8F4FC;
+  background-image: url('/images/login_harbor_bg.png');
+  background-size: 100% auto;
+  background-position: top center;
+  background-repeat: no-repeat;
+  position: relative;
+  font-family: 'Inter', sans-serif;
+  color: #0F172A;
+}
+
+.login-light-layout::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(180deg, rgba(232,244,252,0.05) 0%, rgba(232,244,252,1) 310px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-light-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* ── Brand ─────────────────────────────────────────────────────── */
+.ll-brand-icon {
+  width: 52px;
+  height: 52px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1D6AE5;
+}
+
+.ll-brand-name { font-size: 22px; font-weight: 800; color: #0F204C; line-height: 1.1; }
+.ll-brand-sub  { font-size: 20px; font-weight: 700; color: #4AA4F1; line-height: 1.1; }
+.ll-brand-tag  { font-size: 12px; font-weight: 500; color: #64748B; margin-top: 5px; }
+
+/* ── Card ───────────────────────────────────────────────────────── */
+.ll-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  position: relative;
+}
+
+/* ── Method Tabs ─────────────────────────────────────────────────── */
+.ll-tabs {
+  display: flex;
+  background: #F1F5F9;
+  border-radius: 8px;
+  padding: 3px;
+  margin-bottom: 1.25rem;
+}
+
+.ll-tab {
+  flex: 1;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 6px;
+  color: #94A3B8;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.ll-tab.active {
+  background: #FFFFFF;
+  color: #1D6AE5;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+
+/* ── Labels ─────────────────────────────────────────────────────── */
+.ll-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #475569;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+/* ── Inputs ──────────────────────────────────────────────────────── */
+.ll-input {
+  width: 100%;
+  height: 48px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 0 16px 0 42px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0F172A;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+}
+
+.ll-input::placeholder { color: #94A3B8; }
+
+.ll-input:focus {
+  outline: none;
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+.ll-input.error { border-color: #F87171; }
+.ll-input.error:focus { box-shadow: 0 0 0 3px rgba(248,113,113,0.15); }
+
+.ll-input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+/* OTP big input */
+.ll-otp-input {
+  width: 100%;
+  height: 64px;
+  background: #FFFFFF;
+  border: 2px solid #E2E8F0;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.5em;
+  color: #0F172A;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+}
+
+.ll-otp-input:focus {
+  outline: none;
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+/* ── Submit Button ────────────────────────────────────────────────── */
+.ll-submit-btn {
+  width: 100%;
+  height: 52px;
+  background: #1D6AE5;
+  color: #FFFFFF;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+  margin-top: 1.25rem;
+}
+
+.ll-submit-btn:hover:not(:disabled) {
+  background: #1555C0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(29,106,229,0.3);
+}
+
+.ll-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ll-submit-btn.locked {
+  background: #F59E0B;
+}
+
+/* ── Divider ──────────────────────────────────────────────────────── */
+.ll-divider {
+  display: flex;
+  align-items: center;
+  margin: 1.25rem 0;
+}
+.ll-divider::before, .ll-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #E2E8F0;
+}
+.ll-divider span {
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94A3B8;
+}
+
+/* ── Google Button ────────────────────────────────────────────────── */
+.google-btn {
+  width: 100% !important;
+  min-height: 48px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 8px !important;
+  color: #0F172A;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all 0.2s;
+  overflow: hidden;
+}
+.google-btn:hover:not(:disabled) { background: #F8FAFC; border-color: #CBD5E1 !important; }
+.google-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.google-btn iframe { width: 100% !important; min-width: 200px; }
+#google-oauth-btn { width: 100% !important; }
+
+/* ── Banners ──────────────────────────────────────────────────────── */
+.ll-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #FFF1F2;
+  border: 1px solid #FECDD3;
+  border-radius: 8px;
+  color: #E11D48;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.ll-offline-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 8px;
+  color: #2563EB;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.ll-session-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+  color: #16A34A;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* ── Success overlay ──────────────────────────────────────────────── */
+.ll-success-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.96);
+  border-radius: 12px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* ── Bottom Sign-up link ──────────────────────────────────────────── */
+.ll-bottom-link {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748B;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.ll-bottom-link button {
+  font-weight: 700;
+  color: #1D6AE5;
+}
+
+/* ── Lang toggle ──────────────────────────────────────────────────── */
+.ll-lang-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: all 0.2s;
+}
+.ll-lang-btn:hover { border-color: #BFDBFE; background: #F8FBFF; }
+
+/* ── Forgot password link ─────────────────────────────────────────── */
+.ll-forgot-link {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563EB;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Wave loading bars (reuse from login.css) ─────────────────────── */
+.ll-wave-bars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 18px;
+}
+.ll-wave-bars span {
+  display: block;
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  background: #fff;
+  animation: ll-wave 0.7s ease-in-out infinite;
+}
+.ll-wave-bars span:nth-child(2) { animation-delay: 0.1s; }
+.ll-wave-bars span:nth-child(3) { animation-delay: 0.2s; }
+.ll-wave-bars span:nth-child(4) { animation-delay: 0.3s; }
+.ll-wave-bars span:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes ll-wave {
+  0%,100% { transform: scaleY(0.4); }
+  50%     { transform: scaleY(1.0); }
+}

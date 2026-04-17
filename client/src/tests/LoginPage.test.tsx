@@ -75,11 +75,11 @@ describe('LoginPage — 8 UX States', () => {
   });
 
   // ── 1. Default render ───────────────────────────────────────
-  it('State 1: renders Google button, divider, phone form and demo pills', () => {
+  it('State 1: renders Google button, divider, phone form and version badge', () => {
     renderPage();
     expect(screen.getByTestId('google-sdk-btn')).toBeTruthy();
     expect(screen.getByPlaceholderText(/phone number/i)).toBeTruthy();
-    expect(screen.getByText(/Ravi \(Agent\)/i)).toBeTruthy();
+    expect(screen.getByLabelText(/Application version/i)).toBeTruthy();
     expect(screen.getByText('OR')).toBeTruthy();
   });
 

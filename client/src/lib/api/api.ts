@@ -38,7 +38,7 @@ api.interceptors.response.use(
             } catch (refreshError) {
                 // Refresh failed — kick to login cleanly
                 if (typeof window !== 'undefined') {
-                    window.dispatchEvent(new CustomEvent('auth:logout'));
+                    window.dispatchEvent(new CustomEvent('auth:unauthorized'));
                 }
                 return Promise.reject(refreshError);
             }

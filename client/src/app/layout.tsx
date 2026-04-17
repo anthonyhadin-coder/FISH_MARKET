@@ -27,10 +27,10 @@ export const metadata: Metadata = {
   },
 };
 
+import Script from 'next/script';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ToastProvider } from '@/components/ui/Toast';
-import { BetaWatermark } from '@/components/beta/BetaWatermark';
 import { FeedbackWidget } from '@/components/beta/FeedbackWidget';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
@@ -48,8 +48,9 @@ export default function RootLayout({
           <LanguageProvider>
             <AuthProvider>
               <ToastProvider>
-                <BetaWatermark />
-                {children}
+                <main id="main-content">
+                  {children}
+                </main>
                 <aside aria-label="Feedback and Support">
                   <FeedbackWidget />
                 </aside>
@@ -57,15 +58,17 @@ export default function RootLayout({
             </AuthProvider>
           </LanguageProvider>
         </GoogleOAuthProvider>
-        <script
+        <Script
+          id="sw-registration"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                  navigator.serviceWorker.register('/sw.js').then(function() {
                     // SW registered
-                  }, function(err) {
-                    console.error('SW registration failed: ', err);
+                  }, function() {
+                    // SW registration failed — handled silently in production
                   });
                 });
 

@@ -105,7 +105,7 @@ app.use(errorHandler);
 
 if (process.env.NODE_ENV !== 'test' || (process.env.NODE_ENV as string) === 'e2e') {
     app.listen(Number(PORT), '0.0.0.0', () => {
-        console.log(`Server running on port ${PORT}`);
+        logger.info(`Server running on port ${PORT}`);
     });
 }
 

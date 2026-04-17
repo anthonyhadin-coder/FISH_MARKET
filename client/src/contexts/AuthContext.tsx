@@ -66,9 +66,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // ── FIX 1 (client side): Listen for the auth:unauthorized event ─────────
     useEffect(() => {
         const handleUnauthorized = () => {
+            // Only redirect if we actually had a user (prevents infinite loops on login page)
             setUser(null);
             localStorage.removeItem('user');
             localStorage.removeItem('token');
+            document.cookie = 'fm_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
             router.push('/login?reason=session-expired');
         };
 
@@ -83,13 +85,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         // Sync role to a non-HttpOnly cookie for Next.js middleware route protection.
         if (typeof window !== 'undefined') {
-            document.cookie = `fm_role=${userData.role}; path=/; max-age=86400; SameSite=Lax`;
+            const role = userData.role.toLowerCase();
+            document.cookie = `fm_role=${role}; path=/; max-age=86400; SameSite=Lax`;
         }
 
-        if (userData.role === 'owner') router.push('/owner');
-        else if (userData.role === 'agent') router.push('/staff');
-        else if (userData.role === 'buyer') router.push('/customer');
-        else router.push('/viewer');
+        const role = userData.role.toLowerCase();
+        if (role === 'owner' || role === 'admin') router.push('/owner');
+        else if (role === 'agent') router.push('/staff');
+        else if (role === 'buyer') router.push('/customer');
+        else router.push(`/${role}`);
     };
 
     const logout = async () => {

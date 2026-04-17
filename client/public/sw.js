@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fish-market-v5';
+const CACHE_NAME = 'fish-market-v6';
 const API_CACHE_NAME = 'api-cache'; // CLEANUP 8: separate named bucket for API responses
 const API_CACHE_MAX = 50;           // CLEANUP 8: hard limit on cached API entries
 const ASSETS_TO_CACHE = [
@@ -131,12 +131,12 @@ async function flushMutationQueue() {
       });
       if (response.ok) {
         await dequeueById(id);
-        console.log(`[SW] Replayed offline mutation: ${method} ${url}`);
+        // Mutation replayed successfully — no logging needed in SW context
       } else {
-        console.warn(`[SW] Mutation replay got ${response.status}, keeping in queue.`);
+        // Non-2xx: keep in queue for next sync attempt
       }
-    } catch (err) {
-      console.error('[SW] Mutation replay failed, keeping in queue:', err);
+    } catch {
+      // Network error — mutation stays in queue for next retry
     }
   }
 }
@@ -253,13 +253,11 @@ self.addEventListener('sync', (event) => {
 // is back online" without relying on native Background Sync support.
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'PAGE_FOCUS_RETRY') {
-    flushMutationQueue().catch(console.error);
+    flushMutationQueue().catch(() => { /* silent in SW context */ });
   }
   // CLEANUP 8: On logout, purge the sensitive API cache from disk.
   if (event.data?.type === 'PURGE_API_CACHE') {
-    caches.delete(API_CACHE_NAME).then(() =>
-      console.log('[SW] API cache purged after logout.')
-    );
+    caches.delete(API_CACHE_NAME);
   }
 });
 
@@ -279,7 +277,7 @@ self.addEventListener('push', (event) => {
   if (!event.data) return;
   let data = {};
   try { data = event.data.json(); }
-  catch (e) { console.error('Push data is not JSON:', event.data.text()); return; }
+  catch { return; } // Malformed push payload — discard silently
 
   const options = {
     body   : data.body,

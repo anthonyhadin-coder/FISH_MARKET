@@ -14,6 +14,7 @@ export default function ForgotPasswordPage() {
   const [otp, setOtp] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +52,10 @@ export default function ForgotPasswordPage() {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
+    if (newPassword !== confirmPassword) {
+      showToast('Passwords do not match', 'error');
+      return;
+    }
     setLoading(true);
     try {
       await api.post('/auth/reset-password', { resetToken, newPassword });
@@ -65,7 +70,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="login-bg flex flex-col items-center justify-center min-h-screen px-4 py-10">
+    <main id="main-content" className="login-bg flex flex-col items-center justify-center min-h-screen px-4 py-8">
       <div className="login-content w-full max-w-[440px]">
         <button
           onClick={() => router.push('/login')}
@@ -122,6 +127,9 @@ export default function ForgotPasswordPage() {
                   <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                   <input
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="one-time-code"
                     placeholder="6-digit code"
                     value={otp}
                     onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -156,6 +164,23 @@ export default function ForgotPasswordPage() {
                     className="ocean-input w-full rounded-2xl pl-10 pr-4 font-semibold h-[52px]"
                     required
                     minLength={8}
+                    autoComplete="new-password"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-black uppercase tracking-widest ml-1" style={{ color: 'var(--white-secondary)' }}>Confirm Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                  <input
+                    type="password"
+                    placeholder="Re-enter password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    className="ocean-input w-full rounded-2xl pl-10 pr-4 font-semibold h-[52px]"
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
                   />
                 </div>
               </div>
@@ -171,6 +196,6 @@ export default function ForgotPasswordPage() {
           )}
         </div>
       </div>
-    </div>
+    </main>
   );
 }
