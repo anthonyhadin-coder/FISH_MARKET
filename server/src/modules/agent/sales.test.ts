@@ -11,7 +11,7 @@ const mockConn = {
     release: vi.fn(),
 };
 
-vi.mock('../config/db', () => ({
+vi.mock('../../config/db', () => ({
     default: {
         query: vi.fn(),
         getConnection: vi.fn(() => mockConn),
@@ -19,7 +19,7 @@ vi.mock('../config/db', () => ({
 }));
 
 // Mock authentication middleware
-vi.mock('../middleware/auth', () => ({
+vi.mock('../../middleware/auth', () => ({
     authenticate: (req: any, res: any, next: any) => {
         req.user = { userId: '1', role: 'agent' };
         next();
