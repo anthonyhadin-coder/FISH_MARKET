@@ -14,6 +14,8 @@ jobs:
   deploy-client:
     name: 🚀 Deploy Client → Vercel
     runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -37,24 +39,24 @@ jobs:
           echo "✅ Build passed locally — proceeding to Vercel deploy"
         env:
           NEXT_PUBLIC_API_URL: http://127.0.0.1:5000
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'placeholder' }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
           NODE_ENV: production
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
       - name: Pull Vercel environment info
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
         working-directory: client
 
       - name: Build for Vercel
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token=$VERCEL_TOKEN
         working-directory: client
 
       - name: Deploy to Vercel (production)
         id: vercel-deploy
         run: |
-          DEPLOY_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          DEPLOY_URL=$(vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN)
           echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
         working-directory: client
 
@@ -67,7 +69,7 @@ jobs:
   deploy-server:
     name: 🚀 Deploy Server → VPS (PM2)
     runs-on: ubuntu-latest
-    continue-on-error: true
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -76,7 +78,7 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Deploy via SSH
-        continue-on-error: true
+
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
