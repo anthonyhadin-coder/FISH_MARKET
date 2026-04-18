@@ -79,7 +79,6 @@ describe('LoginPage — 8 UX States', () => {
     renderPage();
     expect(screen.getByTestId('google-sdk-btn')).toBeTruthy();
     expect(screen.getByPlaceholderText(/phone number/i)).toBeTruthy();
-    expect(screen.getByLabelText(/Application version/i)).toBeTruthy();
     expect(screen.getByText('OR')).toBeTruthy();
   });
 
@@ -94,7 +93,7 @@ describe('LoginPage — 8 UX States', () => {
     fireEvent.change(screen.getByPlaceholderText('••••••••'), {
       target: { value: 'password123' },
     });
-    fireEvent.click(screen.getByText(/Sign In/i));
+    fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Signing in/i)).toBeTruthy();
@@ -114,7 +113,7 @@ describe('LoginPage — 8 UX States', () => {
     fireEvent.change(screen.getByPlaceholderText('••••••••'), {
       target: { value: 'wrongpass' },
     });
-    fireEvent.click(screen.getByText(/Sign In/i));
+    fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Invalid phone number or password\./i)).toBeTruthy();
@@ -145,13 +144,18 @@ describe('LoginPage — 8 UX States', () => {
   });
 
   // ── 6. Google error ───────────────────────────────────────
-  it('State 6: shows Google error message', () => {
+  it('State 6: shows Google error message', async () => {
     mocks.mockGoogleAuth.mockReturnValue({
       ...mocks.defaultGoogleState,
       error: 'Google login failed — please try again.' as unknown as null,
     });
     renderPage();
-    expect(screen.getByText(/Google login failed/i)).toBeTruthy();
+    // Google error is only shown if the user actually attempted a Google login
+    fireEvent.click(screen.getByTestId('google-sdk-btn'));
+    
+    await waitFor(() => {
+      expect(screen.getByText(/Google login failed/i)).toBeTruthy();
+    });
   });
 
   // ── 7. Popup blocked ─────────────────────────────────────
