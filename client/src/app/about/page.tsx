@@ -94,7 +94,7 @@ export default function AboutPage() {
         <section className="max-w-5xl mx-auto px-6 mt-24">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">Innovation & Patent Strategy</h2>
-            <p className="text-ocean-400 text-sm mt-2">Protecting India's Maritime Tech Intelligence</p>
+            <p className="text-ocean-400 text-sm mt-2">Protecting India&apos;s Maritime Tech Intelligence</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -102,7 +102,7 @@ export default function AboutPage() {
               <h4 className="text-ocean-400 font-bold text-xs uppercase mb-3">IP Strategy</h4>
               <p className="text-white font-bold mb-2">Is it patentable?</p>
               <p className="text-ocean-300 text-xs leading-relaxed">
-                Our localized Tamil Voice Parser and specialized noise-handling logic for chaotic markets constitute a "Technical Contribution" protectable via patents and trade secrets in India.
+                Our localized Tamil Voice Parser and specialized noise-handling logic for chaotic markets constitute a &quot;Technical Contribution&quot; protectable via patents and trade secrets in India.
               </p>
             </Card>
             <Card className="bg-ocean-900/40 border-ocean-800 p-6">

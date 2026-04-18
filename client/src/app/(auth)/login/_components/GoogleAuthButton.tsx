@@ -33,10 +33,12 @@ export default function GoogleAuthButton({
   const [useRedirect, setUseRedirect] = useState(false);
   
   useEffect(() => {
-    setMounted(true);
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    if (isMobile || isStandalone) setUseRedirect(true);
+    setTimeout(() => {
+      setMounted(true);
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      if (isMobile || isStandalone) setUseRedirect(true);
+    }, 0);
   }, []);
 
   // We strictly use "popup" mode because "redirect" requires a backend callback endpoint

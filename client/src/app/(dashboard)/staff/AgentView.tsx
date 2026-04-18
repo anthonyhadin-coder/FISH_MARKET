@@ -85,8 +85,9 @@ export default function AgentDashboard() {
             ]);
             setDailySales(salesRes.data || []);
             setPayments(paymentsRes.data || []);
-        } catch (err: any) {
-            console.error("Failed to fetch daily data details:", err.message, err.code, err.response?.status);
+        } catch (err: unknown) {
+            const error = err as ApiError;
+            console.error("Failed to fetch daily data details:", error.message, error.code, error.response?.status);
             toast("Data error", "error");
         }
     }, [selectedBoat, dateKey]);

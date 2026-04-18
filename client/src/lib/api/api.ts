@@ -2,7 +2,7 @@ import axios from 'axios';
 import { showToast } from '@/components/ui/Toast';
 
 const api = axios.create({
-    baseURL: (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_TEST__)
+    baseURL: (typeof window !== 'undefined' && (window as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__)
         ? '/api'
         : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'),
     // Auth is handled entirely via HttpOnly cookies — no Bearer tokens needed.
@@ -15,8 +15,8 @@ api.interceptors.request.use((config) => {
     if (typeof window !== 'undefined' && !navigator.onLine) {
         // Break early if we know we are offline. Ensures offline mechanisms trigger instantly
         // and prevents Playwright mock interceptors from wrongly returning 200 OKs.
-        const error = new Error('Network error: Browser is offline');
-        (error as any).code = 'ERR_NETWORK';
+        const error = new Error('Network error: Browser is offline') as Error & { code?: string };
+        error.code = 'ERR_NETWORK';
         return Promise.reject(error);
     }
     return config;

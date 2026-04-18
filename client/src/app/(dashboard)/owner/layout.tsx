@@ -16,7 +16,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
             } else if (user.role !== 'owner' && user.role !== 'admin') {
                 router.push(user.role === 'agent' ? '/agent' : '/');
             } else {
-                setIsAuthorized(true);
+                setTimeout(() => setIsAuthorized(true), 0);
             }
         }
     }, [user, isLoading, router]);

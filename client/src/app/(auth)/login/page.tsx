@@ -80,8 +80,10 @@ function LoginContent() {
 
   // ── Mount / offline ────────────────────────────────────────────
   useEffect(() => {
-    setMounted(true);
-    if (!navigator.onLine) setLoginState('offline');
+    setTimeout(() => {
+      setMounted(true);
+      if (!navigator.onLine) setLoginState('offline');
+    }, 0);
     const onOnline  = () => setLoginState(s => s === 'offline' ? 'idle' : s);
     const onOffline = () => setLoginState('offline');
     window.addEventListener('online',  onOnline);
@@ -107,13 +109,17 @@ function LoginContent() {
   useEffect(() => {
     const errorParam = searchParams?.get('error');
     if (errorParam === 'google_failed' && loginState !== 'error') {
-      setLoginState('error');
-      setError('Google sign-in failed. Please try again or use phone/password.');
+      setTimeout(() => {
+        setLoginState('error');
+        setError('Google sign-in failed. Please try again or use phone/password.');
+      }, 0);
     }
     const credParam = searchParams?.get('credential');
     if (credParam && loginState === 'idle') {
-      setGoogleClicked(true);
-      handleGoogleSuccess(credParam);
+      setTimeout(() => {
+        setGoogleClicked(true);
+        handleGoogleSuccess(credParam);
+      }, 0);
     }
     if (errorParam || credParam) router.replace('/login', { scroll: false });
   }, [searchParams, router, loginState, handleGoogleSuccess]);

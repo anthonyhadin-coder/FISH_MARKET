@@ -46,8 +46,10 @@ function RegisterContent() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    if (!navigator.onLine) setState('offline');
+    setTimeout(() => {
+      setMounted(true);
+      if (!navigator.onLine) setState('offline');
+    }, 0);
     const onOnline  = () => setState(s => s === 'offline' ? 'idle' : s);
     const onOffline = () => setState('offline');
     window.addEventListener('online',  onOnline);
