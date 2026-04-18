@@ -260,11 +260,7 @@ export function EntryTab({
     return (
         <div style={{ paddingBottom: 100 }}>
 
-            {!isOnline && (
-                <div data-testid="offline-banner" style={{background:G.red+"22",border:`1px solid ${G.red}40`,borderRadius:10,padding:"10px 16px",marginBottom:14,fontSize:13,color:G.red,display:"flex",alignItems:"center",gap:8,fontWeight:700}}>
-                    📡 {t.summary.offline}
-                </div>
-            )}
+
 
             {pendingCount > 0 && (
                 <div onClick={syncOfflineData} style={{background:G.amber+"22",border:`1px solid ${G.amber}40`,borderRadius:10,padding:"10px 16px",marginBottom:14,fontSize:13,color:G.amber,display:"flex",justifyContent:"space-between",alignItems:"center",cursor:isOnline?"pointer":"default"}}>

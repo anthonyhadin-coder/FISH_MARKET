@@ -214,9 +214,7 @@ const initDb = async () => {
       await pool.query(`CREATE INDEX idx_users_phone ON users(phone)`);
     } catch (e: any) { if (e.code !== 'ER_DUP_KEYNAME') console.error(e); }
     
-    try {
-      await pool.query(`CREATE INDEX idx_entries_created_at ON sales(created_at)`);
-    } catch (e: any) { if (e.code !== 'ER_DUP_KEYNAME') console.error(e); }
+
     
     try {
       await pool.query(`CREATE INDEX idx_entries_boat_id ON sales(boat_id)`);

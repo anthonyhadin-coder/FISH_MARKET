@@ -48,9 +48,9 @@ export default function RootLayout({
           <LanguageProvider>
             <AuthProvider>
               <ToastProvider>
-                <main id="main-content">
+                <div id="main-content">
                   {children}
-                </main>
+                </div>
                 <aside aria-label="Feedback and Support">
                   <FeedbackWidget />
                 </aside>
