@@ -75,9 +75,9 @@ describe('LoginPage — 8 UX States', () => {
   });
 
   // ── 1. Default render ───────────────────────────────────────
-  it('State 1: renders Google button, divider, phone form and version badge', () => {
+  it('State 1: renders Google button, divider, phone form and version badge', async () => {
     renderPage();
-    expect(screen.getByTestId('google-sdk-btn')).toBeTruthy();
+    expect(await screen.findByTestId('google-sdk-btn')).toBeTruthy();
     expect(screen.getByPlaceholderText(/phone number/i)).toBeTruthy();
     expect(screen.getByText('OR')).toBeTruthy();
   });
@@ -121,13 +121,13 @@ describe('LoginPage — 8 UX States', () => {
   });
 
   // ── 4. Google loading ─────────────────────────────────────
-  it('State 4: shows Google verifying spinner when googleLoading=true', () => {
+  it('State 4: shows Google verifying spinner when googleLoading=true', async () => {
     mocks.mockGoogleAuth.mockReturnValue({
       ...mocks.defaultGoogleState,
       isLoading: true,
     });
     renderPage();
-    expect(screen.getByText(/Verifying with Google/i)).toBeTruthy();
+    expect(await screen.findByText(/Verifying with Google/i)).toBeTruthy();
   });
 
   // ── 5. Google success (mocked) ────────────────────────────
@@ -151,7 +151,7 @@ describe('LoginPage — 8 UX States', () => {
     });
     renderPage();
     // Google error is only shown if the user actually attempted a Google login
-    fireEvent.click(screen.getByTestId('google-sdk-btn'));
+    fireEvent.click(await screen.findByTestId('google-sdk-btn'));
     
     await waitFor(() => {
       expect(screen.getByText(/Google login failed/i)).toBeTruthy();
@@ -159,14 +159,14 @@ describe('LoginPage — 8 UX States', () => {
   });
 
   // ── 7. Popup blocked ─────────────────────────────────────
-  it('State 7: shows popup-blocked warning banner', () => {
+  it('State 7: shows popup-blocked warning banner', async () => {
     mocks.mockGoogleAuth.mockReturnValue({
       ...mocks.defaultGoogleState,
       popupBlocked: true,
     });
     renderPage();
     // Popup-blocked banner text rendered inside GoogleAuthButton
-    expect(screen.getByText(/Allow popups for Google login/i)).toBeTruthy();
+    expect(await screen.findByText(/Allow popups for Google login/i)).toBeTruthy();
   });
 
   // ── 8. New user role modal ────────────────────────────────
