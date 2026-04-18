@@ -5,7 +5,8 @@ test.describe('Accessibility (WCAG 2.1 AA)', () => {
   test('Home Page should be accessible', async ({ page }: { page: Page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.waitForSelector('main', { state: 'attached', timeout: 10000 });
+    // Increased timeout for CI stability (Next.js compilation can be slow on first load)
+    await page.waitForSelector('main', { state: 'attached', timeout: 30000 });
     await page.waitForTimeout(2000); // Allow dynamic components to settle
     await injectAxe(page);
     try {
