@@ -15,7 +15,7 @@ jobs:
     name: 🚀 Deploy Client → Vercel
     runs-on: ubuntu-latest
     env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_TOKEN: ${{ secrets['VERCEL_TOKEN'] }}
 
     steps:
       - name: Checkout code
@@ -39,7 +39,7 @@ jobs:
           echo "✅ Build passed locally — proceeding to Vercel deploy"
         env:
           NEXT_PUBLIC_API_URL: http://127.0.0.1:5000
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets['NEXT_PUBLIC_GOOGLE_CLIENT_ID'] }}
           NODE_ENV: production
 
       - name: Install Vercel CLI
@@ -81,16 +81,16 @@ jobs:
 
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets['SSH_HOST'] }}
+          username: ${{ secrets['SSH_USERNAME'] }}
+          key: ${{ secrets['SSH_PRIVATE_KEY'] }}
           port: 22
           script: |
             echo "🔁 Pulling latest code..."
             cd /var/www/deep-ocean-fish-market || exit 1
             git config --global --add safe.directory /var/www/deep-ocean-fish-market
             # Authenticate the VPS to your private repository using the GitHub Action token
-            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+            git remote set-url origin https://x-access-token:${{ secrets['GITHUB_TOKEN'] }}@github.com/${{ github.repository }}.git
             git pull origin main
 
             echo "📦 Installing server dependencies..."
