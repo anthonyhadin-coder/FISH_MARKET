@@ -12,7 +12,7 @@
     "test:visual": "npx playwright test tests/e2e/visual.test.ts",
     "test:smoke": "npx playwright test --grep @smoke --reporter=line",
     "test:a11y": "npx playwright test tests/e2e/accessibility.test.ts",
-    "lint": "npm run lint --prefix client && npm run lint --prefix server",
+    "lint": "npm run lint --prefix client && npm run lint --prefix server"
   },
   "keywords": [],
   "author": "",
