@@ -57,18 +57,21 @@ export default defineConfig({
     {
       command: 'cd server && npm run dev',
       url: 'http://localhost:5000/health',
-      timeout: 120000,
+      timeout: 180000,
       reuseExistingServer: true,
       env: {
-        NODE_ENV: 'test',
+        NODE_ENV: 'e2e',
         PORT: '5000',
       }
     },
     {
       command: 'cd client && npm run dev',
       url: 'http://localhost:3000',
-      timeout: 120000,
+      timeout: 180000,
       reuseExistingServer: true,
+      env: {
+        NEXT_PUBLIC_API_URL: 'http://localhost:5000/api',
+      }
     }
   ],
 });

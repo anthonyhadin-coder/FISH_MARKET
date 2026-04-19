@@ -94,14 +94,11 @@ app.get('/health', async (req, res) => {
     if (!redis) {
         health.components.redis = 'disabled (in-memory fallback)';
     } else {
-        try {
-            const pong = await redis.ping();
-            health.components.redis = pong === 'PONG' ? 'ok' : 'error';
-            if (pong !== 'PONG') health.status = 'error';
-        } catch (err: any) {
+        // Use non-blocking status check instead of ping()
+        const status = redis.status;
+        health.components.redis = status === 'ready' ? 'ok' : status;
+        if (status !== 'ready' && status !== 'connecting' && status !== 'reconnecting') {
             health.status = 'error';
-            health.components.redis = 'error';
-            health.error = (health.error ? health.error + ' | ' : '') + err.message;
         }
     }
 

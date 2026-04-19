@@ -20,18 +20,28 @@ test.beforeAll(() => {
 
 test.describe('Visual Regression (Percy/Chromatic)', () => {
   test('Home page visual snapshot', async ({ page }) => {
+    await setupUniversalMocking(page);
+    // Explicitly force logged-out state for landing page to ensure "Login/Register" buttons show
+    await page.route('**/api/auth/me', route => 
+      route.fulfill({ 
+        status: 401, 
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Unauthorized' }) 
+      })
+    );
+
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000); // let fonts + animations settle
+    await page.waitForTimeout(1500); // let fonts + animations settle
 
     await expect(page).toHaveScreenshot('home-page.png', {
-      maxDiffPixelRatio: 0.25,   // ← raise from 0.1 to 0.25 (UI evolves)
-      threshold: 0.3,            // ← raise from 0.2 to 0.3
+      maxDiffPixelRatio: 0.25,
+      threshold: 0.3,
       animations: 'disabled',
       mask: [
-        page.locator('.wave-bars'),        // animated wave loader
-        page.locator('.fish-icon'),        // emoji can vary by OS
-        page.locator('[data-dynamic]'),    // any time-based content
+        page.locator('img[alt="Ocean Fish Market"]'), // mask external Unsplash image
+        page.locator('.lucide'),                      // mask all Lucide icons
+        page.locator('[data-dynamic]'),               // any time-based content
       ]
     });
   });

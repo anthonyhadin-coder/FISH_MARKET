@@ -8,6 +8,13 @@ if (redisUrl) {
     redis = new Redis(redisUrl, {
         maxRetriesPerRequest: 3,
         enableReadyCheck: true,
+        retryStrategy(times) {
+            const delay = Math.min(times * 50, 2000);
+            if (process.env.NODE_ENV !== 'production' && times > 3) {
+                return null; // Stop retrying
+            }
+            return delay;
+        },
     });
 
     redis.on('connect', () => {
