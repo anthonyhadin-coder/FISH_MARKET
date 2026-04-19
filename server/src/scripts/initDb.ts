@@ -6,6 +6,25 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
+async function connectWithRetry(url: string, retries = 5, delayMs = 3000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const conn = await mysql.createConnection(url);
+      console.log('Database connected successfully');
+      return conn;
+    } catch (err: any) {
+      if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
+        if (i < retries - 1) {
+          console.log(`DB connection attempt ${i + 1} failed, retrying in ${delayMs}ms...`);
+          await new Promise(r => setTimeout(r, delayMs));
+          continue;
+        }
+      }
+      throw err;
+    }
+  }
+}
+
 const initDb = async () => {
   let connection;
   try {
@@ -31,7 +50,7 @@ const initDb = async () => {
     // Remove the pathname (database name) to connect to mysql server generally
     const urlWithoutDb = dbUrl.replace(parsedUrl.pathname, '');
     
-    connection = await mysql.createConnection(urlWithoutDb);
+    connection = await connectWithRetry(urlWithoutDb);
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`\${dbName}\``);
     await connection.end();
     
