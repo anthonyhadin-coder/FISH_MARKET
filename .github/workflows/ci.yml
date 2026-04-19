@@ -108,7 +108,7 @@ jobs:
 
       - name: Verify .env.example is complete
         run: |
-          node -e \"
+          node -e "
             const example = require('fs').readFileSync('.env.example', 'utf8');
             const required = [
               'DATABASE_URL','REDIS_URL','JWT_SECRET',
@@ -122,7 +122,7 @@ jobs:
               process.exit(1);
             }
             console.log('✅ .env.example contains all required variables');
-          \"
+          "
 
       - name: Run Vitest + Supertest integration tests
         run: npm run test
