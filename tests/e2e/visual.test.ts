@@ -44,8 +44,10 @@ test.describe('Visual Regression (Percy/Chromatic)', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          id: 1, name: 'Test Agent',
-          role: 'agent', phone: '9876543210'
+          user: {
+            id: 1, name: 'Test Agent',
+            role: 'agent', phone: '9876543210'
+          }
         })
       })
     );
