@@ -37,26 +37,66 @@ test.describe('Visual Regression (Percy/Chromatic)', () => {
   test('Voice Input Dialog visual snapshot', async ({ page }) => {
     // Centralized API mocks and __PLAYWRIGHT_TEST__ flag
     await setupUniversalMocking(page);
+
+    // Mock auth and staff data needed for /staff page
+    await page.route('**/api/auth/me', route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 1, name: 'Test Agent',
+          role: 'agent', phone: '9876543210'
+        })
+      })
+    );
+
+    await page.route('**/api/boats**', route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ id: 1, name: 'Boat 1' }])
+      })
+    );
+
+    await page.route('**/api/buyers**', route =>
+      route.fulfill({ status: 200, body: JSON.stringify([]) })
+    );
+
+    await page.route('**/api/notifications**', route =>
+      route.fulfill({ status: 200, body: JSON.stringify([]) })
+    );
     
-    await page.goto('/');
+    // Navigate to /staff instead of /
+    await page.goto('/staff');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1500); // let animations settle
 
     // Force stable dialog width before screenshot
     await page.addStyleTag({
       content: `.voice-dialog-container { width: 360px !important; max-width: 360px !important; }`
     });
 
-    const voiceBtn = page.locator('[data-testid="voice-input-btn"]');
+    const voiceBtn = page.locator('[data-testid="voice-input-btn"]').first();
+    
+    // Debug helper: if button not found, take screenshot and log info
+    if (await voiceBtn.count() === 0) {
+      console.log('Voice btn not found. Page URL:', page.url());
+      await page.screenshot({ path: 'test-results/voice-debug-not-found.png' });
+      throw new Error('voice-input-btn not found — check the page and testid');
+    }
+
     await voiceBtn.click();
-    await page.waitForSelector('.voice-dialog-container', { state: 'visible' });
+    await page.waitForSelector('.voice-dialog-container', { 
+      state: 'visible',
+      timeout: 10000
+    });
     await page.waitForTimeout(500);
 
     await expect(page.locator('.voice-dialog-container')).toHaveScreenshot('voice-dialog.png', {
-      maxDiffPixelRatio: 0.15,   // ← raise slightly
+      maxDiffPixelRatio: 0.15,
       threshold: 0.3,
       animations: 'disabled',
       mask: [page.locator('canvas')],
-      // Allow 2px tolerance for sub-pixel rendering differences
       maxDiffPixels: 200,
     });
   });

@@ -108,6 +108,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
           gap: 12
         }}>
           <button
+            data-testid="voice-input-btn"
             onClick={isListening ? stopListening : startListening}
             title={isListening ? "Stop" : "Voice Entry"}
             aria-label={isListening ? (lang === 'ta' ? 'குரல் பதிவை நிறுத்து' : 'Stop listening') : (lang === 'ta' ? 'குரல் பதிவைத் தொடங்கு' : 'Start voice entry')}
@@ -166,6 +167,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <button
+          data-testid="voice-input-btn"
           onClick={isListening ? stopListening : startListening}
           title={isListening ? "Stop" : (lang === 'ta' ? "குரல் உள்ளீடு" : "Voice Entry")}
           style={{
@@ -206,6 +208,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
       
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <button
+          data-testid="voice-input-btn"
           onClick={isListening ? stopListening : startListening}
           aria-label={isListening ? "Stop listening" : "Start voice entry"}
           style={{
