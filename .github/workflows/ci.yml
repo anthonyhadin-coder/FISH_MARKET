@@ -158,16 +158,19 @@ jobs:
           DATABASE_URL: mysql://root:password@127.0.0.1:3306/fish_market
 
       - name: Build client
-        run: cd client && npm run build
+        run: |
+          cd $GITHUB_WORKSPACE/client
+          npm run build
+          # Required for standalone: copy static + public assets
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public
         env:
           NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api
 
-      - name: Start Apps in background
-        run: |
-          cd client && npm start &
-          cd ../server && npm run dev &
+      - name: Start backend server
+        run: cd $GITHUB_WORKSPACE/server && npm run dev &
         env:
-          NODE_ENV: e2e
+          NODE_ENV: production
           PORT: 5000
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
@@ -176,10 +179,19 @@ jobs:
           DB_PASSWORD: password
           REDIS_URL: redis://127.0.0.1:6379
 
-      - name: Wait for apps to be ready
+      - name: Start frontend client
         run: |
-          npx wait-on http://127.0.0.1:3000 --timeout 120000
-          npx wait-on http://127.0.0.1:5000/health --timeout 60000
+          cd $GITHUB_WORKSPACE/client/.next/standalone
+          PORT=3000 HOSTNAME=0.0.0.0 node server.js &
+        env:
+          NODE_ENV: production
+          PORT: 3000
+
+      - name: Wait for backend
+        run: npx wait-on http://127.0.0.1:5000/health --timeout 60000
+
+      - name: Wait for frontend
+        run: npx wait-on http://127.0.0.1:3000 --timeout 60000
 
       - name: Update Snapshots
         run: npx playwright test tests/e2e/visual.test.ts --update-snapshots
@@ -258,22 +270,35 @@ jobs:
           DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/fish_market_test
 
       - name: Build client
-        run: cd client && npm run build
+        run: |
+          cd $GITHUB_WORKSPACE/client
+          npm run build
+          # Required for standalone: copy static + public assets
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public
         env:
           NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api
 
-      - name: Start background services
-        run: |
-          cd server && npm run dev &
-          cd ../client && npm start &
+      - name: Start backend server
+        run: cd $GITHUB_WORKSPACE/server && npm run dev &
         env:
+          NODE_ENV: production
           PORT: 5000
           NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api
 
-      - name: Wait for services
+      - name: Start frontend client
         run: |
-          npx wait-on http://127.0.0.1:5000/health --timeout 120000
-          npx wait-on http://127.0.0.1:3000 --timeout 120000
+          cd $GITHUB_WORKSPACE/client/.next/standalone
+          PORT=3000 HOSTNAME=0.0.0.0 node server.js &
+        env:
+          NODE_ENV: production
+          PORT: 3000
+
+      - name: Wait for backend
+        run: npx wait-on http://127.0.0.1:5000/health --timeout 120000
+
+      - name: Wait for frontend
+        run: npx wait-on http://127.0.0.1:3000 --timeout 120000
 
       - name: Run Playwright tests
         run: npx playwright test
