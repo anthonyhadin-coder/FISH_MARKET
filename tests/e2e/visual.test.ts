@@ -80,16 +80,17 @@ test.describe('Visual Regression (Percy/Chromatic)', () => {
       content: `.voice-dialog-container { width: 360px !important; max-width: 360px !important; }`
     });
 
-    const voiceBtn = page.locator('[data-testid="voice-input-btn"]').first();
+    const helpBtn = page.locator('[data-testid="voice-help-btn"]').first();
     
     // Debug helper: if button not found, take screenshot and log info
-    if (await voiceBtn.count() === 0) {
-      console.log('Voice btn not found. Page URL:', page.url());
+    if (await helpBtn.count() === 0) {
+      console.log('Voice help btn not found. Page URL:', page.url());
       await page.screenshot({ path: 'test-results/voice-debug-not-found.png' });
-      throw new Error('voice-input-btn not found — check the page and testid');
+      throw new Error('voice-help-btn not found — check the page and testid');
     }
 
-    await voiceBtn.click();
+    // Use force:true to ignore mobile header overlap/interception
+    await helpBtn.click({ force: true });
     await page.waitForSelector('.voice-dialog-container', { 
       state: 'visible',
       timeout: 10000

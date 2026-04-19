@@ -232,6 +232,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
         </button>
 
         <button
+          data-testid="voice-help-btn"
           onClick={() => { stopListening(); setShowGuide(true); }}
           title={lang === 'ta' ? 'உதவி' : 'Help'}
           style={{
