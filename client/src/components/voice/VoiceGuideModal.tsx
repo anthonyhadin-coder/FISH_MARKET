@@ -76,7 +76,7 @@ export const VoiceGuideModal: React.FC<VoiceGuideModalProps> = ({ isOpen, onClos
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="voice-dialog-container relative w-full max-w-[92vw] sm:max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-ocean-100 mx-auto"
+            className="voice-dialog-container relative w-full max-w-[360px] sm:max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-ocean-100 mx-auto"
           >
             {/* Header */}
             <div className="p-6 bg-gradient-to-br from-ocean-600 to-ocean-800 text-white">

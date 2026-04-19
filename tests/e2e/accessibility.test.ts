@@ -2,12 +2,20 @@ import { test, expect, type Page } from '@playwright/test';
 import { injectAxe, checkA11y } from 'axe-playwright';
 
 test.describe('Accessibility (WCAG 2.1 AA)', () => {
-  test('Home Page should be accessible', async ({ page }: { page: Page }) => {
+  test('Home Page should be accessible', async ({ page }) => {
+
+    // Pre-warm: hit the page once to trigger Next.js compilation
+    await page.goto('/', { waitUntil: 'commit' });
+    await page.waitForTimeout(3000);
+
+    // Now do the real load
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    // Increased timeout for CI stability (Next.js compilation can be slow on first load)
-    await page.waitForSelector('main', { state: 'attached', timeout: 30000 });
-    await page.waitForTimeout(2000); // Allow dynamic components to settle
+
+    // ↑ Increase timeout from 30s to 60s for CI cold start
+    await page.waitForSelector('main', { state: 'attached', timeout: 60000 });
+    await page.waitForTimeout(2000);
+
     await injectAxe(page);
     try {
       const results = await new (require('axe-playwright')).AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
