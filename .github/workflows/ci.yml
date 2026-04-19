@@ -198,11 +198,7 @@ jobs:
           JWT_SECRET: ci-test-jwt-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: test-google-id
           GOOGLE_CLIENT_SECRET: test-google-secret
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_NAME: fish_market
-          DB_USER: root
-          DB_PASSWORD: password
+          DATABASE_URL: mysql://root:password@127.0.0.1:3306/fish_market
           REDIS_URL: redis://127.0.0.1:6379
 
       - name: Start frontend client
@@ -315,6 +311,8 @@ jobs:
           JWT_SECRET: ci-test-jwt-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: test-google-id
           GOOGLE_CLIENT_SECRET: test-google-secret
+          DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/fish_market_test
+          REDIS_URL: redis://127.0.0.1:6379
           NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api
 
       - name: Start frontend client
