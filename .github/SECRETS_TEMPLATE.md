@@ -24,7 +24,8 @@ Go to: **GitHub Repo → Settings → Secrets and variables → Actions → New 
 | `DATABASE_URL` | MySQL connection string | `mysql://user:pass@host:3306/fish_market` |
 | `REDIS_URL` | Redis connection string | `redis://default:password@host:6379` |
 | `JWT_SECRET` | Secret for signing access tokens | Use `openssl rand -hex 64` |
-| `JWT_REFRESH_SECRET` | Secret for signing refresh tokens | Use `openssl rand -hex 64` |
+| `REFRESH_TOKEN_SECRET` | Secret for signing refresh tokens | Use `openssl rand -hex 64` |
+| `CLIENT_URL` | URL of the client application | `https://yourdomain.com` |
 | `GOOGLE_CLIENT_ID` | Google OAuth Client ID (server-side) | `123456789.apps.googleusercontent.com` |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | `GOCSPX-xxxxxxxxxxxxxxxxxxxx` |
 | `SENTRY_DSN` | Sentry DSN for server error tracking | `https://abc@o123.ingest.sentry.io/789` |

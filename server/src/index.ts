@@ -9,6 +9,7 @@ import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errors';
 import { initSentry } from './config/sentry';
 import { validateEnv } from './config/validateEnv';
+import redis from './config/redis';
 
 dotenv.config();
 
@@ -68,12 +69,43 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.get('/health', (req, res) => {
-    res.status(200).json({ 
-        status: 'ok', 
+app.get('/health', async (req, res) => {
+    const health: any = {
+        status: 'ok',
         timestamp: new Date().toISOString(),
-        service: 'deep-ocean-fish-market-api'
-    });
+        service: 'deep-ocean-fish-market-api',
+        components: {
+            db: 'unknown',
+            redis: 'unknown'
+        }
+    };
+
+    try {
+        // Check MySQL
+        await pool.query('SELECT 1');
+        health.components.db = 'ok';
+    } catch (err: any) {
+        health.status = 'error';
+        health.components.db = 'error';
+        health.error = err.message;
+    }
+
+    // Check Redis
+    if (!redis) {
+        health.components.redis = 'disabled (in-memory fallback)';
+    } else {
+        try {
+            const pong = await redis.ping();
+            health.components.redis = pong === 'PONG' ? 'ok' : 'error';
+            if (pong !== 'PONG') health.status = 'error';
+        } catch (err: any) {
+            health.status = 'error';
+            health.components.redis = 'error';
+            health.error = (health.error ? health.error + ' | ' : '') + err.message;
+        }
+    }
+
+    res.status(health.status === 'ok' ? 200 : 503).json(health);
 });
 
 import authRoutes from './modules/auth/auth';

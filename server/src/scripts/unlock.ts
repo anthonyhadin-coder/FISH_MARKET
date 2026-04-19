@@ -31,4 +31,3 @@ async function unlock() {
   }
 }
 
-unlock();
