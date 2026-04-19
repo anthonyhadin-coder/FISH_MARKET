@@ -8,8 +8,12 @@ import pool from './config/db';
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errors';
 import { initSentry } from './config/sentry';
+import { validateEnv } from './config/validateEnv';
 
 dotenv.config();
+
+// Validate environment early, right after loading .env
+validateEnv();
 
 // Initialize Sentry before other middlewares
 initSentry();

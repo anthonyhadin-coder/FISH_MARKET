@@ -1,0 +1,15 @@
+DATABASE_URL="mysql://root:Hadin_2378@localhost:3306/fish_market"
+JWT_SECRET="7eda57a2426e2b852a6e37e49ec15743020846d5b4efb55042918d16b5832d19a3fedf8aa4707b7c2dec3a7886f7f39fea2f0f31c5878b5a275df6262561e038"
+REFRESH_TOKEN_SECRET="05399bd46d3f014318ab67e463084450fdcdf0a2c0fbc68a7a5cf677146a409080b7d111a72646bbc8a834e6d217e81ef593ca071054cd8d2e020ffbc06aa74d"
+PORT=5000
+NODE_ENV=production
+CLIENT_URL=http://localhost:3000
+REDIS_URL=redis://localhost:6379
+
+VAPID_PUBLIC_KEY=BFE_uMrunUtn6VL8GpQstcv0Dqh3ZW27OBimhz093QflZ4uuiMapMq-DD5OdNUeeUeQQAYLwlhf2_ipbyhLmXJ0
+VAPID_PRIVATE_KEY=R9GbMsykxuWhDrKT9GoQX70sfF9wW5HmvJUfN-wc6ms
+VAPID_EMAIL=mailto:admin@fishmarket.app
+GOOGLE_CLIENT_ID="314116827404-kf90nn217jkqvmcf2kd11lvu3gbmungo.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="YOUR_GOOGLE_CLIENT_SECRET_HERE"
+ALLOWED_ORIGINS="https://your-production-domain.com,http://localhost:3000"
+SENTRY_DSN="https://your-sentry-dsn@sentry.io/project"

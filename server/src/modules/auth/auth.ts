@@ -14,8 +14,8 @@ import redis, { blockToken } from '../../config/redis';
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) throw new Error('FATAL: JWT_SECRET env var is missing.');
 
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
-if (!JWT_REFRESH_SECRET) throw new Error('FATAL: JWT_REFRESH_SECRET env var is missing.');
+const JWT_REFRESH_SECRET = process.env.REFRESH_TOKEN_SECRET;
+if (!JWT_REFRESH_SECRET) throw new Error('FATAL: REFRESH_TOKEN_SECRET env var is missing.');
 
 const BCRYPT_ROUNDS = 12;
 const MAX_FAILED_ATTEMPTS = 5;

@@ -288,4 +288,21 @@ const initDb = async () => {
   }
 };
 
-initDb();
+if (process.env.NODE_ENV === 'production') {
+  const readline = require('readline').createInterface({
+    input: process.stdin, output: process.stdout
+  });
+  readline.question(
+    '⚠️  WARNING: Running maintenance script in PRODUCTION. Type "yes" to continue: ',
+    (answer: string) => {
+      readline.close();
+      if (answer.toLowerCase() !== 'yes') {
+        console.log('Aborted.');
+        process.exit(0);
+      }
+      initDb();
+    }
+  );
+} else {
+  initDb();
+}
