@@ -83,7 +83,7 @@ test.describe('Authentication Stabilization Verification', () => {
         // but we can trigger the API call directly via browser console to test the interceptor logic.
         await page.evaluate(async () => {
             // @ts-expect-error - axios is attached to window in mock environment
-            try { await window.axios.post('/api/auth/google', { credential: 'fake' }); } catch (e) {}
+            try { await window.axios.post('/api/auth/google', { credential: 'fake' }); } catch (_e) {}
         });
 
         await page.waitForTimeout(1000);

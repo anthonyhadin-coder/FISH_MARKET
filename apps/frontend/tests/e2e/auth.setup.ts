@@ -4,7 +4,7 @@ import fs from 'fs';
 
 const authFile = path.join(__dirname, '../../playwright/.auth/agent.json');
 
-setup('create agent auth state via localStorage injection', async ({ page, request }) => {
+setup('create agent auth state via localStorage injection', async ({ page, request: _request }) => {
     // Auth in FISH_MARKET is stored in localStorage under the 'user' key.
     // We don't need a live backend — just inject the user object and save storageState.
     

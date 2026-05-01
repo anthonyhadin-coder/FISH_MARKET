@@ -25,7 +25,7 @@ api.interceptors.request.use((config) => {
 // ── Response Interceptor ───────────────────────────────────────────────────────
 // Module-level variable to deduplicate concurrent refresh attempts.
 // If multiple 401s happen at once, they all await this same promise.
-let refreshPromise: Promise<any> | null = null;
+let refreshPromise: Promise<unknown> | null = null;
 
 api.interceptors.response.use(
     (response) => response,
@@ -49,7 +49,7 @@ api.interceptors.response.use(
             try {
                 await refreshPromise;
                 return api(originalRequest); // retry original request
-            } catch (refreshError: any) {
+            } catch (refreshError: unknown) {
                 // Refresh failed OR refresh itself returned "Token is not valid" 
                 // Notify AuthContext to redirect cleanly
                 if (typeof window !== 'undefined') {

@@ -116,7 +116,7 @@ describe('Fish Name Detection', () => {
   });
 
   it('All dictionary entries have avgRate > 0', () => {
-    for (const [key, val] of Object.entries(FISH_DICTIONARY)) {
+    for (const [_key, val] of Object.entries(FISH_DICTIONARY)) {
       expect(val.avgRate).toBeGreaterThan(0);
     }
   });

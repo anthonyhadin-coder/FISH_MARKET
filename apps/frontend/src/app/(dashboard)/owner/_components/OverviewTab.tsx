@@ -54,7 +54,7 @@ export function OverviewTab({ date, setDate, setTab }: OverviewTabProps) {
             const msg = (e.errorKey && T[lang][e.errorKey]) || e.response?.data?.message || T[lang].serverError;
             toast(msg, 'error');
         } finally { setLoading(false); }
-    }, [date, toast]);
+    }, [date, toast, lang]);
 
     useEffect(() => { load(); }, [load]);
 

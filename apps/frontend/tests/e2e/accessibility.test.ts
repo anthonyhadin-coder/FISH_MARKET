@@ -20,7 +20,7 @@ test.describe('Accessibility (WCAG 2.1 AA)', () => {
     try {
       const results = await new (require('axe-playwright')).AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
       require('fs').writeFileSync('axe-violations.json', JSON.stringify(results.violations, null, 2));
-    } catch(e) {}
+    } catch(_e) {}
     await checkA11y(page, undefined, {
       detailedReport: true,
       detailedReportOptions: { html: true },

@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { setupUniversalMocking } from './test-utils';
 import { existsSync } from 'fs';
 import path from 'path';

@@ -1,7 +1,6 @@
 "use client";
 import React from 'react';
-import { motion } from 'framer-motion';
-import { ShoppingBag, History, CreditCard, ChevronRight, Fish } from 'lucide-react';
+import { ShoppingBag, History, CreditCard, Fish } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';

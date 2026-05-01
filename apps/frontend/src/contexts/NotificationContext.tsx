@@ -15,7 +15,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 interface NotificationProviderProps {
     children: React.ReactNode;
-    agentData?: { pendingCount?: number; isSyncing?: boolean; dailyReport?: any; selectedBoat?: any };
+    agentData?: { pendingCount?: number; isSyncing?: boolean; dailyReport?: Record<string, unknown>; selectedBoat?: Record<string, unknown> };
 }
 
 export const NotificationProvider = ({ children, agentData }: NotificationProviderProps) => {
@@ -73,9 +73,10 @@ export const NotificationProvider = ({ children, agentData }: NotificationProvid
                     return merged.slice(0, 50);
                 });
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             // Silence 401s as they are handled by the global interceptor and AuthContext redirect
-            if (err?.response?.status !== 401) {
+            const error = err as { response?: { status?: number } };
+            if (error?.response?.status !== 401) {
                 console.error("Failed to fetch notifications", err instanceof Error ? err.message : err);
             }
         }
@@ -147,14 +148,14 @@ export const NotificationProvider = ({ children, agentData }: NotificationProvid
     useEffect(() => {
         if (dailyReport && selectedBoat) {
             const target = 100000; 
-            if (dailyReport.totalSales >= target) {
+            if (Number(dailyReport.totalSales || 0) >= target) {
                  const key = `notif_target_${selectedBoat.id}_${new Date().toDateString()}`;
                  if (!localStorage.getItem(key)) {
                     // Use a microtask to avoid synchronous render warning
                     Promise.resolve().then(() => {
                         addNotification({
                             title: 'Target Met! 🎯',
-                            message: `Boat ${selectedBoat.name} has reached its daily catch target of ${target}!`,
+                            message: `Boat ${selectedBoat.name || 'Unknown'} has reached its daily catch target of ${target}!`,
                             type: 'info'
                         });
                     });

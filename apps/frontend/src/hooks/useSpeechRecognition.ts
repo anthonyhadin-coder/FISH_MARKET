@@ -171,9 +171,10 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
         options.onResult(parsed);
         options.onConfidence?.(confidence);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Whisper transcription failed:', err);
-      const serverMsg = err.response?.data?.message || err.friendlyMessage;
+      const e = err as { response?: { data?: { message?: string } }; friendlyMessage?: string };
+      const serverMsg = e.response?.data?.message || e.friendlyMessage;
       
       options.onError(
         lang === 'ta'

@@ -7,7 +7,7 @@ export const corsHeaders = {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept'
 };
 
-export async function fulfillWithCors(route: Route, options: { status?: number, json?: any, headers?: Record<string, string> }) {
+export async function fulfillWithCors(route: Route, options: { status?: number, json?: unknown, headers?: Record<string, string> }) {
     const request = route.request();
     const origin = request.headers().origin || 'http://localhost:3000';
     
@@ -24,8 +24,9 @@ export async function fulfillWithCors(route: Route, options: { status?: number, 
             },
             json: options.json
         });
-    } catch (err: any) {
-        console.error(`FAILED TO FULFILL: ${request.url()}`, err.message, err.code);
+    } catch (err: unknown) {
+        const e = err as { message?: string; code?: string };
+        console.error(`FAILED TO FULFILL: ${request.url()}`, e.message, e.code);
     }
 }
 
@@ -35,7 +36,7 @@ export async function fulfillWithCors(route: Route, options: { status?: number, 
 export async function setupUniversalMocking(page: Page) {
     // Set flag for api.ts to use relative path and avoid production backend
     await page.addInitScript(() => {
-        (window as any).__PLAYWRIGHT_TEST__ = true;
+        (window as unknown as Record<string, unknown>).__PLAYWRIGHT_TEST__ = true;
     });
 
     // Universal Interceptor

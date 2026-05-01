@@ -47,7 +47,7 @@ export function ReportsTab({ date, setDate }: ReportsTabProps) {
             setLoading(true);
             const data = await fetchAdminReport(date);
             setReport(data);
-        } catch (err: unknown) {
+        } catch (_err: unknown) {
             toast('Failed to load daily report', 'error');
         } finally { setLoading(false); }
     }, [date, toast]);
@@ -64,7 +64,7 @@ export function ReportsTab({ date, setDate }: ReportsTabProps) {
             if (boatsList.length > 0 && !selectedBoat) {
                 setSelectedBoat(String(boatsList[0].id));
             }
-        } catch (err: unknown) {
+        } catch (_err: unknown) {
             toast('Failed to load analytics', 'error');
         } finally {
             setAnalyticsLoading(false);

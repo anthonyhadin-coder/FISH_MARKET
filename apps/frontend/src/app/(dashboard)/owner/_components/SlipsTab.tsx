@@ -301,7 +301,7 @@ export function SlipsTab() {
                                                             <div className="flex gap-4">
                                                                 <button 
                                                                     disabled={submitting}
-                                                                    onClick={(e) => setRejectingId(slip.id)}
+                                                                    onClick={(_e) => setRejectingId(slip.id)}
                                                                     className="flex-1 py-4 bg-white border-2 border-coral-200 text-coral-600 font-black rounded-2xl hover:bg-coral-50 transition-all disabled:opacity-50"
                                                                 >
                                                                     Reject ❌

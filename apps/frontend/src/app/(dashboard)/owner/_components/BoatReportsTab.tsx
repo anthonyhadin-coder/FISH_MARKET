@@ -18,7 +18,7 @@ import {
 import { groupByFish, SaleRow } from '@/app/(dashboard)/agent/SharedUI';
 import { 
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
-    ResponsiveContainer, Bar, Legend
+    ResponsiveContainer
 } from 'recharts';
 
 const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;

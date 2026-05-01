@@ -37,7 +37,7 @@ export const createBoat = (data: { name: string; agentId?: number }) =>
     api.post('/boats', data).then(r => r.data);
 
 export const findOwnerByContact = (contact: string) =>
-    api.get<{ owner: any; boats: any[] }>('/boats/find-owner', { params: { contact } }).then(r => r.data);
+    api.get<{ owner: unknown; boats: unknown[] }>('/boats/find-owner', { params: { contact } }).then(r => r.data);
 
 export const requestBoatLink = (boatId: number) =>
     api.post('/boats/request-link', { boatId }).then(r => r.data);

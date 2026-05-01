@@ -13,7 +13,6 @@ import { fetchAllUsers, AdminUser } from '@/lib/api/adminApi';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { T } from '@/lib/i18n';
 import { useToast } from '@/components/ui/Toast';
-import { useAuth } from '@/contexts/AuthContext';
 
 export function BoatsTab() {
     const { lang } = useLanguage();
@@ -26,7 +25,6 @@ export function BoatsTab() {
 
     const [showAdd, setShowAdd] = useState(false);
     const [newName, setNewName] = useState('');
-    const [newAgentId, setNewAgentId] = useState<number | ''>('');
     const [saving, setSaving] = useState(false);
 
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -47,7 +45,7 @@ export function BoatsTab() {
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, [toast, t]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -72,15 +70,16 @@ export function BoatsTab() {
             await approveBoatLink({ boatId, agentId, action });
             toast(`Link request ${action}ed`, "success");
             await load();
-        } catch (err: any) {
-            const msg = (err.errorKey && t[err.errorKey]) || err.response?.data?.message || t.serverError;
+        } catch (err: unknown) {
+            const e = err as { errorKey?: string; response?: { data?: { message?: string } } };
+            const msg = (e.errorKey && t[e.errorKey]) || e.response?.data?.message || t.serverError;
             toast(msg, "error");
         } finally {
             setSaving(false);
         }
     };
 
-    const handleSaveEdit = async (id: number) => {
+    const handleSaveEdit = async (_id: number) => {
         setSaving(true);
         try {
             // Owners can only update name via the updateBoat (if implemented) or we can skip renaming for now
