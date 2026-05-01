@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useTransition, Suspense } from 'react';
+import { useState, useEffect, useTransition, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -20,6 +20,12 @@ import { ApiError } from '@fishmarket/shared-types';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import './login-light.css';
+
+declare global {
+  interface Window {
+    recaptchaVerifier: RecaptchaVerifier | null;
+  }
+}
 
 // ── UX states ───────────────────────────────────────────────────
 type LoginState =
@@ -149,8 +155,8 @@ function LoginContent() {
 
   // ── OTP handlers ─────────────────────────────────────────────
   const setupRecaptcha = () => {
-    if (!(window as any).recaptchaVerifier) {
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'login-submit-btn', {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'login-submit-btn', {
         size: 'invisible'
       });
     }
@@ -164,7 +170,7 @@ function LoginContent() {
       setupRecaptcha();
       // Ensure phone is E.164 format
       const formattedPhone = phone.startsWith('+') ? phone : (phone.length === 10 ? `+91${phone}` : `+${phone}`);
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, (window as any).recaptchaVerifier);
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
       setConfirmationResult(confirmation);
       setOtpStep('verify');
       setResendTimer(60);
@@ -173,9 +179,9 @@ function LoginContent() {
       console.error(err);
       setLoginState('error');
       setError('Failed to send OTP via SMS. Check your number.');
-      if ((window as any).recaptchaVerifier) {
-          (window as any).recaptchaVerifier.clear();
-          (window as any).recaptchaVerifier = null;
+      if (window.recaptchaVerifier) {
+          window.recaptchaVerifier.clear();
+          window.recaptchaVerifier = null;
       }
     }
   };

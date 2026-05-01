@@ -1,5 +1,4 @@
 const { chromium } = require('playwright');
-const axe = require('axe-core');
 
 (async () => {
   const browser = await chromium.launch();

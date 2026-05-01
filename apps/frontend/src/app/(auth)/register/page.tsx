@@ -28,7 +28,7 @@ type UserRole = 'AGENT' | 'OWNER' | 'BUYER';
 function getFriendlyError(err: ApiError): string {
   if (typeof navigator !== 'undefined' && !navigator.onLine) return 'You appear to be offline.';
   
-  const data = err.response?.data as any;
+  const data = err.response?.data as { message?: string; errors?: Array<{ message: string }> };
   const msg = data?.message || '';
   
   // 1. Explicit server message (e.g., "User already exists")
@@ -36,7 +36,7 @@ function getFriendlyError(err: ApiError): string {
 
   // 2. Validation errors
   if (msg === 'Validation failed' && data?.errors) {
-    const fieldMessage = data.errors.map((e: any) => {
+    const fieldMessage = data.errors.map((e) => {
       const rawMsg = e.message;
       if (rawMsg.includes('Too small') || rawMsg.includes('8 characters')) {
         return 'Password must be at least 8 characters long';
@@ -138,10 +138,10 @@ function RegisterContent() {
       setState('error');
       setError(getFriendlyError(apiErr));
       
-      const data = apiErr.response?.data as any;
+      const data = apiErr.response?.data as { errors?: Array<{ path: string[]; message: string }> };
       if (data?.errors && Array.isArray(data.errors)) {
         // Dispatch custom event for useFormErrors hook
-        const fieldErrors = data.errors.map((e: any) => ({
+        const fieldErrors = data.errors.map((e) => ({
           field: e.path[e.path.length - 1], // Usually 'password', 'phone', etc.
           message: e.message
         }));

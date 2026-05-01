@@ -29,15 +29,9 @@ export default function GoogleAuthButton({
   const t = loginT[lang];
   const [mounted, setMounted] = useState(false);
 
-  // Detect if we should use redirect flow (Mobile or Standalone PWA)
-  const [useRedirect, setUseRedirect] = useState(false);
-  
   useEffect(() => {
     setTimeout(() => {
       setMounted(true);
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      if (isMobile || isStandalone) setUseRedirect(true);
     }, 0);
   }, []);
 
