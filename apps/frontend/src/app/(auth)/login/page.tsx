@@ -155,8 +155,9 @@ function LoginContent() {
 
   // ── OTP handlers ─────────────────────────────────────────────
   const setupRecaptcha = () => {
+    if (!auth) return;
     if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'login-submit-btn', {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth!, 'login-submit-btn', {
         size: 'invisible'
       });
     }
@@ -167,10 +168,11 @@ function LoginContent() {
     setLoginState('loading');
     setError('');
     try {
+      if (!auth) throw new Error("Firebase Auth not initialized");
       setupRecaptcha();
       // Ensure phone is E.164 format
       const formattedPhone = phone.startsWith('+') ? phone : (phone.length === 10 ? `+91${phone}` : `+${phone}`);
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
+      const confirmation = await signInWithPhoneNumber(auth!, formattedPhone, window.recaptchaVerifier!);
       setConfirmationResult(confirmation);
       setOtpStep('verify');
       setResendTimer(60);

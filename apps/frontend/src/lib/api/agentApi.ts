@@ -8,7 +8,7 @@ export const agentLinks = [
     { href: '/agent/history',     icon: History,         label: 'Sales History' },
 ];
 
-import { Buyer } from '@fishmarket/shared-types';
+import { Buyer, Boat } from '@fishmarket/shared-types';
 export type { Buyer };
 
 export const fetchBuyers = () =>
@@ -36,8 +36,9 @@ export const fetchBuyerHistory = (id: number) =>
 export const createBoat = (data: { name: string; agentId?: number }) =>
     api.post('/boats', data).then(r => r.data);
 
+
 export const findOwnerByContact = (contact: string) =>
-    api.get<{ owner: unknown; boats: unknown[] }>('/boats/find-owner', { params: { contact } }).then(r => r.data);
+    api.get<{ owner: { name: string; phone: string }; boats: Boat[] }>('/boats/find-owner', { params: { contact } }).then(r => r.data);
 
 export const requestBoatLink = (boatId: number) =>
     api.post('/boats/request-link', { boatId }).then(r => r.data);

@@ -22,6 +22,7 @@ export interface Boat {
     name: string;
     owner_id: number;
     agent_id: number;
+    status: 'active' | 'pending';
     ownerPhone?: string;
 }
 
