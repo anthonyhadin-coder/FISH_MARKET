@@ -181,8 +181,8 @@ jobs:
           cd $GITHUB_WORKSPACE/apps/frontend
           npm run build
           # Required for standalone: copy static + public assets
-          cp -r .next/static .next/standalone/.next/static
-          cp -r public .next/standalone/public
+          cp -r .next/static .next/standalone/apps/frontend/.next/static
+          cp -r public .next/standalone/apps/frontend/public
         env:
           NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api
 
@@ -291,8 +291,8 @@ jobs:
           cd $GITHUB_WORKSPACE/apps/frontend
           npm run build
           # Required for standalone: copy static + public assets
-          cp -r .next/static .next/standalone/.next/static
-          cp -r public .next/standalone/public
+          cp -r .next/static .next/standalone/apps/frontend/.next/static
+          cp -r public .next/standalone/apps/frontend/public
         env:
           NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api
 
