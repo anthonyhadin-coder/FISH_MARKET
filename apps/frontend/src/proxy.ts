@@ -6,7 +6,7 @@ import type { NextRequest } from 'next/server';
  * Enforces route protection and role-based redirection.
  */
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     
     // Get role from cookies (synced by AuthContext)

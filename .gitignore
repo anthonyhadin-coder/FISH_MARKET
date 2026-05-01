@@ -48,8 +48,6 @@ server/logs/
 # Lint / Audit Results
 *_lint_*.json
 tsc_*.txt
-*lint*.*
-*tsc*.*
 coverage/
 
 # Test Cache
@@ -105,3 +103,4 @@ files*.txt
 client_out.txt
 errors.txt
 
+.turbo/

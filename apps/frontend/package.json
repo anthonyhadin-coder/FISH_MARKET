@@ -22,6 +22,7 @@
     "axios": "^1.15.0",
     "axios-auth-refresh": "^5.0.2",
     "clsx": "^2.1.1",
+    "firebase": "^12.12.1",
     "framer-motion": "^12.35.2",
     "idb": "^8.0.3",
     "jspdf": "^4.2.1",

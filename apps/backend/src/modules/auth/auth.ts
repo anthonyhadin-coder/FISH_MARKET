@@ -10,6 +10,7 @@ import { catchAsync } from '../../middleware/errors';
 import { validate } from '../../middleware/validation';
 import { authenticate, AuthRequest } from '../../middleware/auth';
 import redis, { blockToken } from '../../config/redis';
+import { firebaseAdminAuth } from '../../config/firebase';
 
 // ── Env guards ───────────────────────────────────────────────────
 
@@ -124,16 +125,9 @@ const googleSchema = z.object({
     })
 });
 
-const sendOtpSchema = z.object({
+const firebaseLoginSchema = z.object({
     body: z.object({
-        phone: z.string().regex(/^\+?[\s\d\-()]{10,20}$/, 'Invalid phone number format'),
-    })
-});
-
-const verifyPhoneOtpSchema = z.object({
-    body: z.object({
-        phone: z.string().regex(/^\+?[\s\d\-()]{10,20}$/, 'Invalid phone number format'),
-        otp: z.string().length(6),
+        idToken: z.string().min(1),
     })
 });
 
@@ -620,72 +614,28 @@ router.post('/forgot-password', forgotPassword);
 router.post('/verify-otp', verifyOtp);
 router.post('/reset-password', resetPassword);
 
-// Phone Login Flow
-export const sendPhoneOtp = catchAsync(async (req: Request, res: Response) => {
-    const { phone } = req.body;
-    const cleanPhone = cleanPhoneNumber(phone);
+// Firebase Phone Login Flow
+export const verifyFirebasePhoneLogin = catchAsync(async (req: Request, res: Response) => {
+    const { idToken } = req.body;
 
-    // Rate limiting: 1 OTP per 60s
-    if (redis) {
-        const cooldown = await redis.get(`otp_cooldown:${cleanPhone}`);
-        if (cooldown) return res.status(429).json({ message: 'Please wait 60s before requesting another OTP' });
+    if (!firebaseAdminAuth) {
+        return res.status(500).json({ message: 'Firebase authentication is not configured on this server.' });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    if (!redis) {
-        logger.error('[PhoneOTP] CRITICAL: Redis is unavailable. Cannot send OTP safely.');
-        return res.status(503).json({ message: 'Authentication service temporarily unavailable.' });
+    let decodedToken;
+    try {
+        decodedToken = await firebaseAdminAuth.verifyIdToken(idToken);
+    } catch (error) {
+        logger.error('[FirebaseAuth] Token verification failed:', error);
+        return res.status(401).json({ message: 'Invalid or expired Firebase token.' });
     }
 
-    await redis.set(`otp:${cleanPhone}`, otp, 'EX', 300); // 5 mins
-    await redis.set(`otp_cooldown:${cleanPhone}`, '1', 'EX', 60); // 60s cooldown
-
-    if (process.env.NODE_ENV !== 'production') {
-        logger.warn(`[SMS MOCK] OTP for dev — Phone: ${cleanPhone}, OTP: ${otp}`);
-    } else {
-        logger.info('[PhoneOTP] OTP dispatched to user (SMS provider pending)');
-    }
-    res.json({ message: 'OTP sent successfully' });
-});
-
-const OTP_MAX_ATTEMPTS = 5;
-const OTP_LOCKOUT_SECONDS = 15 * 60; // 15 minutes
-
-export const verifyPhoneOtp = catchAsync(async (req: Request, res: Response) => {
-    const { phone, otp } = req.body;
-    const cleanPhone = cleanPhoneNumber(phone);
-
-    if (!redis) {
-        logger.error('[verifyPhoneOtp] CRITICAL: Redis unavailable. Cannot verify OTP safely.');
-        return res.status(503).json({ message: 'Authentication service temporarily unavailable. Try password login.' });
+    const { phone_number } = decodedToken;
+    if (!phone_number) {
+        return res.status(400).json({ message: 'No phone number linked to this Firebase credential.' });
     }
 
-    // Brute-force protection: check lockout first
-    const lockKey = `otp_lock:${cleanPhone}`;
-    const attemptsKey = `otp_attempts:${cleanPhone}`;
-    const isLocked = await redis.get(lockKey);
-    if (isLocked) {
-        return res.status(429).json({ message: `Too many incorrect OTPs. Try again in ${OTP_LOCKOUT_SECONDS / 60} minutes.` });
-    }
-
-    const stored = await redis.get(`otp:${cleanPhone}`);
-    if (!stored || stored !== otp) {
-        // Increment failed attempt counter
-        const attempts = await redis.incr(attemptsKey);
-        await redis.expire(attemptsKey, OTP_LOCKOUT_SECONDS);
-        if (attempts >= OTP_MAX_ATTEMPTS) {
-            await redis.set(lockKey, '1', 'EX', OTP_LOCKOUT_SECONDS);
-            await redis.del(attemptsKey);
-            await redis.del(`otp:${cleanPhone}`);
-            return res.status(429).json({ message: `Too many incorrect OTPs. Locked for ${OTP_LOCKOUT_SECONDS / 60} minutes.` });
-        }
-        return res.status(400).json({ message: 'Invalid or expired OTP', attemptsLeft: OTP_MAX_ATTEMPTS - attempts });
-    }
-    // Correct OTP — clear all rate-limit keys
-    await redis.del(`otp:${cleanPhone}`);
-    await redis.del(attemptsKey);
-    await redis.del(lockKey);
+    const cleanPhone = cleanPhoneNumber(phone_number);
 
     // Find or create user
     const [users]: any[] = await pool.query(
@@ -710,7 +660,6 @@ export const verifyPhoneOtp = catchAsync(async (req: Request, res: Response) => 
     res.json(data);
 });
 
-router.post('/phone/send-otp', validate(sendOtpSchema), sendPhoneOtp);
-router.post('/phone/verify-otp', validate(verifyPhoneOtpSchema), verifyPhoneOtp);
+router.post('/phone/firebase-login', validate(firebaseLoginSchema), verifyFirebasePhoneLogin);
 
 export default router;

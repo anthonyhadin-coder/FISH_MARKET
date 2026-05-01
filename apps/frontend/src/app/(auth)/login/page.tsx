@@ -17,6 +17,8 @@ import GoogleAuthButton from './_components/GoogleAuthButton';
 import RoleSelectModal from '@/components/shared/RoleSelectModal';
 import { useFormErrors } from '@/hooks/useFormErrors';
 import { ApiError } from '@fishmarket/shared-types';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import './login-light.css';
 
 // ── UX states ───────────────────────────────────────────────────
@@ -44,6 +46,7 @@ function LoginContent() {
   const [loginMethod, setLoginMethod] = useState<'password' | 'otp'>('password');
   const [otpStep, setOtpStep]         = useState<'phone' | 'verify'>('phone');
   const [otp, setOtp]                 = useState('');
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
   const [error, setError]             = useState('');
   const [phone, setPhone]             = useState('');
@@ -145,31 +148,52 @@ function LoginContent() {
   }, [resendTimer]);
 
   // ── OTP handlers ─────────────────────────────────────────────
+  const setupRecaptcha = () => {
+    if (!(window as any).recaptchaVerifier) {
+      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'login-submit-btn', {
+        size: 'invisible'
+      });
+    }
+  };
+
   const handleSendOtp = async () => {
     if (!phone) return;
     setLoginState('loading');
     setError('');
     try {
-      await api.post('/auth/phone/send-otp', { phone });
+      setupRecaptcha();
+      // Ensure phone is E.164 format
+      const formattedPhone = phone.startsWith('+') ? phone : (phone.length === 10 ? `+91${phone}` : `+${phone}`);
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, (window as any).recaptchaVerifier);
+      setConfirmationResult(confirmation);
       setOtpStep('verify');
       setResendTimer(60);
       setLoginState('idle');
-    } catch {
+    } catch (err) {
+      console.error(err);
       setLoginState('error');
-      setError('Failed to send OTP. Please try again.');
+      setError('Failed to send OTP via SMS. Check your number.');
+      if ((window as any).recaptchaVerifier) {
+          (window as any).recaptchaVerifier.clear();
+          (window as any).recaptchaVerifier = null;
+      }
     }
   };
 
   const handleVerifyOtp = async () => {
-    if (otp.length !== 6) return;
+    if (otp.length !== 6 || !confirmationResult) return;
     setLoginState('loading');
     setError('');
     try {
-      const res = await api.post('/auth/phone/verify-otp', { phone, otp });
+      const result = await confirmationResult.confirm(otp);
+      const idToken = await result.user.getIdToken();
+      const res = await api.post('/auth/phone/firebase-login', { idToken });
+      
       setLoginState('success');
       await new Promise(r => setTimeout(r, 1000));
       login(res.data.user);
-    } catch {
+    } catch (err) {
+      console.error(err);
       setLoginState('error');
       setError(t.invalidOtp);
     }
