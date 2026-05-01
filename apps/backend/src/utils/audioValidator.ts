@@ -1,0 +1,49 @@
+import { Request, Response, NextFunction } from 'express';
+import rateLimit from 'express-rate-limit';
+
+// Rate limiting for transcription: max 10 requests per minute per user
+export const transcribeRateLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 10,
+    message: 'Too many transcription requests, please wait a minute.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req: any) => {
+        // Use user ID if available, otherwise fall back to IP
+        const key = req.user?.userId || req.ip;
+        // Ensure we return a string and handle potential IPv6 identification
+        return String(key);
+    },
+    // Explicitly disable validation checks that cause synchronous crashes
+    validate: false,
+});
+
+export const validateAudioFile = (req: Request, res: Response, next: NextFunction) => {
+    const file = (req as any).file;
+    if (!file) {
+        return res.status(400).json({ message: 'No audio file provided' });
+    }
+
+    // 1. Max file size: 5MB
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+        return res.status(400).json({ message: 'Audio file too large (max 5MB)' });
+    }
+
+    // 2. MIME type check: support broad spectrum of browser formats (WebM, WAV, MP4/AAC, OGG)
+    const ALLOWED_TYPES = [
+        'audio/webm', 
+        'audio/wav', 
+        'audio/ogg', 
+        'audio/mp4', 
+        'audio/mpeg', 
+        'audio/aac',
+        'audio/x-matroska',
+        'application/octet-stream'
+    ];
+    if (!ALLOWED_TYPES.includes(file.mimetype) && !file.mimetype.startsWith('audio/')) {
+        return res.status(400).json({ message: `Invalid audio format: ${file.mimetype}. Only standard audio formats supported.` });
+    }
+
+    next();
+};

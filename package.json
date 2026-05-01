@@ -3,16 +3,16 @@
   "version": "1.0.0",
   "description": "Deep Ocean Fish Market PWA — Monorepo",
   "main": "index.js",
+  "packageManager": "npm@11.8.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "concurrently --names \"CLIENT,SERVER\" --prefix-colors \"cyan,green\" \"npm run dev --prefix client\" \"npm run dev --prefix server\"",
-    "build": "npm run build --prefix client && npm run build --prefix server",
-    "test": "npm run test --prefix client && npm run test --prefix server",
-    "test:e2e": "npx playwright test",
-    "test:update-snapshots": "docker compose -f docker-compose.test.yml up -d && sleep 5 && npx playwright test tests/e2e/visual.test.ts --update-snapshots && docker compose -f docker-compose.test.yml down",
-    "test:visual": "npx playwright test tests/e2e/visual.test.ts",
-    "test:smoke": "npx playwright test --grep @smoke --reporter=line",
-    "test:a11y": "npx playwright test tests/e2e/accessibility.test.ts",
-    "lint": "npm run lint --prefix client && npm run lint --prefix server"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +24,7 @@
     "@types/node": "^25.5.0",
     "axe-playwright": "^2.2.2",
     "concurrently": "^9.1.2",
+    "turbo": "^2.9.6",
     "vitest": "^4.1.0"
   }
 }

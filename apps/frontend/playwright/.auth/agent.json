@@ -1,0 +1,25 @@
+{
+  "cookies": [
+    {
+      "name": "fm_role",
+      "value": "agent",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1776755269.545794,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "user",
+          "value": "{\"id\":\"1\",\"name\":\"Test Agent\",\"role\":\"agent\"}"
+        }
+      ]
+    }
+  ]
+}
