@@ -1,8 +1,7 @@
 "use client";
 import React, { useState, useRef } from "react";
-import { T_AGENT, G, FISH_TA, FISH_TA_SYNONYMS, FISH_EN, FISH_COLORS, EXP_KEYS, EXP_ICONS, fmt, groupByFish, Label, Badge, Divider, GCard, makeInp, TH, TD, Payment, SaleRow } from "../SharedUI";
+import { T_AGENT, G, FISH_TA, FISH_EN, FISH_COLORS, EXP_KEYS, EXP_ICONS, fmt, groupByFish, Label, Badge, Divider, GCard, makeInp, TH, TD, Payment, SaleRow } from "../SharedUI";
 import api from '@/lib/api';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { useAgent } from '../_context/AgentContext';
 import { offlineStorage } from '@/lib/offlineStorage';
 import { useToast } from '@/components/ui/Toast';

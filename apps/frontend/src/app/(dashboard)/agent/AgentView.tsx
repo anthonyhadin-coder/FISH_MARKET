@@ -435,9 +435,9 @@ export default function AgentDashboard() {
                                     className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 py-4 z-[100]"
                                 >
                                     <div className="flex items-center justify-between px-5 mb-4">
-                                        <h3 className="text-[11px] font-black uppercase tracking-widest text-ocean-900">{(t as any).notifications || "Notifications"}</h3>
+                                        <h3 className="text-[11px] font-black uppercase tracking-widest text-ocean-900">{(t as Record<string, string>).notifications || "Notifications"}</h3>
                                         {notifications.length > 0 && (
-                                            <button onClick={clearAll} className="text-[9px] font-bold text-ocean-400 hover:text-ocean-600 transition-colors uppercase">{(t as any).clearAll || "Clear All"}</button>
+                                            <button onClick={clearAll} className="text-[9px] font-bold text-ocean-400 hover:text-ocean-600 transition-colors uppercase">{(t as Record<string, string>).clearAll || "Clear All"}</button>
                                         )}
                                     </div>
                                     <div className="max-h-80 overflow-y-auto px-2 space-y-1">

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/Input';
 import {
     Users, Plus, Wallet, AlertCircle, X, Loader2, IndianRupee, MessageCircle, History as HistoryIcon, TrendingUp, TrendingDown, Calendar
 } from 'lucide-react';
-import { fetchBuyers, createBuyer, recordBuyerPayment, Buyer, fetchBuyerHistory } from '@/lib/api/agentApi';
+import { fetchBuyers as _fetchBuyers, createBuyer, recordBuyerPayment, Buyer, fetchBuyerHistory } from '@/lib/api/agentApi';
 import { shareToWhatsApp } from '@/lib/whatsapp';
 import { SaleRow, Payment } from '@fishmarket/shared-types';
 import { fmt, T_AGENT, dispDate } from '../SharedUI';
@@ -43,7 +43,7 @@ export function BuyersTab({ lang }: { lang: string }) {
         try {
             const data = await fetchBuyerHistory(buyer.id);
             setHistoryModal(prev => ({ ...prev, data, loading: false }));
-        } catch (e) {
+        } catch (_e) {
             toast("Failed to load history", "error");
             setHistoryModal(prev => ({ ...prev, loading: false }));
         }

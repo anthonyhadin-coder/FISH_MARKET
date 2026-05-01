@@ -71,7 +71,7 @@ export function AgentBoatWeeklyReport({ lang, availBoats }: AgentBoatWeeklyRepor
             setLoading(true);
             const data = await fetchAgentBoatWeeklyReport(selectedBoat, weekStart, weekEnd) as WeeklyReportData;
             setReportData(data);
-        } catch (err) {
+        } catch (_err) {
             toast("Failed to load boat weekly report", "error");
         } finally {
             setLoading(false);
@@ -160,7 +160,7 @@ export function AgentBoatWeeklyReport({ lang, availBoats }: AgentBoatWeeklyRepor
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-ocean-100 bg-white">
-                                    {reportData.daily_breakdown.map((day, idx: number) => (
+                                    {reportData.daily_breakdown.map((day, _idx: number) => (
                                         <React.Fragment key={day.date}>
                                             {day.entries.map((entry, eIdx: number) => (
                                                 <tr key={`${day.date}-${eIdx}`} className="hover:bg-ocean-50/30 transition-colors">

@@ -169,7 +169,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Start Services
-        run: docker compose -f infrastructure/docker/docker-compose.yml up -d db redis
+        run: docker compose -f infrastructure/docker/docker-compose.yml up -d --wait db redis
 
       - name: Initialize Test Database
         run: cd apps/backend && npx -y tsx src/scripts/initDb.ts

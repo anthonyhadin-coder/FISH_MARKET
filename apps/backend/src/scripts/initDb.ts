@@ -6,7 +6,7 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-async function connectWithRetry(url: string, retries = 5, delayMs = 3000) {
+async function connectWithRetry(url: string, retries = 15, delayMs = 3000) {
   for (let i = 0; i < retries; i++) {
     try {
       const conn = await mysql.createConnection(url);
