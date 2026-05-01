@@ -110,7 +110,7 @@ jobs:
       - name: Verify .env.example is complete
         run: |
           node -e "
-            const example = require('fs').readFileSync('../.env.example', 'utf8');
+            const example = require('fs').readFileSync('../../.env.example', 'utf8');
             const required = [
               'DATABASE_URL','REDIS_URL','JWT_SECRET',
               'REFRESH_TOKEN_SECRET','CLIENT_URL',
