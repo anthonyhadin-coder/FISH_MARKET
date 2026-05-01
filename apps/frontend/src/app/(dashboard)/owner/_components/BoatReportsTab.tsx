@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { 
     Ship, TrendingUp, TrendingDown, Banknote, CalendarDays, Loader2, History, X,
-    ArrowUpRight, ArrowDownRight, Activity
+    ArrowUpRight, Activity
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -18,7 +18,7 @@ import {
 import { groupByFish, SaleRow } from '@/app/(dashboard)/agent/SharedUI';
 import { 
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
-    ResponsiveContainer, BarChart, Bar, Legend
+    ResponsiveContainer, Bar, Legend
 } from 'recharts';
 
 const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;

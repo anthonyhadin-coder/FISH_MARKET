@@ -65,7 +65,7 @@ export const AgentProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             const res = await api.get('/buyers');
             setBuyers(res.data);
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (err?.response?.status !== 401) {
                 console.error("Failed to fetch buyers", err instanceof Error ? err.message : err);
             }

@@ -19,7 +19,7 @@ interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
 }
 
-interface SpeechRecognition extends EventTarget {
+interface _SpeechRecognition extends EventTarget {
   onresult: (e: SpeechRecognitionEvent) => void;
   start: () => void;
   stop: () => void;
@@ -94,7 +94,7 @@ export function EntryTab({
     const fishList = lang === "ta" ? FISH_TA : FISH_EN;
     const inp = makeInp();
 
-    const speak = (message: string, currentLang: string) => {
+    const _speak = (message: string, currentLang: string) => {
         if (!window.speechSynthesis) return;
         const utterance = new SpeechSynthesisUtterance(message);
         utterance.lang = currentLang === 'ta' ? 'ta-IN' : 'en-IN';
@@ -200,7 +200,7 @@ export function EntryTab({
         return matrix[a.length][b.length];
     };
 
-    const fuzzyMatch = (input: string, list: string[], threshold = 0.3): string | null => {
+    const _fuzzyMatch = (input: string, list: string[], threshold = 0.3): string | null => {
         if (!input) return null;
         let bestMatch: string | null = null;
         let minDistance = Infinity;

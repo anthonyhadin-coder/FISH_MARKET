@@ -3,11 +3,11 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
     TrendingUp, TrendingDown, DollarSign, PieChart, 
-    ArrowUpRight, ArrowDownRight, Info, ChevronDown, 
+    ArrowUpRight, Info, ChevronDown, 
     ChevronUp, Calendar, Filter, BarChart3, Activity
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { T_AGENT, G, GCard, Label, fmt } from "../SharedUI";
+import { T_AGENT, G, GCard, fmt } from "../SharedUI";
 import { AgentBoatWeeklyReport } from './AgentBoatWeeklyReport';
 import api from '@/lib/api';
 import { useToast } from '@/components/ui/Toast';

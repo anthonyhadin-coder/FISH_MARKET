@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Printer, ArrowLeft, CheckCircle2, Send, Download, FileText } from "lucide-react";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { T_AGENT, G, EXP_KEYS, fmt, dispDate, SaleRow } from "../SharedUI";
+import { T_AGENT, EXP_KEYS, fmt, dispDate, SaleRow } from "../SharedUI";
 import api from "@/lib/api";
 import { useToast } from '@/components/ui/Toast';
 import { SendToOwnerButton } from '@/components/shared/SendToOwnerButton';
@@ -31,7 +31,7 @@ interface SlipTabProps {
 export function SlipTab({ lang, rec, boat, user, dateKey, commRate, commission, expAmts, totalDed, netPay, payments, totalPaid, remaining, settled, setTab, dailySales }: SlipTabProps) {
     const t = T_AGENT[lang as 'en' | 'ta'];
     const [sending, setSending] = useState(false);
-    const [sent, setSent] = useState(false);
+    const [_sent, setSent] = useState(false);
     const [slipStatus, setSlipStatus] = useState<string | null>(null);
     const [rejectReason, setRejectReason] = useState<string | null>(null);
     const [checkingStatus, setCheckingStatus] = useState(true);
