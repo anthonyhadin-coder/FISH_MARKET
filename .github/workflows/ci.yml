@@ -214,7 +214,7 @@ jobs:
         run: npx wait-on http://127.0.0.1:3000 --timeout 60000
 
       - name: Update Snapshots
-        run: npx playwright test tests/e2e/visual.test.ts --update-snapshots
+        run: npx playwright test apps/frontend/tests/e2e/visual.test.ts --update-snapshots
         continue-on-error: true
         env:
           BASE_URL: http://127.0.0.1:3000
@@ -224,7 +224,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add tests/e2e/visual.test.ts-snapshots/
+          git add apps/frontend/tests/e2e/visual.test.ts-snapshots/
           git diff --staged --quiet && echo "No snapshot changes" || \
             (git commit -m "chore: update visual snapshots [skip ci]" && git push)
 
@@ -325,7 +325,7 @@ jobs:
         run: npx wait-on http://127.0.0.1:3000 --timeout 120000
 
       - name: Run Playwright tests
-        run: npx playwright test
+        run: npx playwright test apps/frontend/tests/e2e
         env:
           BASE_URL: http://127.0.0.1:3000
           API_URL: http://127.0.0.1:5000/api
