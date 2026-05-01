@@ -23,7 +23,7 @@ import './login-light.css';
 
 declare global {
   interface Window {
-    recaptchaVerifier: RecaptchaVerifier | null;
+    recaptchaVerifier?: RecaptchaVerifier;
   }
 }
 
@@ -181,7 +181,7 @@ function LoginContent() {
       setError('Failed to send OTP via SMS. Check your number.');
       if (window.recaptchaVerifier) {
           window.recaptchaVerifier.clear();
-          window.recaptchaVerifier = null;
+          delete window.recaptchaVerifier;
       }
     }
   };
