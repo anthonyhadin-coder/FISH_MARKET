@@ -17,7 +17,7 @@ export default defineConfig({
     }
   },
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: process.env.BASE_URL || 'http://localhost:3000',
     actionTimeout: 15000,
     navigationTimeout: 60000,  // ← increase from default 30s
     trace: 'on-first-retry',
