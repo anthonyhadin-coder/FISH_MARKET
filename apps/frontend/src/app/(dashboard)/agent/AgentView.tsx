@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Bell, History, ArrowRight } from 'lucide-react';
+import { LogOut, Bell, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -12,7 +12,7 @@ import { BuyersTab } from './_components/BuyersTab';
 import { HistoryTab } from './_components/HistoryTab';
 import { T_AGENT, toKey, Payment, SaleRow, EXP_KEYS } from './SharedUI';
 import api from '@/lib/api';
-import { ApiError, Buyer } from '@fishmarket/shared-types';
+import { ApiError, Boat } from '@fishmarket/shared-types';
 import { ParsedVoiceResult } from '@/lib/voice/voiceParser';
 import { strictVoiceParse } from '@/lib/voice/strictVoiceParser';
 import { offlineStorage } from '@/lib/offlineStorage';
@@ -35,9 +35,9 @@ export default function AgentDashboard() {
         refreshBoats,
         isLoading: boatsLoading,
         isOnline,
-        isSyncing,
-        pendingCount,
-        syncOfflineData
+        isSyncing: _isSyncing,
+        pendingCount: _pendingCount,
+        syncOfflineData: _syncOfflineData
     } = useAgent();
 
     const { notifications, markAsRead, clearAll } = useNotifications();
@@ -69,7 +69,7 @@ export default function AgentDashboard() {
     const [dailySales, setDailySales] = useState<SaleRow[]>([]);
     const [showAddBoat, setShowAddBoat] = useState(false);
     const [ownerSearchQuery, setOwnerSearchQuery] = useState("");
-    const [searchResult, setSearchResult] = useState<{ owner: any; boats: any[] } | null>(null);
+    const [searchResult, setSearchResult] = useState<{ owner: { name: string; phone: string }; boats: Boat[] } | null>(null);
     const [isSearching, setIsSearching] = useState(false);
     const [requestingBoatId, setRequestingBoatId] = useState<number | null>(null);
 
@@ -94,7 +94,7 @@ export default function AgentDashboard() {
             console.error("Failed to fetch daily data details:", error.message, error.code, error.response?.status);
             toast("Data error", "error");
         }
-    }, [selectedBoat, dateKey]);
+    }, [selectedBoat, dateKey, toast]);
 
     const addRow = useCallback(async (overrideRow?: typeof newRow) => {
         const data = overrideRow || newRow;
@@ -280,7 +280,7 @@ export default function AgentDashboard() {
     }, [fetchDailyData]);
 
     // Summary calculations
-    const totalSales = (dailySales || []).reduce((sum, r) => sum + Number((r as any).total || 0), 0);
+    const totalSales = (dailySales || []).reduce((sum, r) => sum + Number(r.total || 0), 0);
     const commission = Math.round(totalSales * (commRate / 100));
     const expAmts = EXP_KEYS.reduce((a, k) => ({ ...a, [k]: Number(rec.exp[k] || 0) }), {} as Record<string, number>);
     const totalExp = Object.values(expAmts).reduce((a, b) => a + b, 0);
@@ -297,8 +297,9 @@ export default function AgentDashboard() {
         try {
             const res = await findOwnerByContact(ownerSearchQuery.trim());
             setSearchResult(res);
-        } catch (err: any) {
-            toast(err.response?.data?.message || "Owner not found", "error");
+        } catch (err: unknown) {
+            const error = err as ApiError;
+            toast(error.response?.data?.message || "Owner not found", "error");
         } finally {
             setIsSearching(false);
         }
@@ -313,8 +314,9 @@ export default function AgentDashboard() {
             setSearchResult(null);
             setOwnerSearchQuery("");
             refreshBoats();
-        } catch (err: any) {
-            toast(err.response?.data?.message || "Failed to send request", "error");
+        } catch (err: unknown) {
+            const error = err as ApiError;
+            toast(error.response?.data?.message || "Failed to send request", "error");
         } finally {
             setRequestingBoatId(null);
         }

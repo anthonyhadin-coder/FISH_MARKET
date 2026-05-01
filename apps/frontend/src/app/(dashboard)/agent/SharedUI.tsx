@@ -21,6 +21,7 @@ export interface SaleRow {
     buyerName?: string;
     amountPaid?: number;
     balance?: number;
+    total?: number;
 }
 
 /* ── i18n specifically for the Agent Dashboard rewrite ───────────────────── */
