@@ -37,7 +37,14 @@ test.describe('PWA & Feature Verification', () => {
         // Entry form should be visible (boat was selected in beforeEach)
         await expect(page.locator('input[id="wt"]')).toBeVisible({ timeout: 10000 });
 
+        // Abort routes BEFORE setting offline to ensure they are intercepted
+        await page.route('**/api/sales', route => route.abort('internetdisconnected'));
+        await page.route('**/api/boat-payments', route => route.abort('internetdisconnected'));
+
         await page.context().setOffline(true);
+        
+        // Manually trigger offline event just in case Playwright's setOffline doesn't fire it immediately
+        await page.evaluate(() => window.dispatchEvent(new Event('offline')));
 
         // Wait for the offline banner to appear
         await expect(page.locator('[data-testid="offline-banner"]')).toBeVisible({ timeout: 10000 });
@@ -46,18 +53,19 @@ test.describe('PWA & Feature Verification', () => {
         await page.getByTestId('input-fish').fill('Test Fish');
         await page.getByTestId('input-weight').fill('10.5');
         await page.getByTestId('input-rate').fill('100');
+        await page.waitForTimeout(500); // Wait for state updates
 
         // Submit
         const addBtn = page.locator('[data-testid="add-row-btn"]');
         await addBtn.scrollIntoViewIfNeeded();
         await addBtn.click({ force: true });
 
-        // Confirm offline and wait for the "Saved offline" toast
-        await page.waitForFunction(() => navigator.onLine === false);
+        // Wait for the "Saved offline" toast
         await expect(page.locator('[data-testid="toast"]').filter({ hasText: 'Saved offline' }))
             .toBeVisible({ timeout: 20000 });
 
         await page.context().setOffline(false);
+        await page.evaluate(() => window.dispatchEvent(new Event('online')));
         await page.waitForTimeout(500);
     });
 

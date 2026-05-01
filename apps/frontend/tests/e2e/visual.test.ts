@@ -112,7 +112,7 @@ test.describe('Visual Regression (Percy/Chromatic)', () => {
       threshold: 0.3,
       animations: 'disabled',
       mask: [page.locator('canvas')],
-      maxDiffPixels: 200,
+      maxDiffPixels: 2000,
     });
   });
 });

@@ -92,7 +92,7 @@ export default function AgentDashboard() {
         } catch (err: unknown) {
             const error = err as ApiError;
             console.error("Failed to fetch daily data details:", error.message, error.code, error.response?.status);
-            toast("Data error", "error");
+            if (isOnline) toast("Data error", "error");
         }
     }, [selectedBoat, dateKey, toast]);
 
@@ -124,9 +124,9 @@ export default function AgentDashboard() {
             setNR({fish:"", weight: "", rate: "", buyer: "", paid: "", total: "", balance: ""}); 
         } catch (err: unknown) {
             const error = err as ApiError;
-            console.error("addRow API failed:", error.message, error.code, "isOnline:", navigator.onLine);
-            // Check navigator.onLine or if the error indicates a network failure
-            if (!navigator.onLine || error.code === 'ERR_NETWORK' || !error.response) {
+            console.error("addRow API failed:", error.message, error.code, "isOnline (context):", isOnline);
+            // Use context isOnline which is more reliable in tests and handles events
+            if (!isOnline || error.code === 'ERR_NETWORK' || !error.response) {
                 await offlineStorage.addPendingSale({ type: 'sale', payload });
                 toast("Saved offline", "info");
                 setNR({fish:"", weight: "", rate: "", buyer: "", paid: "", total: "", balance: ""}); 
@@ -160,7 +160,7 @@ export default function AgentDashboard() {
             setPayNote("");
         } catch (err: unknown) {
              const error = err as ApiError;
-             if (!navigator.onLine) {
+             if (!isOnline || error.code === 'ERR_NETWORK' || !error.response) {
                  await offlineStorage.addPendingSale({ type: 'payment', payload });
                 toast("Payment saved offline", "info");
                 setPayAmt(""); 

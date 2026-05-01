@@ -378,7 +378,7 @@ export function EntryTab({
                             </div>
                         </div>
                         <button 
-                            onClick={addRow} 
+                            onClick={() => addRow()} 
                             data-testid="add-row-btn"
                             style={{background:newRow.fish&&newRow.weight&&newRow.rate?G.accent:"#F3F4F6",border:"none",borderRadius:8,padding:"9px 14px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:13,height:39,fontFamily:"inherit",whiteSpace:"nowrap"}}
                         >
