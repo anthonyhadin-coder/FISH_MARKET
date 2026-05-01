@@ -19,8 +19,8 @@ test.describe('PWA & Feature Verification', () => {
             body: JSON.stringify([{ id: 1, name: 'Boat 1', registrationNumber: 'TN-001' }]) })
         );
 
-        await page.goto('/staff');
-        await expect(page).toHaveURL(/.*staff/);
+        await page.goto('/agent');
+        await expect(page).toHaveURL(/.*agent/);
 
         // Wait for the dashboard to be fully mounted
         await expect(page.getByTestId('dashboard-heading')).toBeVisible({ timeout: 15000 });

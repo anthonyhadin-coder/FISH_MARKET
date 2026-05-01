@@ -34,7 +34,7 @@ test.describe('Accessibility (WCAG 2.1 AA)', () => {
 
   test('Voice Entry Tab should have proper contrast and tab order', async ({ page }: { page: Page }) => {
     await page.route('**/api/auth/me', route => route.fulfill({ status: 200, json: { user: { id: '1', name: 'Test Agent', role: 'agent' } } }));
-    await page.goto('/staff'); // Adjust based on routing
+    await page.goto('/agent'); // Adjust based on routing
     
     // Explicitly wait for main landmark and page title to ensure hydration
     // Use 'attached' because sr-only h1 is not 'visible' according to Playwright

@@ -38,8 +38,8 @@ test.describe('Authentication Stabilization Verification', () => {
         // Track redirects
         const redirectPromise = page.waitForURL(url => url.pathname === '/login');
         
-        console.log('Navigating to protected route /staff...');
-        await page.goto('/staff');
+        console.log('Navigating to protected route /agent...');
+        await page.goto('/agent');
 
         await redirectPromise;
         

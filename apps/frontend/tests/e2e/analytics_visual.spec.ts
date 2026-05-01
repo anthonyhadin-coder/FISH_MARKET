@@ -15,8 +15,8 @@ test.describe('Analytics Visual Regression', () => {
         await setupUniversalMocking(page);
 
         // Navigation
-        console.log("Navigating to /staff...");
-        await page.goto('/staff');
+        console.log("Navigating to /agent...");
+        await page.goto('/agent');
         
         // Wait for hydration by ensuring the sr-only heading is attached
         await page.waitForSelector('main[role="main"] h1', { state: 'attached', timeout: 30000 });

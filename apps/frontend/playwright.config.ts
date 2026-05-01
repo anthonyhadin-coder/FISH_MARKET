@@ -1,4 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
+
+const authFile = path.resolve(__dirname, 'playwright/.auth/agent.json');
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -38,7 +41,7 @@ export default defineConfig({
       name: 'Desktop Chrome',
       use: { 
         ...devices['Desktop Chrome'],
-        storageState: 'playwright/.auth/agent.json',
+        storageState: authFile,
       },
       dependencies: ['setup'],
     },
@@ -47,7 +50,7 @@ export default defineConfig({
       name: 'Mobile Pixel 5',
       use: { 
         ...devices['Pixel 5'],
-        storageState: 'playwright/.auth/agent.json',
+        storageState: authFile,
       },
       dependencies: ['setup'],
     },
@@ -55,7 +58,8 @@ export default defineConfig({
 
   webServer: [
     {
-      command: 'cd server && npm run dev',
+      command: 'npm run dev --workspace=server',
+      cwd: path.resolve(__dirname, '../..'),
       url: 'http://localhost:5000/health',
       timeout: 180000,
       reuseExistingServer: true,
@@ -65,7 +69,7 @@ export default defineConfig({
       }
     },
     {
-      command: 'cd client && npm run dev',
+      command: 'npm run dev',
       url: 'http://localhost:3000',
       timeout: 180000,
       reuseExistingServer: true,

@@ -80,8 +80,8 @@ test.describe('Visual Regression (Percy/Chromatic)', () => {
       route.fulfill({ status: 200, body: JSON.stringify([]) })
     );
     
-    // Navigate to /staff instead of /
-    await page.goto('/staff');
+    // Navigate to /agent instead of /staff
+    await page.goto('/agent');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1500); // let animations settle
 
