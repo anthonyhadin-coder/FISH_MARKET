@@ -202,7 +202,7 @@ jobs:
       - name: Start frontend client
         run: |
           cd $GITHUB_WORKSPACE/apps/frontend/.next/standalone
-          PORT=3000 HOSTNAME=0.0.0.0 node server.js &
+          PORT=3000 HOSTNAME=0.0.0.0 node apps/frontend/server.js &
         env:
           NODE_ENV: production
           PORT: 3000
@@ -313,7 +313,7 @@ jobs:
       - name: Start frontend client
         run: |
           cd $GITHUB_WORKSPACE/apps/frontend/.next/standalone
-          PORT=3000 HOSTNAME=0.0.0.0 node server.js &
+          PORT=3000 HOSTNAME=0.0.0.0 node apps/frontend/server.js &
         env:
           NODE_ENV: production
           PORT: 3000
