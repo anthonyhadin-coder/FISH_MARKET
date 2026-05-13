@@ -104,3 +104,9 @@ client_out.txt
 errors.txt
 
 .turbo/
+
+# Specific generated output files not covered by patterns above
+tree.txt
+apps/backend/lint_errors.txt
+apps/backend/lint_results.json
+apps/backend/scratch/
