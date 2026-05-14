@@ -3,7 +3,8 @@
  * Tests confidence scoring, fish NLP, Tamil numbers, fuzzy matching, fallbacks.
  */
 
-import { parseVoiceInput, scoreConfidence, FISH_DICTIONARY, levenshtein } from '@/lib/voice/voiceParser';
+import { parseVoiceInput, scoreConfidence, levenshtein } from '@/lib/voice/voiceParser';
+import { FISH_BY_ID } from '@/lib/voice/fishPatterns';
 import { parseNumber, parseRomanisedTamilNumber } from '@/lib/voice/tamilNumberParser';
 
 // ─────────────────────────────────────────────────────────────────
@@ -115,9 +116,10 @@ describe('Fish Name Detection', () => {
     expect(s?.fish).toBeUndefined();
   });
 
-  it('All dictionary entries have avgRate > 0', () => {
-    for (const [_key, val] of Object.entries(FISH_DICTIONARY)) {
-      expect(val.avgRate).toBeGreaterThan(0);
+  it('All dictionary entries have price range set properly', () => {
+    for (const [_key, val] of FISH_BY_ID.entries()) {
+      expect(val.priceRange[0]).toBeGreaterThan(0);
+      expect(val.priceRange[1]).toBeGreaterThanOrEqual(val.priceRange[0]);
     }
   });
 });
@@ -303,14 +305,14 @@ describe('Levenshtein Distance', () => {
 
 describe('Average Rate Suggestions', () => {
 
-  it('"vanjaram 10 kg" (no rate) → warning includes avg rate ₹600', () => {
+  it('"vanjaram 10 kg" (no rate) → warning includes avg rate ₹650', () => {
     const s = saleOf('vanjaram 10 kg');
-    expect(s?.warnings?.some(w => w.includes('600'))).toBe(true);
+    expect(s?.warnings?.some(w => w.includes('650'))).toBe(true);
   });
 
-  it('"prawn 5 kg" → warning includes ₹700', () => {
+  it('"prawn 5 kg" → warning includes ₹800', () => {
     const s = saleOf('prawn 5 kg');
-    expect(s?.warnings?.some(w => w.includes('700'))).toBe(true);
+    expect(s?.warnings?.some(w => w.includes('800'))).toBe(true);
   });
 
   it('When rate provided → no avg rate warning', () => {

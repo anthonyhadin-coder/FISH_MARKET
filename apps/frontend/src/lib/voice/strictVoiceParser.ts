@@ -26,6 +26,7 @@ import {
   ROMANISED_MULTIPLIERS,
   ROMANISED_FUSED,
 } from './tamilNumberParser';
+import { FISH_NAME_INDEX, FISH_BY_ID } from './fishPatterns';
 
 // ─────────────────────────────────────────────────────────────────
 // TYPES
@@ -50,23 +51,7 @@ export interface StrictParseResult {
  * The parser accepts the first token that matches any entry here.
  * If no match, it accepts the first non-keyword token as fish_name.
  */
-const KNOWN_FISH = new Set([
-  'vanjaram', 'vanjiram', 'kingfish',
-  'sankara', 'sangara',
-  'nethili', 'nathili', 'anchovy',
-  'kaala', 'kala',
-  'thira', 'rayfish',
-  'vangada', 'mackerel',
-  'prawn', 'iraal', 'chemmeen',
-  'choodai', 'soodai', 'sardine',
-  'kola', 'barracuda',
-  'nei', 'pomfret',
-  'nandu', 'crab',
-  'squid', 'kanavaai',
-  'tuna', 'soorai',
-  'viral', 'murrel',
-  'mathi',
-]);
+// KNOWN_FISH dictionary has been replaced with FISH_NAME_INDEX from fishPatterns.ts
 
 // ─────────────────────────────────────────────────────────────────
 // KEYWORD SETS
@@ -154,8 +139,11 @@ export function strictVoiceParse(transcript: string): StrictParseResult {
 
     // Detect Fish Name (first eligible token)
     if (fish_name === '') {
-      if (KNOWN_FISH.has(t)) {
-        fish_name = t.charAt(0).toUpperCase() + t.slice(1);
+      if (FISH_NAME_INDEX.has(t)) {
+        const fishId = FISH_NAME_INDEX.get(t)!;
+        const profile = FISH_BY_ID.get(fishId);
+        const resolvedName = profile ? profile.englishNames[0] || fishId : fishId;
+        fish_name = resolvedName.charAt(0).toUpperCase() + resolvedName.slice(1);
       } else if (
         !isNumericToken(t) &&
         !WEIGHT_UNITS.has(t) &&

@@ -79,7 +79,8 @@ describe('LoginPage — 8 UX States', () => {
     renderPage();
     expect(await screen.findByTestId('google-sdk-btn')).toBeTruthy();
     expect(screen.getByPlaceholderText(/phone number/i)).toBeTruthy();
-    expect(screen.getByText('OR')).toBeTruthy();
+    expect(screen.getByText('Or access via')).toBeTruthy();
+
   });
 
   // ── 2. Phone login loading ─────────────────────────────────

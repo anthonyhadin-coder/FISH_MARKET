@@ -14,7 +14,7 @@ import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import GoogleAuthButton from '../login/_components/GoogleAuthButton';
 import RoleSelectModal from '@/components/shared/RoleSelectModal';
 import { useFormErrors } from '@/hooks/useFormErrors';
-import { loginT } from '@/lib/loginTranslations';
+import { T as loginT } from '@/lib/i18n';
 import api from '@/lib/api';
 // We import the new unified design system
 import '../login/login-light.css';

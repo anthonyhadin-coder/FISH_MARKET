@@ -1,7 +1,7 @@
 "use client";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Ship, Store, Eye } from 'lucide-react';
-import { loginT } from '@/lib/loginTranslations';
+import { T as loginT } from '@/lib/i18n';
 import type { Language } from '@/lib/i18n';
 
 export type UserRole = 'AGENT' | 'OWNER' | 'BUYER';
