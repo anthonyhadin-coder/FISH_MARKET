@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { authenticate, authorize } from '../../../middleware/auth';
-import { validate } from '../../../middleware/validation';
+import { authenticate, authorize } from '../../middleware/auth';
+import { validate } from '../../middleware/validation';
 
 import { getDailyReport, getWeeklyReport, getDailyReportSchema, getWeeklyReportSchema } from './salesReports';
 import { getTrendData } from './analyticsReports';

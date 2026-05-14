@@ -5,13 +5,18 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import pool from './config/db';
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errors';
 import { initSentry } from './config/sentry';
 import { validateEnv } from './config/validateEnv';
 import redis from './config/redis';
+import { requestTracing } from './middleware/tracing';
+import { httpLogger } from './middleware/pinoHttp';
+import { requestTiming } from './middleware/timing';
+import { checkHealth } from './controllers/health';
+import { csrfProtection } from './middleware/csrf';
+import { globalRateLimit, authRateLimit } from './middleware/rateLimiter';
 
 // Validate environment early, right after loading .env
 validateEnv();
@@ -20,109 +25,56 @@ validateEnv();
 initSentry();
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Security Middleware
 app.use(helmet());
 app.use(cors({
     origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : 'http://localhost:3000',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id', 'x-csrf-token'],
     credentials: true
 }));
 app.use(cookieParser());
 
-// Global rate limit (100 req / 15 min)
-const globalLimiter = rateLimit({
-    windowMs: Math.min(Math.max(parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), 60000), 3600000),
-    max: Math.min(Math.max(parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10), 10), 500),
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: 'Too many requests from this IP, please try again after 15 minutes',
-});
-app.use('/api/', globalLimiter);
+// Global Redis-backed Rate Limiter
+app.use('/api/', globalRateLimit);
 
-// Auth-specific strict rate limit (5 attempts / 15 min)
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: parseInt(process.env.AUTH_LIMIT_MAX || '5'),
-    standardHeaders: true,
-    legacyHeaders: false,
-    skipSuccessfulRequests: true, // Only count failures toward the limit
-    handler: (_req, res) => {
-        res.status(429).json({
-            message: 'Too many login attempts. Please try again after 15 minutes.',
-            retryAfter: 900,
-        });
-    },
-});
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
-app.use('/api/auth/google', authLimiter);
+// Strict Auth Rate Limiter
+app.use('/api/auth/login', authRateLimit);
+app.use('/api/auth/register', authRateLimit);
+app.use('/api/auth/google', authRateLimit);
+app.use('/api/auth/refresh', authRateLimit);
+
+// CSRF Protection for all mutations
+app.use('/api/', csrfProtection);
 
 app.use(express.json({ limit: '1mb' }));
 
-// Request Logging
-app.use((req: Request, res: Response, next: NextFunction) => {
-    logger.info(`${req.method} ${req.url}`);
-    next();
-});
+// Observability Middlewares
+app.use(requestTracing);
+app.use(httpLogger);
+app.use(requestTiming);
 
 const PORT = process.env.PORT || 5000;
 
-app.get('/health', async (req, res) => {
-    const health: any = {
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        service: 'deep-ocean-fish-market-api',
-        components: {
-            db: 'unknown',
-            redis: 'unknown'
-        }
-    };
+app.get('/health', checkHealth);
 
-    try {
-        // Check MySQL
-        await pool.query('SELECT 1');
-        health.components.db = 'ok';
-    } catch (err: any) {
-        health.status = 'error';
-        health.components.db = 'error';
-        health.error = err.message;
-    }
-
-    // Check Redis
-    if (!redis) {
-        health.components.redis = 'disabled (in-memory fallback)';
-    } else {
-        const status = redis.status;
-        health.components.redis = status === 'ready' ? 'ok' : status;
-        
-        // If Redis failed/stopped after retries, it's 'end'. 
-        // We report this as 'warning' in components but 'ok' for service status 
-        // because the app handles the fallback safely.
-        if (status === 'end') {
-            health.components.redis = 'fallback (redis-connection-failed)';
-        } else if (status !== 'ready' && status !== 'connecting' && status !== 'reconnecting') {
-            health.status = 'error';
-        }
-    }
-
-    res.status(health.status === 'ok' ? 200 : 503).json(health);
-});
 
 import authRoutes from './modules/auth/auth';
-import saleRoutes from './modules/agent/sales';
-import buyerRoutes from './modules/agent/buyers';
-import boatRoutes from './modules/owner/boats';
-import expenseRoutes from './modules/owner/expenses';
-import boatPaymentRoutes from './modules/owner/payments';
-import reportRoutes from './modules/owner/reports';
-import adminRoutes from './modules/owner/admin';
-import voiceRoutes from './modules/agent/voice';
-import salariesRoutes from './modules/owner/salaries';
-import slipsRoutes from './modules/owner/slips';
+import saleRoutes from './modules/sales';
+import buyerRoutes from './modules/buyers';
+import boatRoutes from './modules/boats';
+import expenseRoutes from './modules/expenses';
+import boatPaymentRoutes from './modules/payments';
+import reportRoutes from './modules/reports';
+import adminRoutes from './modules/admin';
+import voiceRoutes from './modules/voice';
+import salariesRoutes from './modules/salaries';
+import slipsRoutes from './modules/slips';
 import betaRoutes from './modules/beta/feedback';
 import notificationsRoutes from './modules/notifications/notifications';
+import analyticsRoutes from './modules/analytics';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/sales', saleRoutes);
@@ -137,6 +89,7 @@ app.use('/api/salaries', salariesRoutes);
 app.use('/api/slips', slipsRoutes);
 app.use('/api/beta', betaRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

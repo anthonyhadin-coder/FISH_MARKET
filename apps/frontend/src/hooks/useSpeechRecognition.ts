@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { parseVoiceInput, scoreConfidence, ConfidenceBreakdown, ParsedVoiceResult } from '../lib/voice/voiceParser';
-import api from '../lib/api';
+import { scoreConfidence, ConfidenceBreakdown, ParsedVoiceResult } from '../lib/voice/voiceParser';
+import { nlpWorkerManager } from '../lib/voice/worker/workerManager';
+import api, { logTelemetry } from '../lib/api/api';
 
 /**
  * useSpeechRecognition Hook — Enhanced
@@ -143,7 +144,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
     };
   }, [options]);
 
-  // ── Whisper API fallback ──────────────────────────────────────
+  // ── Whisper API fallback ──────────────────────────────
   const triggerWhisperFallback = useCallback(async (
     blob: Blob,
     lang: 'ta' | 'en',
@@ -152,7 +153,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
       const formData = new FormData();
       formData.append('audio',  blob);
       formData.append('lang',   lang);
-      formData.append('domain', 'fish_market');   // domain hint → better accuracy
+      formData.append('domain', 'fish_market');
 
       const res        = await api.post('/voice/transcribe', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -161,7 +162,8 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
       const transcript = res.data.transcript as string;
       if (!transcript) throw new Error('empty transcript');
 
-      const parsed     = parseVoiceInput(transcript, lang, {
+      // → Parse via worker (off-thread) even for Whisper results
+      const parsed = await nlpWorkerManager.parse(transcript, lang, {
         fishList:  options.fishList,
         buyerList: options.buyerList,
       });
@@ -184,35 +186,43 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
     }
   }, [options]);
 
-  // ── Pick best result across ALL alternatives ──────────────────
-  const pickBestResult = useCallback((
+  // ── Async best-result picker using NLP Worker ───────────────
+  // Spawns one worker task per alternative, awaits all in parallel,
+  // then picks the highest-confidence SALE result.
+  const pickBestResult = useCallback(async (
     event: SpeechRecognitionEvent,
     lang: 'ta' | 'en',
-  ): BestResult | null => {
+  ): Promise<BestResult | null> => {
     const results = event.results as unknown as SpeechRecognitionResultList;
     const alternatives = Array.from(results[0]) as unknown as SpeechRecognitionAlternative[];
-    let best: BestResult | null = null;
-    let bestScore = -1;
 
-    for (const alt of alternatives) {
-      const transcript = (alt.transcript as string).trim();
-      if (!transcript) continue;
-
-      const parsed = parseVoiceInput(transcript, lang, {
-        fishList:  options.fishList,
-        buyerList: options.buyerList,
+    // Fire all parses in parallel via the worker
+    const parseJobs = alternatives
+      .map(alt => (alt.transcript as string).trim())
+      .filter(Boolean)
+      .map(async (transcript) => {
+        try {
+          const parsed = await nlpWorkerManager.parse(transcript, lang, {
+            fishList:  options.fishList,
+            buyerList: options.buyerList,
+          });
+          const saleResult = parsed.find(r => r.type === 'SALE') ?? parsed[0];
+          if (!saleResult) return null;
+          const scored = scoreConfidence(saleResult, transcript);
+          return { transcript, parsed, confidence: scored } as BestResult;
+        } catch {
+          return null;
+        }
       });
 
-      // Score the first SALE result (most relevant)
-      const saleResult = parsed.find(r => r.type === 'SALE') ?? parsed[0];
-      if (!saleResult) continue;
+    const settled = await Promise.all(parseJobs);
+    const best = settled
+      .filter((r): r is BestResult => r !== null)
+      .reduce<BestResult | null>(
+        (acc, cur) => (acc === null || cur.confidence.total > acc.confidence.total ? cur : acc),
+        null,
+      );
 
-      const scored = scoreConfidence(saleResult, transcript);
-      if (scored.total > bestScore) {
-        bestScore = scored.total;
-        best = { transcript, parsed, confidence: scored };
-      }
-    }
     return best;
   }, [options]);
 
@@ -295,7 +305,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
       };
 
       // ── onresult: pick best across ALL alternatives ────────────
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
+      recognition.onresult = async (event: SpeechRecognitionEvent) => {
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
 
         let interim = '';
@@ -304,11 +314,26 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
 
           if (result.isFinal) {
             const lang = (currentLangRef.current === 'ta-IN') ? 'ta' : 'en';
-            const best = pickBestResult(event, lang);
-
+            const best = await pickBestResult(event, lang);
             if (!best) return;
 
-            // ── Route by confidence grade ──────────────────────
+            // Telemetry is now provided by the worker via onTelemetry callback;
+            // we emit the high-level action event for the backend.
+            logTelemetry('voice', {
+                rawText: best.transcript,
+                normalizedText: JSON.stringify(best.parsed),
+                overallConfidence: best.confidence.total,
+                durationMs: 0, // measured inside worker
+                fishConfidence: best.confidence.breakdown.fishName,
+                corrected: false,
+                metadata: {
+                    lang,
+                    action: best.confidence.action,
+                    alternatives: event.results.length
+                }
+            });
+
+            // ── Route by confidence grade ─────────────────
             switch (best.confidence.action) {
 
               case 'auto_fill':

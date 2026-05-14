@@ -92,7 +92,7 @@ export async function sendPushToUser(
         const succeeded = results.filter(r => r.status === 'fulfilled').length;
         logger.info(`Push delivery for user ${userId}: ${succeeded}/${subscriptions.length} successful.`);
     } catch (err) {
-        logger.error(`Failed to send push to user ${userId}`, err);
+        logger.error(err, `Failed to send push to user ${userId}`);
     }
 }
 

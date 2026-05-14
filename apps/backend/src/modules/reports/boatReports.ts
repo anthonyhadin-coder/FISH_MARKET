@@ -1,10 +1,10 @@
 import { Response } from 'express';
 import { z } from 'zod';
-import pool from '../../../config/db';
-import { AuthRequest } from '../../../middleware/auth';
-import { catchAsync } from '../../../middleware/errors';
-import { createNotification } from '../../notifications/notifications';
-import { sendPushToUser, pushTemplates } from '../../../services/push.service';
+import pool from '../../config/db';
+import { AuthRequest } from '../../middleware/auth';
+import { catchAsync } from '../../middleware/errors';
+import { createNotification } from '../notifications/notifications';
+import { sendPushToUser, pushTemplates } from '../../services/push.service';
 
 export const getBoatPaymentHistorySchema = z.object({
     query: z.object({

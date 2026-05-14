@@ -55,6 +55,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { FeedbackWidget } from '@/components/beta/FeedbackWidget';
 import { StableGoogleAuthProvider } from '@/components/providers/GoogleAuthProvider';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 export default function RootLayout({
   children,
@@ -80,7 +81,9 @@ export default function RootLayout({
               <AuthProvider>
                 <ToastProvider>
                   <div id="main-content">
-                    {children}
+                    <ErrorBoundary>
+                      {children}
+                    </ErrorBoundary>
                   </div>
                   <aside aria-label="Feedback and Support">
                     <FeedbackWidget />
@@ -94,7 +97,9 @@ export default function RootLayout({
             <AuthProvider>
               <ToastProvider>
                 <div id="main-content">
-                  {children}
+                  <ErrorBoundary>
+                    {children}
+                  </ErrorBoundary>
                 </div>
                 <aside aria-label="Feedback and Support">
                   <FeedbackWidget />

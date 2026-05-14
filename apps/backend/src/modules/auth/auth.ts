@@ -40,32 +40,48 @@ const getGoogleClient = () => {
 const isProduction = process.env.NODE_ENV === 'production';
 
 const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
+    // Access token (HttpOnly)
     res.cookie('access_token', accessToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'lax', // FIX 5: Use 'lax' instead of 'strict' for seamless transitions from external links (WhatsApp, Emails)
+        sameSite: 'lax', // Lax for cross-site deep links
         maxAge: 15 * 60 * 1000, // 15 minutes
+        path: '/',
     });
+
+    // Refresh token (HttpOnly, Path-scoped)
     res.cookie('refresh_token', refreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'strict', // Refresh token is not needed for top-level navigation, strict is safe
+        sameSite: 'strict', // Strict is safer for refresh tokens
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        path: '/api/auth/refresh', // scope refresh cookie
+        path: '/api/auth/refresh',
+    });
+
+    // CSRF Token (NOT HttpOnly - needed for frontend to read and send back in header)
+    const csrfToken = randomUUID();
+    res.cookie('csrf_token', csrfToken, {
+        httpOnly: false, // Accessible by JS
+        secure: isProduction,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // Sync with refresh token life
+        path: '/',
     });
 };
 
 const clearAuthCookies = (res: Response) => {
-    res.clearCookie('access_token');
+    res.clearCookie('access_token', { path: '/' });
     res.clearCookie('refresh_token', { path: '/api/auth/refresh' });
+    res.clearCookie('csrf_token', { path: '/' });
 };
 
 // ── Token generation ─────────────────────────────────────────────
-const generateTokens = (userId: number, role: string) => {
-    const jti = randomUUID(); // FIX 3: Assign a unique ID for the denylist checking
+const generateTokens = (userId: number, role: string, familyId?: string) => {
+    const jti = randomUUID(); // assigned to access token for denylist
+    const fid = familyId || randomUUID(); // family ID for rotation
     const accessToken = jwt.sign({ userId, role, jti }, JWT_SECRET!, { expiresIn: '15m' });
-    const refreshToken = jwt.sign({ userId, role }, JWT_REFRESH_SECRET!, { expiresIn: '7d' });
-    return { accessToken, refreshToken, jti };
+    const refreshToken = jwt.sign({ userId, role, fid }, JWT_REFRESH_SECRET!, { expiresIn: '7d' });
+    return { accessToken, refreshToken, jti, familyId: fid };
 };
 
 const hashToken = (token: string) =>
@@ -134,15 +150,22 @@ const firebaseLoginSchema = z.object({
 // ── Handlers ─────────────────────────────────────────────────────
 
 /**
- * Common Logic for issuing sessions
+ * Common Logic for issuing sessions with rotation support
  */
 const issueSession = async (res: Response, user: any) => {
-    const { accessToken, refreshToken } = generateTokens(user.id, user.role);
+    const { accessToken, refreshToken, familyId } = generateTokens(user.id, user.role);
     const tokenHash = hashToken(refreshToken);
 
+    // Save to new refresh_tokens table
     await pool.query(
-        'UPDATE users SET failed_attempts = 0, locked_until = NULL, refresh_token_hash = ?, last_login = NOW() WHERE id = ?',
-        [tokenHash, user.id]
+        'INSERT INTO refresh_tokens (user_id, token_hash, family_id, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))',
+        [user.id, tokenHash, familyId]
+    );
+
+    // Reset lockout and last login on the user record
+    await pool.query(
+        'UPDATE users SET failed_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?',
+        [user.id]
     );
 
     setAuthCookies(res, accessToken, refreshToken);
@@ -184,14 +207,11 @@ export const register = catchAsync(async (req: Request, res: Response) => {
 
     const userId = result.insertId;
     logger.info('[Register Trace] 5. User inserted ID: ' + userId);
-    const { accessToken, refreshToken } = generateTokens(userId, role);
-    const tokenHash = hashToken(refreshToken);
-
-    await pool.query('UPDATE users SET refresh_token_hash = ? WHERE id = ?', [tokenHash, userId]);
-    setAuthCookies(res, accessToken, refreshToken);
+    
+    const data = await issueSession(res, { id: userId, name, role, phone: cleanPhone });
 
     logger.info('[Register Trace] 6. Registration successful');
-    res.status(201).json({ user: { id: userId, name, role: role.toLowerCase() } });
+    res.status(201).json(data);
 });
 
 export const login = catchAsync(async (req: Request, res: Response) => {
@@ -249,60 +269,63 @@ export const login = catchAsync(async (req: Request, res: Response) => {
         return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Successful login — reset attempts and set last_login
-    const { accessToken, refreshToken } = generateTokens(user.id, user.role);
-    const tokenHash = hashToken(refreshToken);
-
-    await pool.query(
-        'UPDATE users SET failed_attempts = 0, locked_until = NULL, refresh_token_hash = ?, last_login = NOW() WHERE id = ?',
-        [tokenHash, user.id]
-    );
-
-    setAuthCookies(res, accessToken, refreshToken);
-
-    res.json({
-        user: {
-            id: user.id,
-            name: user.name,
-            role: user.role.toLowerCase(),
-            phone: user.phone,
-            language: user.language,
-        }
-    });
+    // Successful login — use issueSession for consistency
+    const data = await issueSession(res, user);
+    res.json(data);
 });
 
 export const refresh = catchAsync(async (req: Request, res: Response) => {
     const token = req.cookies?.refresh_token;
     if (!token) {
-        // BUG 1 FIX: Never expose internal token state to the client.
-        // A missing refresh_token cookie means the session has ended or never started.
         return res.status(401).json({ message: 'Session expired. Please sign in again.' });
     }
 
-    let decoded: { userId: number; role: string };
+    let decoded: { userId: number; role: string; fid: string };
     try {
-        decoded = jwt.verify(token, JWT_REFRESH_SECRET!) as { userId: number; role: string };
+        decoded = jwt.verify(token, JWT_REFRESH_SECRET!) as { userId: number; role: string; fid: string };
     } catch {
         return res.status(401).json({ message: 'Invalid or expired refresh token' });
     }
 
     const tokenHash = hashToken(token);
-    const [users]: any[] = await pool.query(
-        'SELECT id, role, is_active, refresh_token_hash FROM users WHERE id = ?',
-        [decoded.userId]
+    const [tokens]: any[] = await pool.query(
+        'SELECT id, user_id, family_id, is_revoked FROM refresh_tokens WHERE token_hash = ?',
+        [tokenHash]
     );
 
-    if (users.length === 0 || users[0].refresh_token_hash !== tokenHash || !users[0].is_active) {
+    // If token not found or already revoked -> Potential Replay Attack
+    if (tokens.length === 0 || tokens[0].is_revoked) {
+        if (tokens.length > 0) {
+            // REPLAY DETECTED: Revoke entire family
+            const familyId = tokens[0].family_id;
+            logger.error(`SECURITY ALERT: Refresh token reuse detected for user ${decoded.userId}. Revoking family ${familyId}.`);
+            await pool.query('UPDATE refresh_tokens SET is_revoked = TRUE WHERE family_id = ?', [familyId]);
+        }
         clearAuthCookies(res);
-        return res.status(401).json({ message: 'Session expired. Please log in again.' });
+        return res.status(401).json({ message: 'Security alert: Session compromised. Please log in again.' });
     }
 
-    const { accessToken, refreshToken: newRefresh } = generateTokens(decoded.userId, decoded.role);
+    const savedToken = tokens[0];
+
+    // Check if user is still active
+    const [users]: any[] = await pool.query('SELECT is_active FROM users WHERE id = ?', [savedToken.user_id]);
+    if (users.length === 0 || !users[0].is_active) {
+        clearAuthCookies(res);
+        return res.status(401).json({ message: 'Account disabled' });
+    }
+
+    // ROTATION: Invalidate current token, issue new one in SAME family
+    await pool.query('UPDATE refresh_tokens SET is_revoked = TRUE WHERE id = ?', [savedToken.id]);
+
+    const { accessToken, refreshToken: newRefresh, familyId } = generateTokens(decoded.userId, decoded.role, decoded.fid);
     const newHash = hashToken(newRefresh);
 
-    await pool.query('UPDATE users SET refresh_token_hash = ? WHERE id = ?', [newHash, decoded.userId]);
-    setAuthCookies(res, accessToken, newRefresh);
+    await pool.query(
+        'INSERT INTO refresh_tokens (user_id, token_hash, family_id, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))',
+        [decoded.userId, newHash, familyId]
+    );
 
+    setAuthCookies(res, accessToken, newRefresh);
     res.json({ success: true });
 });
 
@@ -310,8 +333,13 @@ export const logout = catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
     const userId = authReq.user?.userId;
     
+    // Revoke all tokens in the current family if we can identify it
+    // Note: We don't have familyId in the access token, but we can clear by user_id
+    // Or better, we just clear the refresh_token cookie and let the user re-login.
+    // If they want to "Logout of all devices", we'd revoke all tokens for userId.
     if (userId) {
-        await pool.query('UPDATE users SET refresh_token_hash = NULL WHERE id = ?', [userId]);
+        // Just revoke all for this user for maximum security on logout
+        await pool.query('UPDATE refresh_tokens SET is_revoked = TRUE WHERE user_id = ?', [userId]);
     }
     
     // FIX 3: Push valid access token to Redis denylist to enforce stateless actual logout functionality
@@ -398,7 +426,7 @@ export const googleAuth = async (req: Request, res: Response) => {
             payload = ticket.getPayload()!;
             logger.info('[GoogleAuth Trace] 2. Token verified, email: ' + payload.email);
         } catch (verifyErr) {
-            logger.error('[GoogleAuth Trace] 2. ERROR: Token verification failed:', verifyErr);
+            logger.error(verifyErr, '[GoogleAuth Trace] 2. ERROR: Token verification failed:');
             return res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
         }
 
@@ -455,30 +483,15 @@ export const googleAuth = async (req: Request, res: Response) => {
         logger.info('[GoogleAuth Trace] 6. User created ID: ' + result.insertId);
     }
 
-    // 6. Log in
+    // 6. Log in — use issueSession for rotation support
     const user = rows[0];
-    logger.info('[GoogleAuth Trace] 7. Generating tokens for user: ' + user.id);
-    const { accessToken, refreshToken } = generateTokens(user.id, user.role);
-    const tokenHash = hashToken(refreshToken);
-
-    await pool.query(
-        'UPDATE users SET refresh_token_hash = ?, last_login = NOW() WHERE id = ?',
-        [tokenHash, user.id]
-    );
-
-    setAuthCookies(res, accessToken, refreshToken);
+    logger.info('[GoogleAuth Trace] 7. Issuing session for user: ' + user.id);
+    const data = await issueSession(res, user);
     logger.info('[GoogleAuth Trace] 8. Success, sending user object');
 
-        return res.json({
-            user: {
-                id: user.id,
-                name: user.name,
-                role: user.role.toLowerCase(),
-                picture: user.google_picture,
-            },
-        });
+    return res.json(data);
     } catch (err) {
-        logger.error('[GoogleAuth Trace] FATAL UNHANDLED ERROR:', err);
+        logger.error(err, '[GoogleAuth Trace] FATAL UNHANDLED ERROR:');
         return res.status(500).json({ message: 'Google sign-in failed. Please try again later.' });
     }
 };
@@ -626,7 +639,7 @@ export const verifyFirebasePhoneLogin = catchAsync(async (req: Request, res: Res
     try {
         decodedToken = await firebaseAdminAuth.verifyIdToken(idToken);
     } catch (error) {
-        logger.error('[FirebaseAuth] Token verification failed:', error);
+        logger.error(error, '[FirebaseAuth] Token verification failed:');
         return res.status(401).json({ message: 'Invalid or expired Firebase token.' });
     }
 

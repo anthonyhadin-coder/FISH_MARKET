@@ -39,7 +39,14 @@ if (!process.env.DATABASE_URL) {
   process.env.DATABASE_URL = `mysql://${encodedUser}:${encodedPassword}@${dbHost}:${dbPort}/${dbName}`;
 }
 
-const pool = mysql.createPool(process.env.DATABASE_URL);
+const pool = mysql.createPool({
+  uri: process.env.DATABASE_URL,
+  connectionLimit: process.env.NODE_ENV === 'production' ? 50 : 10,
+  queueLimit: 0,
+  waitForConnections: true,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0
+});
 
 export const query = async (text: string, params?: any[]) => {
   const [results] = await pool.execute(text, params);

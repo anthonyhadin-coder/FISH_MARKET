@@ -200,3 +200,19 @@
 *   **Centralized Fish Database:** The single source of truth for all fish metadata, aliases, and pricing profiles is located at `apps/frontend/src/lib/voice/fishPatterns.ts` (`FISH_BY_ID` and `FISH_NAME_INDEX`).
 *   **Legacy Architecture Retired:** The redundant `FISH_DICTIONARY` and `KNOWN_FISH` mappings previously found in `voiceParser.ts` and `strictVoiceParser.ts` have been fully removed.
 *   **Voice Engine Workflow:** Voice input is transcribed by browser SpeechRecognition and passed to the parsers which validate species names strictly against the master `FISH_NAME_INDEX`. Missing or implicit rates are dynamically computed as averages from the fish's defined `priceRange` in the master pattern file.
+
+---
+
+## 11. BACKEND ARCHITECTURE & DOMAIN SEPARATION
+
+*   **Framework:** Express.js + MySQL2 + Zod.
+*   **Domain-Driven Modules:** The API is structured by core domains instead of role-based buckets:
+    *   \/auth\: Authentication and role-based login.
+    *   \/sales\: Agent entry and catch recording.
+    *   \/reports\: Unified financial metrics and analytics using a shared query builder.
+    *   \/voice\: Advanced multilingual voice parsing engine.
+    *   \/boats\, \/buyers\, \/expenses\, \/payments\, \/salaries\, \/slips\: Domain-specific CRUD entities.
+*   **Security & Scalability:**
+    *   Strict rate limiting via Redis (or in-memory fallback).
+    *   Sentry error tracking.
+

@@ -49,7 +49,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
             logger.warn('JWT Access Token Expired');
             return res.status(401).json({ message: 'Session expired', code: 'TOKEN_EXPIRED' });
         }
-        logger.error(`JWT Verification Failed: ${err.message}`, { name: err.name });
+        logger.error({ name: err.name }, `JWT Verification Failed: ${err.message}`);
         res.status(401).json({ message: 'Token is not valid' });
     }
 };

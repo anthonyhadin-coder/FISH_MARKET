@@ -10,8 +10,25 @@ const api = axios.create({
     withCredentials: true,
 });
 
-// ── Request Interceptor (Offline Check) ────────────────────────────────────────
+// ── Request Interceptor (Tracing & Offline Check) ─────────────────────────────
 api.interceptors.request.use((config) => {
+    // Inject x-request-id for end-to-end tracing
+    if (typeof window !== 'undefined' && !config.headers['x-request-id']) {
+        config.headers['x-request-id'] = crypto.randomUUID();
+    }
+
+    // Inject x-csrf-token for non-GET requests (Double-Submit Cookie Pattern)
+    if (typeof window !== 'undefined' && config.method && !['get', 'head', 'options'].includes(config.method.toLowerCase())) {
+        const csrfToken = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrf_token='))
+            ?.split('=')[1];
+        
+        if (csrfToken) {
+            config.headers['x-csrf-token'] = csrfToken;
+        }
+    }
+
     if (typeof window !== 'undefined' && !navigator.onLine) {
         // Break early if we know we are offline. Ensures offline mechanisms trigger instantly
         // and prevents Playwright mock interceptors from wrongly returning 200 OKs.
@@ -121,6 +138,32 @@ api.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
+/**
+ * Global helper to log frontend errors to the backend for observability.
+ */
+export const logTelemetry = async (type: 'error' | 'voice', data: any) => {
+    try {
+        // Use navigator.sendBeacon for errors to ensure they are sent even if page is closing
+        if (typeof window !== 'undefined' && type === 'error' && navigator.sendBeacon) {
+            const payload = JSON.stringify({
+                ...data,
+                url: window.location.href,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString()
+            });
+            const blob = new Blob([payload], { type: 'application/json' });
+            navigator.sendBeacon('/api/analytics/telemetry/error', blob);
+            return;
+        }
+
+        // Fallback or voice telemetry uses standard API call
+        await api.post(`/analytics/telemetry/${type}`, data);
+    } catch (e) {
+        // Silently fail telemetry logging to avoid infinite loops or blocking the UI
+        console.error('Failed to send telemetry', e);
+    }
+};
 
 // Helper — capitalises the first letter of a field name for display
 function capitalise(str: string): string {
