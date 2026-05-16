@@ -4,7 +4,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 RUN npm install -g turbo
 COPY . .
-RUN turbo prune --scope=frontend --docker
+RUN turbo prune --scope=client --docker
 
 # Stage 2: Install dependencies
 FROM node:20-alpine AS installer
@@ -25,7 +25,7 @@ COPY --from=pruner /app/out/full/ .
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
 
-RUN npx turbo run build --filter=frontend...
+RUN npx turbo run build --filter=client...
 
 # Stage 4: Production Runner
 FROM node:20-alpine AS runner
