@@ -4,7 +4,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 RUN npm install -g turbo
 COPY . .
-RUN turbo prune --scope=backend --docker
+RUN turbo prune --scope=server --docker
 
 # Stage 2: Install dependencies
 FROM node:20-alpine AS installer
@@ -21,7 +21,7 @@ WORKDIR /app
 COPY --from=installer /app/ .
 COPY --from=pruner /app/out/full/ .
 
-RUN npx turbo run build --filter=backend...
+RUN npx turbo run build --filter=server...
 
 # Stage 4: Production Runner
 FROM node:20-alpine AS runner
