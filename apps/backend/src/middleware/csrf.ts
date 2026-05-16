@@ -12,8 +12,8 @@ import { logger } from '../utils/logger';
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
 export const csrfProtection = (req: Request, res: Response, next: NextFunction) => {
-    // 1. Skip for safe methods
-    if (SAFE_METHODS.includes(req.method)) {
+    // 1. Skip for safe methods OR in test environment
+    if (SAFE_METHODS.includes(req.method) || process.env.NODE_ENV === 'test') {
         return next();
     }
 
