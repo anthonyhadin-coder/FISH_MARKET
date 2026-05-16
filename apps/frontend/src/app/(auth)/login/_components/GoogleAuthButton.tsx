@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { Loader2, WifiOff } from 'lucide-react';
-import { loginT } from '@/lib/loginTranslations';
+import { T as loginT } from '@/lib/i18n';
 import type { Language } from '@/lib/i18n';
 
 interface GoogleAuthButtonProps {
@@ -30,13 +30,10 @@ export default function GoogleAuthButton({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => {
-      setMounted(true);
-    }, 0);
+    setTimeout(() => { setMounted(true); }, 0);
   }, []);
 
-  // We strictly use "popup" mode because "redirect" requires a backend callback endpoint
-  // that we do not currently have implemented. Popup-blocked state is handled below.
+  // Strictly use popup mode; redirect requires a backend callback endpoint.
 
   const handleSuccess = (response: { credential?: string }) => {
     if (response.credential) {
@@ -61,28 +58,29 @@ export default function GoogleAuthButton({
     return (
       <div
         id="google-btn-loading"
-        className="google-btn w-full h-14 rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed"
+        className="google-btn w-full flex items-center justify-center gap-3 cursor-not-allowed"
+        style={{ height: 48 }}
       >
-        <Loader2 className="w-5 h-5 text-ocean-400 animate-spin" />
-        <span className="text-sm font-semibold text-ocean-300">{t.googleVerifying}</span>
+        <Loader2 size={18} style={{ color: 'var(--clr-primary)', animation: 'spin 1s linear infinite' }} />
+        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--clr-primary)' }}>{t.googleVerifying}</span>
       </div>
     );
   }
 
   return (
-    <div className="relative">
+    <div style={{ position: 'relative' }}>
       {/* Native Google button — full OAuth flow */}
       <div
         id="google-oauth-btn"
-        className="google-btn w-full rounded-2xl flex items-center justify-center overflow-hidden"
-        style={{ minHeight: '56px' }}
+        className="google-btn"
+        style={{ width: '100%', minHeight: 48 }}
       >
         <GoogleLogin
           onSuccess={handleSuccess}
           onError={onError}
           useOneTap={false}
           type="standard"
-          theme="filled_black"
+          theme="outline"
           shape="rectangular"
           size="large"
           text="signin_with"

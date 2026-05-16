@@ -57,85 +57,7 @@ export interface ConfidenceBreakdown {
 // FISH DICTIONARY  — domain-specific NLP
 // ─────────────────────────────────────────────────────────────────
 
-export const FISH_DICTIONARY: Record<string, {
-  tamil: string[];
-  english: string[];
-  aliases: string[];
-  avgRate: number;
-}> = {
-  vanjaram: {
-    tamil:   ['வஞ்சரம்', 'வஞ்சிரம்'],
-    english: ['vanjaram', 'kingfish', 'king fish', 'seer fish'],
-    aliases: ['vanjara', 'vanjarm', 'vanajram', 'king'],
-    avgRate: 600,
-  },
-  thira: {
-    tamil:   ['திரா', 'திறா'],
-    english: ['thira', 'ray fish', 'sting ray'],
-    aliases: ['tira', 'thera', 'thiru'],
-    avgRate: 150,
-  },
-  vangada: {
-    tamil:   ['வங்கடா', 'வாங்கடா'],
-    english: ['vangada', 'mackerel'],
-    aliases: ['bangda', 'wangada', 'vangad'],
-    avgRate: 120,
-  },
-  sankara: {
-    tamil:   ['சங்கரா', 'சங்கர மீன்'],
-    english: ['sankara', 'red snapper', 'snapper'],
-    aliases: ['red fish', 'sankara meen', 'sangara'],
-    avgRate: 500,
-  },
-  prawn: {
-    tamil:   ['இறால்', 'செம்மீன்'],
-    english: ['prawn', 'shrimp', 'chemmeen'],
-    aliases: ['tiger prawn', 'iraal', 'chemeen'],
-    avgRate: 700,
-  },
-  choodai: {
-    tamil:   ['சூடை', 'சூடை மீன்'],
-    english: ['choodai', 'sprat', 'sardine'],
-    aliases: ['soodai', 'chudai', 'chuda'],
-    avgRate: 80,
-  },
-  kola: {
-    tamil:   ['கோலா', 'கோல மீன்'],
-    english: ['kola', 'barracuda'],
-    aliases: ['kolaa', 'kola meen'],
-    avgRate: 300,
-  },
-  nei_meen: {
-    tamil:   ['நெய் மீன்', 'நெய்மீன்'],
-    english: ['nei meen', 'pomfret', 'butter fish'],
-    aliases: ['nei', 'pomphret', 'white pomfret'],
-    avgRate: 450,
-  },
-  crab: {
-    tamil:   ['நண்டு'],
-    english: ['crab', 'mud crab'],
-    aliases: ['nandu', 'nandu meen'],
-    avgRate: 600,
-  },
-  squid: {
-    tamil:   ['கணவாய்'],
-    english: ['squid', 'calamari'],
-    aliases: ['kanavaai', 'kanawai'],
-    avgRate: 450,
-  },
-  tuna: {
-    tamil:   ['சூரை', 'டூனா'],
-    english: ['tuna', 'soorai'],
-    aliases: ['soora meen', 'tuna fish'],
-    avgRate: 380,
-  },
-  viral: {
-    tamil:   ['விரால்'],
-    english: ['viral', 'murrel', 'snakehead'],
-    aliases: ['viraal', 'veral'],
-    avgRate: 400,
-  },
-};
+// Fish dictionary has been moved to fishPatterns.ts (FISH_BY_ID, FISH_NAME_INDEX)
 
 // ─────────────────────────────────────────────────────────────────
 // KEYWORD MAPS
@@ -207,10 +129,10 @@ export function scoreConfidence(
       breakdown.fishName = Math.round((detConf / 100) * 40);
     } else {
       // Fallback: check dictionary directly (legacy)
-      const dict = FISH_DICTIONARY[parsed.fish];
-      const exactEn = dict?.english.some(e => text.includes(e.toLowerCase()));
-      const exactTa = dict?.tamil.some(t => text.includes(t));
-      const fuzzy   = dict?.aliases.some(a => _levenshtein(text, a) <= 2);
+      const dict = FISH_BY_ID.get(parsed.fish);
+      const exactEn = dict?.englishNames.some(e => text.includes(e.toLowerCase()));
+      const exactTa = dict?.tamilNames.some(t => text.includes(t));
+      const fuzzy   = dict?.phoneticForms.some(a => _levenshtein(text, a) <= 2);
       if (exactEn || exactTa) breakdown.fishName = 40;
       else if (fuzzy)          breakdown.fishName = 25;
     }
@@ -503,10 +425,9 @@ export const parseVoiceInput = (
     const rateResult  = extractRate(seg, profile?.priceRange);
     const buyer       = extractBuyer(seg, originalSeg, options?.buyerList ?? []);
 
-    // Suggest average rate from FISH_DICTIONARY when rate is missing
-    // Use FISH_DICTIONARY.avgRate for consistent test expectations
+    // Suggest average rate from profile when rate is missing
     if (rateResult.value === null && fish) {
-      const avgRate = FISH_DICTIONARY[fish]?.avgRate;
+      const avgRate = profile ? Math.round((profile.priceRange[0] + profile.priceRange[1]) / 2) : 0;
       if (avgRate) warnings.push(`Suggested rate: ₹${avgRate}`);
     }
 

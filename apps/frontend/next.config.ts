@@ -15,6 +15,19 @@ const nextConfig: NextConfig = {
     root: path.join(__dirname, '../../'),
   },
   experimental: {},
+  // ── Web Worker bundling ────────────────────────────────────────────
+  // Enables `new Worker(new URL('./worker/nlpWorker.ts', import.meta.url))`
+  // in Next.js pages / hooks. The worker is bundled separately and
+  // served as a standalone JS file — it never appears in the main bundle.
+  webpack(config, { isServer }) {
+    if (!isServer) {
+      config.output = {
+        ...config.output,
+        globalObject: 'globalThis',
+      };
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       {

@@ -13,7 +13,7 @@ if (!admin.apps.length) {
             });
             logger.info('Firebase Admin initialized via Base64 Service Account');
         } catch (error) {
-            logger.error('Failed to initialize Firebase Admin with Base64:', error);
+            logger.error(error, 'Failed to initialize Firebase Admin with Base64:');
         }
     } else {
         logger.warn('Firebase Admin is not initialized. Provide FIREBASE_SERVICE_ACCOUNT_BASE64 env var.');

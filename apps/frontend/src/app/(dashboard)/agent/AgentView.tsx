@@ -14,7 +14,6 @@ import { T_AGENT, toKey, Payment, SaleRow, EXP_KEYS } from './SharedUI';
 import api from '@/lib/api';
 import { ApiError, Boat } from '@fishmarket/shared-types';
 import { ParsedVoiceResult } from '@/lib/voice/voiceParser';
-import { strictVoiceParse } from '@/lib/voice/strictVoiceParser';
 import { offlineStorage } from '@/lib/offlineStorage';
 import { findOwnerByContact, requestBoatLink } from '@/lib/api/agentApi';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -224,11 +223,9 @@ export default function AgentDashboard() {
         if (saleItem) {
             const conf = saleItem.confidence?.total || 0;
             
-            if (conf >= 80 && transcript) {
-                const strictResult = strictVoiceParse(transcript);
-                
-                // Guard to prevent empty submissions
-                if (!strictResult.fish_name || !strictResult.weight || !strictResult.rate) {
+            if (conf >= 80) {
+                // Use the exact result already parsed by the NLP Web Worker
+                if (!saleItem.fish || !saleItem.weight || !saleItem.rate) {
                     return;
                 }
 
@@ -236,13 +233,13 @@ export default function AgentDashboard() {
                 isSubmittingRef.current = true;
 
                 const rowData = {
-                    fish: strictResult.fish_name,
-                    weight: String(strictResult.weight),
-                    rate: String(strictResult.rate),
-                    buyer: strictResult.buyer,
-                    paid: String(strictResult.paid),
-                    total: String(strictResult.total),
-                    balance: String(strictResult.balance)
+                    fish: saleItem.fish,
+                    weight: String(saleItem.weight),
+                    rate: String(saleItem.rate),
+                    buyer: saleItem.buyer ?? '',
+                    paid: '',
+                    total: '',
+                    balance: ''
                 };
                 
                 setActiveTab("entry");
@@ -250,8 +247,8 @@ export default function AgentDashboard() {
                 setNR({fish:"", weight: "", rate: "", buyer: "", paid: "", total: "", balance: ""}); // Clear UI to prevent desync
                 
                 const msg = lang === 'ta' 
-                    ? `${strictResult.fish_name || 'மீன்'} ${strictResult.weight || ''} கிலோ தயார்` 
-                    : `${strictResult.fish_name || 'Fish'} ${strictResult.weight || ''} kg ready`;
+                    ? `${saleItem.fish || 'மீன்'} ${saleItem.weight || ''} கிலோ தயார்` 
+                    : `${saleItem.fish || 'Fish'} ${saleItem.weight || ''} kg ready`;
                 speakBack(msg);
 
                 setTimeout(() => {
