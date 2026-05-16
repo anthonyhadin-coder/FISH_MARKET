@@ -15,7 +15,7 @@ class MockSpeechRecognition {
   onend = null;
 }
 
-(window as Window & typeof globalThis).webkitSpeechRecognition = MockSpeechRecognition as unknown as { new (): SpeechRecognition; prototype: SpeechRecognition; };
+(window as any).webkitSpeechRecognition = MockSpeechRecognition;
 
 describe('Voice Integration Hook', () => {
     it('should initialize and start listening', async () => {

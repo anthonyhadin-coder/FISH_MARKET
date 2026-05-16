@@ -285,7 +285,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
         /* MediaRecorder optional — Whisper fallback just won't work */
       }
 
-      const recognition = new window.webkitSpeechRecognition() as SpeechRecognitionInstance;
+      const recognition = new (window as any).webkitSpeechRecognition() as SpeechRecognitionInstance;
       currentLangRef.current = options.lang === 'ta' ? 'ta-IN' : 'en-IN';
       recognition.lang           = currentLangRef.current;
       recognition.interimResults = true;

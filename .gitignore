@@ -110,3 +110,5 @@ tree.txt
 apps/backend/lint_errors.txt
 apps/backend/lint_results.json
 apps/backend/scratch/
+.vercel
+.env*.local
