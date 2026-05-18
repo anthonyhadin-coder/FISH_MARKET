@@ -10,7 +10,11 @@ const REQUIRED_ENV_VARS = [
 ];
 
 export function validateEnv() {
-  const missing = REQUIRED_ENV_VARS.filter(key => !process.env[key]);
+  const requiredVars = process.env.NODE_ENV === 'production'
+    ? REQUIRED_ENV_VARS
+    : REQUIRED_ENV_VARS.filter(key => key !== 'REDIS_URL');
+
+  const missing = requiredVars.filter(key => !process.env[key]);
   if (missing.length > 0) {
     console.error('❌ Missing required environment variables:');
     missing.forEach(key => console.error(`   - ${key}`));
