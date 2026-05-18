@@ -40,12 +40,50 @@ export interface WeeklyReportData {
     };
 }
 
+export interface TranslationObject {
+    loading?: string;
+    date?: string;
+    fishName?: string;
+    weight?: string;
+    rate?: string;
+    amount?: string;
+    noData?: string;
+    downloadPDF?: string;
+    sendToAgent?: string;
+    boatWeeklyReport?: string;
+    grossSales?: string;
+    commission?: string;
+    netPayableOwner?: string;
+    targetMet?: string;
+    fields?: {
+        date?: string;
+        fish?: string;
+        weight?: string;
+        rate?: string;
+        amount?: string;
+    };
+    reports?: {
+        loading?: string;
+        noData?: string;
+        downloadPDF?: string;
+        sendToOwner?: string;
+        boatWeeklyReport?: string;
+        grossSales?: string;
+        targetMet?: string;
+        myTotalEarnings?: string;
+    };
+    summary?: {
+        commission?: string;
+    };
+    [key: string]: unknown;
+}
+
 export interface SharedBoatWeeklyReportProps {
     role: 'owner' | 'agent';
     lang: string;
     boats: { id: string | number; name: string }[];
-    fetchReport: (boatId: string, weekStart: string, weekEnd: string) => Promise<any>;
-    t: any; // Translation object
+    fetchReport: (boatId: string, weekStart: string, weekEnd: string) => Promise<WeeklyReportData>;
+    t: TranslationObject; // Translation object
 }
 
 export function SharedBoatWeeklyReport({ role, lang, boats, fetchReport, t }: SharedBoatWeeklyReportProps) {

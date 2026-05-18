@@ -15,7 +15,7 @@ class MockSpeechRecognition {
   onend = null;
 }
 
-(window as any).webkitSpeechRecognition = MockSpeechRecognition;
+(window as unknown as { webkitSpeechRecognition: typeof MockSpeechRecognition }).webkitSpeechRecognition = MockSpeechRecognition;
 
 describe('Voice Integration Hook', () => {
     it('should initialize and start listening', async () => {

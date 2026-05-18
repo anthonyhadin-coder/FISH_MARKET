@@ -142,7 +142,7 @@ api.interceptors.response.use(
 /**
  * Global helper to log frontend errors to the backend for observability.
  */
-export const logTelemetry = async (type: 'error' | 'voice', data: any) => {
+export const logTelemetry = async (type: 'error' | 'voice', data: Record<string, unknown>) => {
     try {
         // Use navigator.sendBeacon for errors to ensure they are sent even if page is closing
         if (typeof window !== 'undefined' && type === 'error' && navigator.sendBeacon) {

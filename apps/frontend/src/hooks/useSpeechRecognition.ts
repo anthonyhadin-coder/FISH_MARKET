@@ -67,6 +67,15 @@ interface SpeechRecognitionInstance extends EventTarget {
   onerror: ((err: SpeechRecognitionErrorEvent) => void) | null;
 }
 
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognitionInstance;
+}
+
+type WindowWithSpeech = Window & typeof globalThis & {
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
+};
+
 export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
   const [isListening,       setIsListening]       = useState(false);
   const [interimTranscript, setInterimTranscript] = useState('');
@@ -247,11 +256,10 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
 
   // ── Start ─────────────────────────────────────────────────────
   const startListening = async () => {
-    const SpeechRecognition =
-      (window as Window & typeof globalThis & { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown }).SpeechRecognition ||
-      (window as Window & typeof globalThis & { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown }).webkitSpeechRecognition;
+    const win = window as unknown as WindowWithSpeech;
+    const SpeechRecognitionConstructor = win.SpeechRecognition || win.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
+    if (!SpeechRecognitionConstructor) {
       options.onError('Browser does not support Speech Recognition');
       return;
     }
@@ -285,7 +293,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
         /* MediaRecorder optional — Whisper fallback just won't work */
       }
 
-      const recognition = new (window as any).webkitSpeechRecognition() as SpeechRecognitionInstance;
+      const recognition = new SpeechRecognitionConstructor();
       currentLangRef.current = options.lang === 'ta' ? 'ta-IN' : 'en-IN';
       recognition.lang           = currentLangRef.current;
       recognition.interimResults = true;

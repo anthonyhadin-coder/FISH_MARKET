@@ -14,7 +14,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { T, Language } from '@/lib/i18n';
 import { useToast } from '@/components/ui/Toast';
 import {
-    AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { OwnerBoatWeeklyReport } from './OwnerBoatWeeklyReport';
 import dynamic from 'next/dynamic';

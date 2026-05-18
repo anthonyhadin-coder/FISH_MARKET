@@ -93,7 +93,7 @@ export default function AgentDashboard() {
             console.error("Failed to fetch daily data details:", error.message, error.code, error.response?.status);
             if (isOnline) toast("Data error", "error");
         }
-    }, [selectedBoat, dateKey, toast]);
+    }, [selectedBoat, dateKey, toast, isOnline]);
 
     const addRow = useCallback(async (overrideRow?: typeof newRow) => {
         const data = overrideRow || newRow;
@@ -134,7 +134,7 @@ export default function AgentDashboard() {
                 toast(error.response?.data?.message || "Failed to record sale", "error");
             }
         }
-    }, [user, selectedBoat, newRow, toast, fetchDailyData]);
+    }, [user, selectedBoat, newRow, toast, fetchDailyData, isOnline]);
 
     const addPayment = async () => {
         if (!selectedBoat || !payAmt || +payAmt <= 0) {
@@ -183,7 +183,7 @@ export default function AgentDashboard() {
     }, [lang]);
 
     // Global Voice Handler
-    const onGlobalVoiceResult = useCallback(async (results: ParsedVoiceResult[], transcript?: string) => {
+    const onGlobalVoiceResult = useCallback(async (results: ParsedVoiceResult[], _transcript?: string) => {
         if (!results || results.length === 0) return;
         
         // Handle COMMAND and EXPENSE items
@@ -345,7 +345,7 @@ export default function AgentDashboard() {
         );
     }
 
-    const t = T_AGENT[lang];
+    const t = T_AGENT[lang as keyof typeof T_AGENT];
 
     return (
         <div className="min-h-screen bg-white text-black font-sans">
@@ -432,9 +432,9 @@ export default function AgentDashboard() {
                                     className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 py-4 z-[100]"
                                 >
                                     <div className="flex items-center justify-between px-5 mb-4">
-                                        <h3 className="text-[11px] font-black uppercase tracking-widest text-ocean-900">{(t as any).notifications || "Notifications"}</h3>
+                                        <h3 className="text-[11px] font-black uppercase tracking-widest text-ocean-900">{t.notifications}</h3>
                                         {notifications.length > 0 && (
-                                            <button onClick={clearAll} className="text-[9px] font-bold text-ocean-400 hover:text-ocean-600 transition-colors uppercase">{(t as any).clearAll || "Clear All"}</button>
+                                            <button onClick={clearAll} className="text-[9px] font-bold text-ocean-400 hover:text-ocean-600 transition-colors uppercase">{t.clearAll}</button>
                                         )}
                                     </div>
                                     <div className="max-h-80 overflow-y-auto px-2 space-y-1">
