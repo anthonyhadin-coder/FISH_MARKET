@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500;700&display=swap');
+@import "tailwindcss";
 
 @theme {
   --color-ocean-50: #f0f9ff;
