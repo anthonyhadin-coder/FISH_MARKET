@@ -82,7 +82,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
   const [dbLevel,           setDbLevel]           = useState(0);
   const [isTooNoisy,        setIsTooNoisy]        = useState(false);
 
-  const recognitionRef   = useRef<SpeechRecognitionInstance | null>(null);
+  const recognitionRef   = useRef<{ stop(): void } | null>(null);
   const audioContextRef  = useRef<AudioContext | null>(null);
   const streamRef        = useRef<MediaStream | null>(null);
   const audioBlobRef     = useRef<Blob | null>(null);
