@@ -70,6 +70,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https:",
               "connect-src 'self' http://localhost:5000 https://* https://accounts.google.com",
+              "frame-src 'self' https://accounts.google.com https://smartlock.google.com",
               "frame-ancestors 'none'",
             ].join('; '),
           },
