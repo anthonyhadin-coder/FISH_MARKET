@@ -1,16 +1,16 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import pool from './config/db';
+
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errors';
 import { initSentry } from './config/sentry';
 import { validateEnv } from './config/validateEnv';
-import redis from './config/redis';
+
 import { requestTracing } from './middleware/tracing';
 import { httpLogger } from './middleware/pinoHttp';
 import { requestTiming } from './middleware/timing';

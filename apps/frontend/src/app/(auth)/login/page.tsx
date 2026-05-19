@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
   Globe, Eye, EyeOff, Lock, WifiOff, Clock,
-  ArrowRight, Phone, Check, ChevronDown, ShieldCheck, Anchor,
+  ArrowRight, Phone, Check, ChevronDown
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -18,7 +18,6 @@ import { useFormErrors } from '@/hooks/useFormErrors';
 import { ApiError } from '@fishmarket/shared-types';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import './login-light.css';
 
 declare global {
   interface Window {
@@ -268,312 +267,283 @@ function LoginContent() {
   const isOffline = loginState === 'offline';
 
   return (
-    <main className="login-light-layout">
-
-      {/* ── Global success overlay ─────────────────────────────── */}
-      <AnimatePresence>
-        {loginState === 'success' && (
-          <motion.div
-            className="ll-success-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <div
-              style={{
-                width: 72, height: 72,
-                borderRadius: '50%',
-                background: '#e0f0ff',
-                border: '2px solid #9ccaff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--clr-primary)',
-              }}
+    <AuthLayout lang={currentLang}>
+      <AuthCard>
+        {/* Global success overlay */}
+        <AnimatePresence>
+          {loginState === 'success' && (
+            <motion.div
+              className="absolute inset-0 z-50 bg-white/95 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
             >
-              <Check size={34} />
-            </div>
-            <p style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--clr-on-surface)' }}>
-              {currentLang === 'ta' ? 'வெற்றிகரமாக உள்நுழைந்தீர்கள்!' : 'Signed In!'}
-            </p>
-            <p style={{ fontSize: 14, color: 'var(--clr-on-surface-variant)' }}>{t.redirecting}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ══════════════════════════════════════════════════════════
-          LEFT — Branding Pane
-          ══════════════════════════════════════════════════════════ */}
-      <div className="ll-brand-pane">
-        <div className="ll-brand-pane-bg" />
-        <div className="ll-brand-pane-overlay" />
-        <div className="ll-brand-pane-gradient">
-          {/* Brand identity */}
-          <div className="ll-brand-identity">
-            <div className="ll-brand-icon-wrap">
-              <Anchor size={32} strokeWidth={1.8} />
-            </div>
-            <span className="ll-brand-name">{b.name}&nbsp;<span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 400 }}>{b.sub}</span></span>
-          </div>
-          {/* Tagline — desktop only */}
-          <p className="ll-brand-tagline">{b.tagline}</p>
-        </div>
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════
-          RIGHT — Form Pane
-          ══════════════════════════════════════════════════════════ */}
-      <div className="ll-form-pane">
-        <div className="ll-form-inner">
-
-          {/* Header row: just lang toggle */}
-          <div className="ll-header-row">
-            <span />
-            <button type="button" onClick={handleLangToggle} className="ll-lang-btn">
-              <Globe size={14} />
-              {t.langToggle}
-              <ChevronDown size={12} />
-            </button>
-          </div>
-
-          {/* Page title */}
-          <h1 className="ll-page-title">{b.signIn}</h1>
-          <p className="ll-page-subtitle">{b.subtitle}</p>
-
-          {/* Offline banner */}
-          {mounted && isOffline && (
-            <motion.div className="ll-offline-banner" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <WifiOff size={16} />
-              <span>{t.offlineBanner}</span>
+              <div className="w-20 h-20 rounded-full bg-ocean-50 border-4 border-ocean-100 flex items-center justify-center text-ocean-600 mb-6 shadow-sm">
+                <Check size={40} strokeWidth={2.5} />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
+                {currentLang === 'ta' ? 'வெற்றிகரமாக உள்நுழைந்தீர்கள்!' : 'Signed In Successfully'}
+              </h2>
+              <p className="text-slate-500 mt-2 font-medium">{t.redirecting}</p>
             </motion.div>
           )}
+        </AnimatePresence>
 
-          {/* Error banner */}
-          {(error || visibleGoogleError) && (
-            <div className="ll-error-banner">
-              <span style={{ flex: 1 }}>{error || visibleGoogleError}</span>
-              <button type="button" onClick={() => { setError(''); clearGoogleError(); }}>✕</button>
-            </div>
-          )}
-
-          {/* Method tabs */}
-          <div className="ll-tabs">
-            <button
-              type="button"
-              onClick={() => { setLoginMethod('password'); setLoginState('idle'); setError(''); }}
-              className={`ll-tab ${loginMethod === 'password' ? 'active' : ''}`}
-            >
-              {currentLang === 'ta' ? 'கடவுச்சொல்' : 'Password'}
-            </button>
-            <button
-              type="button"
-              onClick={() => { setLoginMethod('otp'); setLoginState('idle'); setError(''); }}
-              className={`ll-tab ${loginMethod === 'otp' ? 'active' : ''}`}
-            >
-              OTP
-            </button>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{b.signIn}</h2>
+            <p className="text-slate-500 text-sm mt-1.5 font-medium">{b.subtitle}</p>
           </div>
+          <button 
+            type="button" 
+            onClick={handleLangToggle} 
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:ring-offset-1"
+          >
+            <Globe size={14} />
+            {t.langToggle}
+            <ChevronDown size={12} />
+          </button>
+        </div>
 
-          {/* Form */}
-          <form ref={formRef} onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {/* Offline banner */}
+        {mounted && isOffline && (
+          <motion.div className="mb-6 p-3 bg-orange-50 border border-orange-200 rounded-xl flex items-center gap-3 text-orange-700 text-sm font-medium" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+            <WifiOff size={18} />
+            <span>{t.offlineBanner}</span>
+          </motion.div>
+        )}
 
-            {loginMethod === 'password' ? (
-              <>
-                {/* Phone */}
-                <div>
-                  <label htmlFor="phone" className="ll-label">{t.phoneLabel}</label>
-                  <div style={{ position: 'relative' }}>
-                    <Phone className="ll-input-icon" />
-                    <input
-                      type="tel"
-                      autoComplete="tel"
-                      placeholder={t.phonePlaceholder}
-                      value={phone}
-                      {...getInputProps('phone')}
-                      onChange={e => {
-                        setPhone(e.target.value.replace(/[^\d+\-\s()]/g, ''));
-                        getInputProps('phone').onChange();
-                        if (loginState !== 'typing') setLoginState('typing');
-                      }}
-                      className={`ll-input ${errors.phone ? 'error' : ''}`}
-                      required
-                    />
+        {/* Error banner */}
+        {(error || visibleGoogleError) && (
+          <motion.div className="mb-6 p-3 bg-coral-50 border border-coral-200 rounded-xl flex items-start gap-3 text-coral-700 text-sm font-medium" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+            <span className="flex-1 mt-0.5">{error || visibleGoogleError}</span>
+            <button type="button" onClick={() => { setError(''); clearGoogleError(); }} className="p-1 hover:bg-coral-100 rounded-md transition-colors">
+              ✕
+            </button>
+          </motion.div>
+        )}
+
+        {/* Method tabs */}
+        <div className="flex p-1 bg-slate-100 rounded-xl mb-6 shadow-inner">
+          <button
+            type="button"
+            onClick={() => { setLoginMethod('password'); setLoginState('idle'); setError(''); }}
+            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${loginMethod === 'password' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            {currentLang === 'ta' ? 'கடவுச்சொல்' : 'Password'}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setLoginMethod('otp'); setLoginState('idle'); setError(''); }}
+            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${loginMethod === 'otp' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            OTP
+          </button>
+        </div>
+
+        {/* Form */}
+        <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-5">
+          {loginMethod === 'password' ? (
+            <>
+              {/* Phone */}
+              <div className="space-y-1.5">
+                <label htmlFor="phone" className="block text-sm font-semibold text-slate-700 tracking-tight">{t.phoneLabel}</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <Phone className="h-5 w-5 text-slate-400" />
                   </div>
-                  {errors.phone && <p style={{ fontSize: 12, color: 'var(--clr-error)', marginTop: 4, fontWeight: 600 }}>{errors.phone}</p>}
+                  <input
+                    id="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder={t.phonePlaceholder}
+                    value={phone}
+                    {...getInputProps('phone')}
+                    onChange={e => {
+                      setPhone(e.target.value.replace(/[^\d+\-\s()]/g, ''));
+                      getInputProps('phone').onChange();
+                      if (loginState !== 'typing') setLoginState('typing');
+                    }}
+                    className={`block w-full h-12 md:h-14 pl-11 pr-4 bg-slate-50 border ${errors.phone ? 'border-coral-500 focus:ring-coral-500' : 'border-slate-200 focus:border-ocean-500 focus:ring-ocean-500'} rounded-xl text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-opacity-20 transition-all sm:text-sm`}
+                    required
+                  />
                 </div>
+                {errors.phone && <p className="text-xs font-semibold text-coral-600 mt-1">{errors.phone}</p>}
+              </div>
 
-                {/* Password */}
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <label htmlFor="password" className="ll-label" style={{ marginBottom: 0 }}>{t.passwordLabel}</label>
-                    <button type="button" className="ll-forgot-link" onClick={() => router.push('/forgot-password')}>
-                      {t.forgotPassword}
-                    </button>
-                  </div>
-                  <div style={{ position: 'relative' }}>
-                    <Lock className="ll-input-icon" />
-                    <input
-                      type={showPass ? 'text' : 'password'}
-                      autoComplete="current-password"
-                      placeholder={t.passwordPlaceholder}
-                      value={password}
-                      {...getInputProps('password')}
-                      onChange={e => {
-                        setPassword(e.target.value);
-                        getInputProps('password').onChange();
-                        if (loginState !== 'typing') setLoginState('typing');
-                      }}
-                      className={`ll-input ${errors.password ? 'error' : ''}`}
-                      style={{ paddingRight: '3rem' }}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPass(!showPass)}
-                      style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--clr-outline)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
-                    >
-                      {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                  {errors.password && <p style={{ fontSize: 12, color: 'var(--clr-error)', marginTop: 4, fontWeight: 600 }}>{errors.password}</p>}
+              {/* Password */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="password" className="block text-sm font-semibold text-slate-700 tracking-tight">{t.passwordLabel}</label>
+                  <button type="button" className="text-sm font-semibold text-ocean-600 hover:text-ocean-700 hover:underline transition-all" onClick={() => router.push('/forgot-password')}>
+                    {t.forgotPassword}
+                  </button>
                 </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <input
+                    id="password"
+                    type={showPass ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    placeholder={t.passwordPlaceholder}
+                    value={password}
+                    {...getInputProps('password')}
+                    onChange={e => {
+                      setPassword(e.target.value);
+                      getInputProps('password').onChange();
+                      if (loginState !== 'typing') setLoginState('typing');
+                    }}
+                    className={`block w-full h-12 md:h-14 pl-11 pr-12 bg-slate-50 border ${errors.password ? 'border-coral-500 focus:ring-coral-500' : 'border-slate-200 focus:border-ocean-500 focus:ring-ocean-500'} rounded-xl text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-opacity-20 transition-all sm:text-sm`}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(!showPass)}
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    {showPass ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-xs font-semibold text-coral-600 mt-1">{errors.password}</p>}
+              </div>
 
-                {/* Keep me signed in */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              {/* Keep me signed in */}
+              <label className="flex items-center gap-2.5 cursor-pointer group w-fit">
+                <div className="relative flex items-center">
                   <input
                     type="checkbox"
                     checked={keepSignedIn}
                     onChange={e => setKeepSignedIn(e.target.checked)}
-                    style={{ width: 18, height: 18, accentColor: 'var(--clr-primary)', cursor: 'pointer' }}
+                    className="w-5 h-5 border-2 border-slate-300 rounded text-ocean-600 focus:ring-ocean-500 focus:ring-offset-0 cursor-pointer transition-all peer"
                   />
-                  <span style={{ fontSize: 14, color: 'var(--clr-on-surface-variant)' }}>{b.keepSignedIn}</span>
-                </label>
-              </>
-            ) : (
-              /* OTP FLOW */
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {otpStep === 'phone' ? (
-                  <div>
-                    <label htmlFor="otp-phone" className="ll-label">{t.phoneLabel}</label>
-                    <div style={{ position: 'relative' }}>
-                      <Phone className="ll-input-icon" />
-                      <input
-                        id="otp-phone"
-                        type="tel"
-                        autoComplete="tel"
-                        placeholder={t.phonePlaceholder}
-                        value={phone}
-                        onChange={e => setPhone(e.target.value.replace(/[^\d+\-\s()]/g, ''))}
-                        className="ll-input"
-                        required
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <label className="ll-label" style={{ marginBottom: 0 }}>{t.enterOtp}</label>
-                      <button type="button" className="ll-forgot-link" onClick={() => setOtpStep('phone')}>
-                        {currentLang === 'ta' ? 'மாற்று' : 'Change Phone'}
-                      </button>
+                </div>
+                <span className="text-sm font-medium text-slate-600 group-hover:text-slate-800 transition-colors">{b.keepSignedIn}</span>
+              </label>
+            </>
+          ) : (
+            /* OTP FLOW */
+            <div className="space-y-5">
+              {otpStep === 'phone' ? (
+                <div className="space-y-1.5">
+                  <label htmlFor="otp-phone" className="block text-sm font-semibold text-slate-700 tracking-tight">{t.phoneLabel}</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <Phone className="h-5 w-5 text-slate-400" />
                     </div>
                     <input
-                      type="text"
-                      maxLength={6}
-                      placeholder="000000"
-                      value={otp}
-                      onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
-                      className="ll-otp-input"
-                      autoFocus
+                      id="otp-phone"
+                      type="tel"
+                      autoComplete="tel"
+                      placeholder={t.phonePlaceholder}
+                      value={phone}
+                      onChange={e => setPhone(e.target.value.replace(/[^\d+\-\s()]/g, ''))}
+                      className="block w-full h-12 md:h-14 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:border-ocean-500 focus:ring-2 focus:ring-ocean-500 focus:ring-opacity-20 transition-all sm:text-sm"
+                      required
                     />
-                    <p style={{ fontSize: 12, color: 'var(--clr-on-surface-variant)', textAlign: 'center', fontWeight: 500 }}>{t.otpSent}</p>
-                    <div style={{ display: 'flex', justifyContent: 'center' }}>
-                      <button
-                        type="button"
-                        disabled={resendTimer > 0}
-                        onClick={handleSendOtp}
-                        style={{ fontSize: 12, fontWeight: 700, color: 'var(--clr-primary)', background: 'none', border: 'none', cursor: resendTimer > 0 ? 'not-allowed' : 'pointer', opacity: resendTimer > 0 ? 0.4 : 1, letterSpacing: '0.05em', textTransform: 'uppercase' }}
-                      >
-                        {resendTimer > 0 ? t.resendIn.replace('[s]', String(resendTimer)) : t.resendOtp}
-                      </button>
-                    </div>
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Submit button */}
-            <button
-              id="login-submit-btn"
-              type="submit"
-              disabled={loginState === 'loading' || loginState === 'locked'}
-              className={`ll-submit-btn ${loginState === 'locked' ? 'locked' : ''}`}
-            >
-              {loginState === 'loading' ? (
-                <>
-                  <div className="ll-wave-bars">
-                    {[1,2,3,4,5].map(i => <span key={i} />)}
-                  </div>
-                  <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, fontSize: 13 }}>
-                    {loginMethod === 'otp' && otpStep === 'phone' ? t.sendOtp : t.loginLoading}
-                  </span>
-                </>
-              ) : loginState === 'locked' ? (
-                <>
-                  <Clock size={16} />
-                  <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, fontSize: 13 }}>
-                    {currentLang === 'ta' ? `${retryAfter}s காத்திருக்கவும்` : `Wait ${retryAfter}s`}
-                  </span>
-                </>
+                </div>
               ) : (
-                <>
-                  <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, fontSize: 13 }}>
-                    {loginMethod === 'otp'
-                      ? (otpStep === 'phone' ? t.sendOtp : t.loginBtn)
-                      : t.loginBtn}
-                  </span>
-                  <ArrowRight size={16} />
-                </>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-semibold text-slate-700 tracking-tight">{t.enterOtp}</label>
+                    <button type="button" className="text-sm font-semibold text-ocean-600 hover:text-ocean-700 hover:underline transition-all" onClick={() => setOtpStep('phone')}>
+                      {currentLang === 'ta' ? 'மாற்று' : 'Change Phone'}
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={otp}
+                    onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+                    className="block w-full h-14 md:h-16 text-center tracking-[0.5em] text-2xl font-bold bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-ocean-500 focus:ring-2 focus:ring-ocean-500 focus:ring-opacity-20 transition-all"
+                    autoFocus
+                  />
+                  <p className="text-xs font-medium text-slate-500 text-center">{t.otpSent}</p>
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      disabled={resendTimer > 0}
+                      onClick={handleSendOtp}
+                      className={`text-xs font-bold uppercase tracking-wider transition-all ${resendTimer > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-ocean-600 hover:text-ocean-700 cursor-pointer'}`}
+                    >
+                      {resendTimer > 0 ? t.resendIn.replace('[s]', String(resendTimer)) : t.resendOtp}
+                    </button>
+                  </div>
+                </div>
               )}
-            </button>
-          </form>
+            </div>
+          )}
 
-          {/* OR divider */}
-          <div className="ll-divider">
-            <span>{b.orAccess}</span>
-          </div>
-
-          {/* Google OAuth */}
-          <div
-            style={{ width: '100%' }}
-            onClick={() => setGoogleClicked(true)}
+          {/* Submit button */}
+          <button
+            id="login-submit-btn"
+            type="submit"
+            disabled={loginState === 'loading' || loginState === 'locked'}
+            className={`w-full h-12 md:h-14 mt-2 flex items-center justify-center gap-2 rounded-xl text-sm font-bold uppercase tracking-wider text-white transition-all transform active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ocean-600 shadow-md ${
+              loginState === 'locked' 
+                ? 'bg-slate-300 shadow-none cursor-not-allowed' 
+                : loginState === 'loading'
+                  ? 'bg-ocean-500 shadow-none cursor-wait'
+                  : 'bg-ocean-600 hover:bg-ocean-700 hover:shadow-lg'
+            }`}
           >
-            <GoogleAuthButton
-              lang={currentLang}
-              isLoading={googleLoading}
-              isOffline={mounted ? isOffline : false}
-              popupBlocked={popupBlocked}
-              onSuccess={(credential) => {
-                setGoogleClicked(true);
-                handleGoogleSuccess(credential);
-              }}
-              onError={() => {
-                if (googleClicked) handleGoogleError();
-              }}
-            />
-          </div>
+            {loginState === 'loading' ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>{loginMethod === 'otp' && otpStep === 'phone' ? t.sendOtp : t.loginLoading}</span>
+              </>
+            ) : loginState === 'locked' ? (
+              <>
+                <Clock className="h-5 w-5" />
+                <span>{currentLang === 'ta' ? `${retryAfter}s காத்திருக்கவும்` : `Wait ${retryAfter}s`}</span>
+              </>
+            ) : (
+              <>
+                <span>{loginMethod === 'otp' ? (otpStep === 'phone' ? t.sendOtp : t.loginBtn) : t.loginBtn}</span>
+                <ArrowRight className="h-5 w-5 opacity-90" />
+              </>
+            )}
+          </button>
+        </form>
 
-          {/* Security badge */}
-          <div className="ll-security-badge">
-            <ShieldCheck size={13} />
-            <span>{t.securedBy}</span>
-          </div>
-
-          {/* Sign up link */}
-          <div className="ll-bottom-link">
-            {b.noAccount}{' '}
-            <Link href="/register">{b.createAccount} <ArrowRight size={12} style={{ display: 'inline', verticalAlign: 'middle' }} /></Link>
-          </div>
-
+        {/* OR divider */}
+        <div className="flex items-center justify-center my-6">
+          <div className="h-px bg-slate-200 flex-1"></div>
+          <span className="px-4 text-xs font-bold text-slate-400 tracking-wider uppercase">{b.orAccess}</span>
+          <div className="h-px bg-slate-200 flex-1"></div>
         </div>
-      </div>
+
+        {/* Google OAuth Wrapper */}
+        <div onClick={() => setGoogleClicked(true)} className="w-full">
+          <GoogleAuthButton
+            lang={currentLang}
+            isLoading={googleLoading}
+            isOffline={mounted ? isOffline : false}
+            popupBlocked={popupBlocked}
+            onSuccess={(credential) => {
+              setGoogleClicked(true);
+              handleGoogleSuccess(credential);
+            }}
+            onError={() => {
+              if (googleClicked) handleGoogleError();
+            }}
+          />
+        </div>
+
+        {/* Sign up link */}
+        <div className="mt-8 text-center text-sm font-medium text-slate-600">
+          {b.noAccount}{' '}
+          <Link href="/register" className="text-ocean-600 hover:text-ocean-800 font-bold transition-colors inline-flex items-center gap-1 group">
+            {b.createAccount}
+            <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+      </AuthCard>
 
       <RoleSelectModal
         isOpen={needsRoleSelection}
@@ -582,17 +552,21 @@ function LoginContent() {
         isLoading={googleLoading}
         onSelect={handleRoleSelect}
       />
-    </main>
+    </AuthLayout>
   );
 }
+
+import AuthLayout from '@/components/auth/AuthLayout';
+import AuthCard from '@/components/auth/AuthCard';
 
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: '100svh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9f9ff' }}>
-        <div className="ll-wave-bars">
-          {[1,2,3,4,5].map(i => <span key={i} style={{ background: '#004370' }} />)}
-        </div>
+      <div className="min-h-[100svh] flex items-center justify-center bg-slate-50">
+        <svg className="animate-spin h-10 w-10 text-ocean-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
       </div>
     }>
       <LoginContent />

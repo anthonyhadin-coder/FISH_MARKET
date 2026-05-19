@@ -10,6 +10,7 @@ export default tseslint.config(
       'final_server_error.txt',
       'migrate_*.ts',
       'vitest.config.ts',
+      'src/scripts/_archive/**',
     ],
   },
   {

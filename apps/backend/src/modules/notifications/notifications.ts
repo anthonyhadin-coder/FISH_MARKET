@@ -2,7 +2,6 @@ import { Response, Router } from 'express';
 import pool from '../../config/db';
 import { authenticate, AuthRequest } from '../../middleware/auth';
 import { catchAsync } from '../../middleware/errors';
-import { sendPushToUser } from '../../services/push.service';
 import { z } from 'zod';
 import { validate } from '../../middleware/validation';
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 interface StableGoogleAuthProviderProps {
