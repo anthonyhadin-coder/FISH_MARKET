@@ -5,7 +5,7 @@ import { Phone, Lock, KeyRound, ArrowRight, ArrowLeft } from 'lucide-react';
 import api from '@/lib/api';
 import { showToast } from '@/components/ui/Toast';
 import { ApiError } from '@fishmarket/shared-types';
-import '../login/login.css';
+import './forgot-password.css';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();

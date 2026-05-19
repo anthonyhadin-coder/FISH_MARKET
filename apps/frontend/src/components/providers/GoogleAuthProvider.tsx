@@ -11,26 +11,9 @@ interface StableGoogleAuthProviderProps {
 
 
 export function StableGoogleAuthProvider({ children, clientId }: StableGoogleAuthProviderProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Return children directly if not mounted yet (SSR) or if already initialized elsewhere
-  // But wait, useGoogleLogin depends on the context. 
-  // The warning happens because the lib calls initialize on mount.
-  // We strictly render the Provider only ONCE.
-  
   return (
-    <div suppressHydrationWarning>
-      {mounted ? (
-        <GoogleOAuthProvider clientId={clientId}>
-          {children}
-        </GoogleOAuthProvider>
-      ) : (
-        <>{children}</>
-      )}
-    </div>
+    <GoogleOAuthProvider clientId={clientId}>
+      {children}
+    </GoogleOAuthProvider>
   );
 }

@@ -1,5 +1,10 @@
 import pool from '../config/db';
 
+if (process.env.NODE_ENV === 'production') {
+  console.error('❌  wipeDb cannot run in production. Aborting.');
+  process.exit(1);
+}
+
 const resetDb = async () => {
   try {
     console.log('Cleaning all tables for a fresh start...');

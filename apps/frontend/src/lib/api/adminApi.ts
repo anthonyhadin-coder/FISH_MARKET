@@ -1,4 +1,5 @@
 import api from './api';
+import type { WeeklyReportData } from '@/components/shared/SharedBoatWeeklyReport';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -110,7 +111,7 @@ export const fetchFleetWeeklyReport = () =>
     api.get<BoatHistory[]>('/admin/reports/fleet-weekly').then(r => r.data);
 
 export const fetchOwnerBoatWeeklyReport = (boatId: string, weekStart: string, weekEnd: string) =>
-    api.get<unknown>('/reports/boat/owner-weekly', { params: { boat_id: boatId, week_start: weekStart, week_end: weekEnd } }).then(r => r.data);
+    api.get<WeeklyReportData>('/reports/boat/owner-weekly', { params: { boat_id: boatId, week_start: weekStart, week_end: weekEnd } }).then(r => r.data);
 
 export const fetchAgentBoatWeeklyReport = (boatId: string, weekStart: string, weekEnd: string) =>
-    api.get<unknown>('/reports/boat/agent-weekly', { params: { boat_id: boatId, week_start: weekStart, week_end: weekEnd } }).then(r => r.data);
+    api.get<WeeklyReportData>('/reports/boat/agent-weekly', { params: { boat_id: boatId, week_start: weekStart, week_end: weekEnd } }).then(r => r.data);
