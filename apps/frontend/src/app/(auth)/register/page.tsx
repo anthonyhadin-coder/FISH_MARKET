@@ -8,6 +8,8 @@ import {
   WifiOff, Check, ChevronDown
 } from 'lucide-react';
 
+import AuthLayout from '@/components/auth/AuthLayout';
+import AuthCard from '@/components/auth/AuthCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
@@ -385,9 +387,6 @@ function RegisterContent() {
     </AuthLayout>
   );
 }
-
-import AuthLayout from '@/components/auth/AuthLayout';
-import AuthCard from '@/components/auth/AuthCard';
 
 export default function RegisterPage() {
   return (

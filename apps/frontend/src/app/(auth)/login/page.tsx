@@ -7,6 +7,8 @@ import {
   Globe, Eye, EyeOff, Lock, WifiOff, Clock,
   ArrowRight, Phone, Check, ChevronDown
 } from 'lucide-react';
+import AuthLayout from '@/components/auth/AuthLayout';
+import AuthCard from '@/components/auth/AuthCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
@@ -555,9 +557,6 @@ function LoginContent() {
     </AuthLayout>
   );
 }
-
-import AuthLayout from '@/components/auth/AuthLayout';
-import AuthCard from '@/components/auth/AuthCard';
 
 export default function LoginPage() {
   return (
