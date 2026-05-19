@@ -354,7 +354,6 @@ function LoginContent() {
                     <Phone className="h-5 w-5 text-slate-400" />
                   </div>
                   <input
-                    id="phone"
                     type="tel"
                     autoComplete="tel"
                     placeholder={t.phonePlaceholder}
@@ -385,7 +384,6 @@ function LoginContent() {
                     <Lock className="h-5 w-5 text-slate-400" />
                   </div>
                   <input
-                    id="password"
                     type={showPass ? 'text' : 'password'}
                     autoComplete="current-password"
                     placeholder={t.passwordPlaceholder}
