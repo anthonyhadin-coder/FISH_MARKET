@@ -152,20 +152,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: 2rem 1.5rem;
 }
 
 @media (min-width: 768px) {
   .ll-form-pane {
     width: 50%;
-    padding: 2.5rem 2rem;
+    padding: 3rem;
+    background: var(--clr-surface);
   }
 }
 
 /* ── Form inner container ─────────────────────────────────────────── */
 .ll-form-inner {
   width: 100%;
-  max-width: 380px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .ll-form-inner {
+    background: var(--clr-surface-lowest);
+    padding: 2.5rem 3rem;
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0, 40, 80, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
 }
 
 /* ── Header row (lang toggle lives here) ─────────────────────────── */
@@ -248,49 +259,56 @@
 /* ── Labels ──────────────────────────────────────────────────────── */
 .ll-label {
   display: block;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--clr-on-surface);
-  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+  color: var(--clr-on-surface-variant);
+  margin-bottom: 8px;
   font-family: var(--font-sans);
 }
 
 /* ── Inputs ──────────────────────────────────────────────────────── */
 .ll-input {
   width: 100%;
-  height: var(--touch);
-  background: var(--clr-surface-bright);
-  border: 1px solid var(--clr-outline);
-  border-radius: var(--radius-md);
-  padding: 0 14px 0 42px;
+  height: 52px;
+  background: var(--clr-surface-lowest);
+  border: 1.5px solid var(--clr-outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 0 16px 0 44px;
   font-size: 15px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--clr-on-surface);
   font-family: var(--font-sans);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.ll-input::placeholder { color: var(--clr-outline); }
+.ll-input::placeholder { color: var(--clr-outline); font-weight: 400; }
 
 .ll-input:focus {
   outline: none;
   border-color: var(--clr-primary);
-  box-shadow: 0 0 0 3px rgba(0,67,112,0.12);
+  box-shadow: 0 0 0 4px rgba(0, 67, 112, 0.1);
+  background: var(--clr-surface-bright);
 }
 
 .ll-input.error { border-color: var(--clr-error); }
-.ll-input.error:focus { box-shadow: 0 0 0 3px rgba(186,26,26,0.12); }
+.ll-input.error:focus { box-shadow: 0 0 0 4px rgba(186, 26, 26, 0.1); }
 
 .ll-input-icon {
   position: absolute;
-  left: 13px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--clr-outline);
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.ll-input:focus + .ll-input-icon,
+.ll-input:not(:placeholder-shown) + .ll-input-icon {
+  color: var(--clr-primary);
 }
 
 /* OTP big input */
@@ -318,42 +336,46 @@
 /* ── Submit Button ────────────────────────────────────────────────── */
 .ll-submit-btn {
   width: 100%;
-  height: var(--touch);
+  height: 52px;
   background: var(--clr-primary);
   color: var(--clr-on-primary);
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.05em;
+  border-radius: var(--radius-lg);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.03em;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   border: none;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: var(--font-sans);
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 67, 112, 0.15);
 }
 
 .ll-submit-btn:hover:not(:disabled) {
   background: var(--clr-primary-container);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0,67,112,0.28);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 67, 112, 0.25);
 }
 
 .ll-submit-btn:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 67, 112, 0.15);
 }
 
 .ll-submit-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.65;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .ll-submit-btn.locked {
   background: #b45309;
+  box-shadow: 0 4px 12px rgba(180, 83, 9, 0.15);
 }
 
 /* ── Divider ──────────────────────────────────────────────────────── */
@@ -380,27 +402,28 @@
 /* ── Google / OAuth button ────────────────────────────────────────── */
 .google-btn {
   width: 100% !important;
-  min-height: var(--touch);
+  min-height: 52px;
   background: var(--clr-surface-lowest);
-  border: 2px solid var(--clr-primary) !important;
-  border-radius: var(--radius-md) !important;
-  color: var(--clr-primary);
+  border: 1.5px solid var(--clr-outline-variant) !important;
+  border-radius: var(--radius-lg) !important;
+  color: var(--clr-on-surface-variant);
   font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.04em;
+  font-size: 15px;
   display: flex !important;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  transition: background 0.15s, transform 0.1s;
+  gap: 12px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   font-family: var(--font-sans);
 }
 .google-btn:hover:not(:disabled) {
-  background: var(--clr-surface-container);
+  background: var(--clr-surface-low);
+  border-color: var(--clr-primary) !important;
+  color: var(--clr-primary);
   transform: translateY(-1px);
 }
-.google-btn:active:not(:disabled) { transform: scale(0.97); }
+.google-btn:active:not(:disabled) { transform: scale(0.98); }
 .google-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .google-btn iframe { width: 100% !important; min-width: 200px; }
 #google-oauth-btn { width: 100% !important; }

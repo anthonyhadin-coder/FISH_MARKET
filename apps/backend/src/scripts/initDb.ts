@@ -73,8 +73,31 @@ const initDb = async () => {
         role ENUM('agent', 'owner', 'buyer') DEFAULT 'agent',
         language VARCHAR(20) DEFAULT 'tamil',
         refresh_token_hash VARCHAR(255),
+        failed_attempts INT DEFAULT 0,
+        locked_until TIMESTAMP NULL,
+        is_active BOOLEAN DEFAULT TRUE,
+        reset_otp_hash VARCHAR(255),
+        reset_otp_expiry TIMESTAMP NULL,
+        reset_token_hash VARCHAR(255),
+        reset_token_expiry TIMESTAMP NULL,
         last_login TIMESTAMP NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Refresh Tokens Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS refresh_tokens (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        token_hash VARCHAR(255) NOT NULL,
+        family_id VARCHAR(255) NOT NULL,
+        is_revoked BOOLEAN DEFAULT FALSE,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_refresh_tokens_hash (token_hash),
+        INDEX idx_refresh_tokens_family (family_id)
       );
     `);
 

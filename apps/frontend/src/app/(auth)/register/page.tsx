@@ -28,11 +28,15 @@ type UserRole = 'AGENT' | 'OWNER' | 'BUYER';
 function getFriendlyError(err: ApiError): string {
   if (typeof navigator !== 'undefined' && !navigator.onLine) return 'You appear to be offline.';
   
+  const status = err.response?.status;
   const data = err.response?.data as { message?: string; errors?: Array<{ message: string }> };
   const msg = data?.message || '';
+
+  if (status && status >= 500) return 'Server error. Please try again in a moment.';
   
   // 1. Explicit server message (e.g., "User already exists")
-  if (msg && msg !== 'Validation failed') return msg;
+  const safeMsgs = ['User already exists with this phone or email', 'Invalid role selection', 'Invalid phone number format'];
+  if (msg && safeMsgs.includes(msg)) return msg;
 
   // 2. Validation errors
   if (msg === 'Validation failed' && data?.errors) {

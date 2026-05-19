@@ -50,11 +50,8 @@ export const metadata: Metadata = {
 };
 
 import Script from 'next/script';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { LanguageProvider } from '@/contexts/LanguageContext';
-import { ToastProvider } from '@/components/ui/Toast';
+import { AppProviders } from '@/components/providers/AppProviders';
 import { FeedbackWidget } from '@/components/beta/FeedbackWidget';
-import { StableGoogleAuthProvider } from '@/components/providers/GoogleAuthProvider';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 export default function RootLayout({
@@ -75,39 +72,16 @@ export default function RootLayout({
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-ocean-600 focus:text-white focus:rounded-lg">
           Skip to main content
         </a>
-        {googleClientId ? (
-          <StableGoogleAuthProvider clientId={googleClientId}>
-            <LanguageProvider>
-              <AuthProvider>
-                <ToastProvider>
-                  <div id="main-content">
-                    <ErrorBoundary>
-                      {children}
-                    </ErrorBoundary>
-                  </div>
-                  <aside aria-label="Feedback and Support">
-                    <FeedbackWidget />
-                  </aside>
-                </ToastProvider>
-              </AuthProvider>
-            </LanguageProvider>
-          </StableGoogleAuthProvider>
-        ) : (
-          <LanguageProvider>
-            <AuthProvider>
-              <ToastProvider>
-                <div id="main-content">
-                  <ErrorBoundary>
-                    {children}
-                  </ErrorBoundary>
-                </div>
-                <aside aria-label="Feedback and Support">
-                  <FeedbackWidget />
-                </aside>
-              </ToastProvider>
-            </AuthProvider>
-          </LanguageProvider>
-        )}
+        <AppProviders googleClientId={googleClientId}>
+          <div id="main-content">
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+          </div>
+          <aside aria-label="Feedback and Support">
+            <FeedbackWidget />
+          </aside>
+        </AppProviders>
         <Script
           id="sw-registration"
           strategy="afterInteractive"
