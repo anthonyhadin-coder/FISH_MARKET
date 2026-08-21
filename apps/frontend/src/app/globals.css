@@ -184,3 +184,74 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: #f0f9ff !important;            /* ocean-50 text */
   transition: background-color 5000s ease-in-out 0s;      /* Suppresses native white flash */
 }
+
+/* ─── Print Styles ──────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide all UI chrome */
+  .no-print,
+  nav,
+  header,
+  aside,
+  footer {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-family: "Courier New", monospace !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Each buyer slip starts on its own page */
+  .buyer-slip-block {
+    page-break-after: always;
+    break-after: page;
+    border: 1.5px solid #000 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 12px !important;
+    margin: 0 !important;
+  }
+
+  /* Boat slip & weekly slip fill the page */
+  #slip-print,
+  #weekly-slip-print {
+    border: 1.5px solid #000 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 14px !important;
+    margin: 0 !important;
+  }
+
+  /* Tables should not break mid-row */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Ensure black text on white background for all slip content */
+  #slip-print *,
+  #weekly-slip-print *,
+  .buyer-slip-block * {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  /* Exception: keep net-payable dark box readable */
+  #slip-print [data-print-invert],
+  #weekly-slip-print [data-print-invert] {
+    background: #000 !important;
+    color: #fff !important;
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card } from '@/components/ui/Card';
+import { Card } from '@fishmarket/ui';
 import {
     TrendingUp, TrendingDown, PiggyBank,
     Loader2, CalendarDays, ArrowRight, Ship, Users
@@ -12,9 +12,9 @@ import {
 import api from '@/lib/api';
 import { fetchAdminReport, AdminReport, fetchFleetWeeklyReport, BoatHistory } from '@/lib/api/adminApi';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@fishmarket/ui';
 import { OwnerTab } from '../OwnerView';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@fishmarket/ui';
 import { T } from '@/lib/i18n';
 
 const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;

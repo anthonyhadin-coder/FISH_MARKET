@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Send, CheckCircle2, Loader2, RotateCcw } from 'lucide-react';
 import api from '@/lib/api';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@fishmarket/ui';
 import { ApiError } from '@fishmarket/shared-types';
 
 // ── Types ─────────────────────────────────────────────────────────

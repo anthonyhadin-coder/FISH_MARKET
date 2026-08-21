@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import pool from '../../config/db';
+import pool from '@fishmarket/database';
 import { authenticate, authorize, AuthRequest } from '../../middleware/auth';
 
 const router = Router();

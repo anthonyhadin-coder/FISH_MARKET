@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { showToast } from '@/components/ui/Toast';
+import { showToast } from '@fishmarket/ui';
 
 const api = axios.create({
     baseURL: (typeof window !== 'undefined' && (window as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__)
@@ -8,6 +8,7 @@ const api = axios.create({
     // Auth is handled entirely via HttpOnly cookies — no Bearer tokens needed.
     // The withCredentials flag ensures cookies are sent on every cross-origin request.
     withCredentials: true,
+    timeout: 10000, // 10s max — prevents loading from hanging if backend is slow
 });
 
 // ── Request Interceptor (Tracing & Offline Check) ─────────────────────────────

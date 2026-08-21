@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card } from '@/components/ui/Card';
+import { Card } from '@fishmarket/ui';
 import { Mail, RefreshCw, CheckCircle, Clock, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import api from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { T, Language } from '@/lib/i18n';
-import { SaleRow, Payment } from '@/app/(dashboard)/agent/SharedUI';
-import { useToast } from '@/components/ui/Toast';
+import { SaleRow, Payment } from '@/components/shared/agentShared';
+import { useToast } from '@fishmarket/ui';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateBoatSlipPDF } from '@/lib/pdfService';
 import { X } from 'lucide-react';

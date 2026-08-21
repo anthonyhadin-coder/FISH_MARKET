@@ -1,14 +1,21 @@
 import { Response, Router } from 'express';
 import { z } from 'zod';
-import pool from '../../config/db';
+import pool from '@fishmarket/database';
 import { authenticate, authorize, AuthRequest } from '../../middleware/auth';
 import { catchAsync } from '../../middleware/errors';
 import { validate } from '../../middleware/validation';
 import multer from 'multer';
-import { validateAudioFile, transcribeRateLimiter } from '../../utils/audioValidator';
+import { validateAudioFile } from '../../utils/audioValidator';
 import { logger } from '../../utils/logger';
+import { aiService } from '../../services/ai.service';
 
-const upload = multer({ storage: multer.memoryStorage() });
+// BUG-006 FIX: Set fileSize limit at multer level — prevents OOM from oversized uploads.
+// The 25MB cap accommodates real 20-30 min boat session recordings at Opus quality.
+const MAX_AUDIO_BYTES = 25 * 1024 * 1024; // 25 MB
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: MAX_AUDIO_BYTES },
+});
 
 const saveVoiceLogSchema = z.object({
     body: z.object({
@@ -53,25 +60,25 @@ export const getVoiceLogs = catchAsync(async (req: AuthRequest, res: Response) =
 export const transcribeAudio = catchAsync(async (req: AuthRequest, res: Response) => {
     const file = (req as any).file;
     
-    if (file) {
-        logger.info(`Transcription requested: type=${file.mimetype}, size=${file.size} bytes`);
+    if (!file) {
+        return res.status(400).json({ message: 'No audio file provided' });
     }
 
-    // Placeholder for actual AI transcription (Whisper/Google)
-    
-    // Logic for Whisper API would go here:
-    // const response = await openai.audio.transcriptions.create({ file: file.buffer, model: "whisper-1" });
-    
+    logger.info(`Transcription requested: type=${file.mimetype}, size=${file.size} bytes`);
+
+    const parsedData = await aiService.transcribeAndParseAudio(file.buffer, file.mimetype);
+
     res.json({ 
-        transcript: "Simulation: Voice parsing successful", 
-        confidence: 0.95,
-        source: 'fallback-cloud'
+        transcript: parsedData.transcript, 
+        isSale: parsedData.isSale,
+        saleDetails: parsedData.saleDetails,
+        source: process.env.GEMINI_API_KEY ? 'gemini-2.5-flash' : 'mock-fallback'
     });
 });
 
 const router = Router();
 router.post('/', authenticate, validate(saveVoiceLogSchema), saveVoiceLog);
 router.get('/', authenticate, authorize(['owner', 'agent']), getVoiceLogs);
-router.post('/transcribe', authenticate, transcribeRateLimiter, upload.single('audio'), validateAudioFile, transcribeAudio);
+router.post('/transcribe', authenticate, upload.single('audio'), validateAudioFile, transcribeAudio);
 
 export default router;

@@ -23,7 +23,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     // Prefer HttpOnly access_token cookie; fall back to Authorization header for tooling/tests
     let token = req.cookies?.access_token;
 
-    if (!token) {
+    if (!token && process.env.NODE_ENV !== 'production') {
         const authHeader = req.header('Authorization');
         if (authHeader?.startsWith('Bearer ')) {
             token = authHeader.replace('Bearer ', '');
@@ -50,7 +50,8 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
             return res.status(401).json({ message: 'Session expired', code: 'TOKEN_EXPIRED' });
         }
         logger.error({ name: err.name }, `JWT Verification Failed: ${err.message}`);
-        res.status(401).json({ message: 'Token is not valid' });
+        // BUG FIX #14: Added missing return to prevent fall-through after sending response.
+        return res.status(401).json({ message: 'Token is not valid' });
     }
 };
 

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { T } from '@/lib/i18n';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@fishmarket/ui';
 import { DashboardLayout } from '@/components/shared/DashboardLayout';
 import { 
     BarChart3, Ship, History, Users, Mail
@@ -24,7 +24,9 @@ export default function OwnerView() {
     const [mounted, setMounted] = React.useState(false);
 
     React.useEffect(() => {
-        setTimeout(() => setMounted(true), 0);
+        // BUG FIX #8: Removed unnecessary setTimeout wrapper.
+        // useEffect already only runs on the client — the timeout added an extra render cycle.
+        setMounted(true);
     }, []);
     
     const t = T[mounted ? lang : 'en'];

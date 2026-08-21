@@ -1,15 +1,15 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Card } from '@fishmarket/ui';
+import { Button } from '@fishmarket/ui';
 import { 
     Users, Plus, Trash2, IndianRupee, X, Loader2, History
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { T, Language } from '@/lib/i18n';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@fishmarket/ui';
 
 const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 

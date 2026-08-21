@@ -3,8 +3,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Fish, ShieldCheck, Ship, Database, WifiOff, Globe } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Button } from '@fishmarket/ui';
+import { Card } from '@fishmarket/ui';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { T } from '@/lib/i18n';
 

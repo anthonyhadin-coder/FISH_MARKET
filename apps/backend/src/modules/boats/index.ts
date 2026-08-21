@@ -1,6 +1,6 @@
 import { Response, Router } from 'express';
 import { z } from 'zod';
-import pool from '../../config/db';
+import pool from '@fishmarket/database';
 import { authenticate, authorize, AuthRequest } from '../../middleware/auth';
 import { catchAsync } from '../../middleware/errors';
 import { validate } from '../../middleware/validation';
@@ -67,8 +67,10 @@ export const findOwner = catchAsync(async (req: AuthRequest, res: Response) => {
         [owner.id]
     );
 
-    const maskPhone = (phone: string) =>
-        phone ? phone.replace(/(\d{2})\d+(\d{2})$/, '$1XXXXXX$2') : '';
+    const maskPhone = (phone: string) => {
+        if (!phone || phone.length < 6) return phone || '';
+        return phone.slice(0, 4) + 'XXXXXX' + phone.slice(-2);
+    };
 
     res.json({
         owner: {
@@ -154,12 +156,16 @@ export const addExpense = catchAsync(async (req: AuthRequest, res: Response) => 
     const { boatId, expenseType, amount, note } = req.body;
     const agentId = req.user?.userId;
     
+    // PHASE 2 — Financial precision
+    const { roundMoney } = await import('../../utils/money');
+    const finalAmount = roundMoney(amount);
+
     const [result]: any = await pool.query(
         'INSERT INTO expenses (boat_id, agent_id, expense_type, amount, note) VALUES (?, ?, ?, ?, ?)',
-        [boatId, agentId || null, expenseType, amount, note || null]
+        [boatId, agentId || null, expenseType, finalAmount, note || null]
     );
     
-    res.status(201).json({ id: result.insertId, boatId, agentId, expenseType, amount, note });
+    res.status(201).json({ id: result.insertId, boatId, agentId, expenseType, amount: finalAmount, note });
 });
 
 export const deleteBoat = catchAsync(async (req: AuthRequest, res: Response) => {

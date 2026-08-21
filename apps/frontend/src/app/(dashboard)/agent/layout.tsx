@@ -17,7 +17,11 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
             if (!user) {
                 router.push('/login');
             } else if (user.role !== 'agent' && user.role !== 'admin') {
-                router.push(user.role === 'owner' ? '/owner' : '/');
+                // BUG FIX #10: Buyer role was redirected to '/' instead of the buyer dashboard.
+                // Map each known role to its correct home route.
+                if (user.role === 'owner') router.push('/owner');
+                else if (user.role === 'buyer') router.push('/marketplace');
+                else router.push('/');
             }
         }
     }, [user, isLoading, router]);

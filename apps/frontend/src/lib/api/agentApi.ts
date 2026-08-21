@@ -33,7 +33,7 @@ export const recordSaleForm = (data: {
 export const fetchBuyerHistory = (id: number) =>
     api.get(`/buyers/${id}/balance`).then(r => r.data);
 
-export const createBoat = (data: { name: string; agentId?: number }) =>
+export const createBoatAgent = (data: { name: string; agentId?: number }) =>
     api.post('/boats', data).then(r => r.data);
 
 

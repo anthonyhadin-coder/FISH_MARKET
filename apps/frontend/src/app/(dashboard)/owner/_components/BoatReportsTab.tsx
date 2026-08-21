@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Card } from '@fishmarket/ui';
+import { Button } from '@fishmarket/ui';
 import { 
     Ship, TrendingUp, TrendingDown, Banknote, CalendarDays, Loader2, History, X,
     ArrowUpRight, Activity
@@ -10,12 +10,12 @@ import {
 import api from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { T, Language } from '@/lib/i18n';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@fishmarket/ui';
 import { 
     fetchAllBoatsAdmin, AdminBoat, fetchBoatMonthlyReport, 
     fetchBoatYearlyReport, BoatHistory, fetchBoatWeeklyReport 
 } from '@/lib/api/adminApi';
-import { groupByFish, SaleRow } from '@/app/(dashboard)/agent/SharedUI';
+import { groupByFish, SaleRow } from '@/components/shared/agentShared';
 import { 
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
     ResponsiveContainer

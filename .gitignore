@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
-client/node_modules/
-server/node_modules/
+apps/frontend/node_modules/
+apps/backend/node_modules/
 .pnp
 .pnp.js
 
@@ -10,18 +10,18 @@ dist/
 build/
 .next/
 out/
-client/.next/
-client/out/
-server/dist/
+apps/frontend/.next/
+apps/frontend/out/
+apps/backend/dist/
 
 # Environment variables (NEVER push these)
 .env
 .env.local
 .env.*.local
 !.env.example
-client/.env
-client/.env.local
-server/.env
+apps/frontend/.env
+apps/frontend/.env.local
+apps/backend/.env
 
 # Logs
 *.log
@@ -39,7 +39,7 @@ Thumbs.db
 dump_*.sql
 
 # PM2
-server/logs/
+apps/backend/logs/
 
 # Temp / Junk
 *.tmp

@@ -1,0 +1,29 @@
+{
+  "name": "@fishmarket/ui",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "lint": "eslint src/",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lucide-react": "^0.474.0",
+    "framer-motion": "^12.0.6",
+    "tailwind-merge": "^2.6.0",
+    "clsx": "^2.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@fishmarket/eslint-config": "*",
+    "@fishmarket/tsconfig": "*",
+    "react": "^18",
+    "react-dom": "^18",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18",
+    "react-dom": "^18"
+  }
+}

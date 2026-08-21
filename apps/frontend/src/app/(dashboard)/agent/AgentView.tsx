@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Bell, ArrowRight } from 'lucide-react';
+import { LogOut, Bell } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNotifications } from '@/contexts/NotificationContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAgent } from './_context/AgentContext';
 import { EntryTab } from './_components/EntryTab';
@@ -10,15 +9,17 @@ import { SlipTab } from './_components/SlipTab';
 import { ReportsTab } from './_components/ReportsTab';
 import { BuyersTab } from './_components/BuyersTab';
 import { HistoryTab } from './_components/HistoryTab';
-import { T_AGENT, toKey, Payment, SaleRow, EXP_KEYS } from './SharedUI';
+import { NotificationDropdown } from './_components/NotificationDropdown';
+import { AddBoatModal } from './_components/AddBoatModal';
+import { T_AGENT, toKey, Payment, SaleRow, EXP_KEYS } from '@/components/shared/agentShared';
 import api from '@/lib/api';
-import { ApiError, Boat } from '@fishmarket/shared-types';
+import { ApiError } from '@fishmarket/shared-types';
 import { ParsedVoiceResult } from '@/lib/voice/voiceParser';
 import { offlineStorage } from '@/lib/offlineStorage';
-import { findOwnerByContact, requestBoatLink } from '@/lib/api/agentApi';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { VoiceInput } from '@/components/voice/VoiceInput';
-import { useToast } from '@/components/ui/Toast';
+import { VoiceNoteRecorder } from '@/components/voice/VoiceNoteRecorder';
+import { useToast } from '@fishmarket/ui';
 
 type Tab = "entry" | "slip" | "reports" | "buyers" | "history";
 
@@ -39,14 +40,12 @@ export default function AgentDashboard() {
         syncOfflineData: _syncOfflineData
     } = useAgent();
 
-    const { notifications, markAsRead, clearAll } = useNotifications();
-    const [showNotifs, setShowNotifs] = useState(false);
-    const unreadCount = notifications.filter(n => !n.read).length;
     const { permission, subscribed, subscribe, loading: pushLoading } = usePushNotifications();
 
     const [activeTab, setActiveTab] = useState<Tab>("entry");
     const [dateKey, setDateKey] = useState(toKey(new Date()));
-    const [commRate] = useState(8);
+    // BUG-004 FIX: Fetch real commission rate from commission_rules table (default 2% = NRM Sea Foods rate)
+    const [commRate, setCommRate] = useState(2);
     const { toast } = useToast();
     const isSubmittingRef = useRef(false);
     
@@ -67,10 +66,8 @@ export default function AgentDashboard() {
     const [payments, setPayments] = useState<Payment[]>([]);
     const [dailySales, setDailySales] = useState<SaleRow[]>([]);
     const [showAddBoat, setShowAddBoat] = useState(false);
-    const [ownerSearchQuery, setOwnerSearchQuery] = useState("");
-    const [searchResult, setSearchResult] = useState<{ owner: { name: string; phone: string }; boats: Boat[] } | null>(null);
-    const [isSearching, setIsSearching] = useState(false);
-    const [requestingBoatId, setRequestingBoatId] = useState<number | null>(null);
+    // BUG-015 FIX: Track data loading so stale sales don't flash when switching boats
+    const [dataLoading, setDataLoading] = useState(false);
 
     const updateRec = useCallback((fn: (prev: typeof rec) => typeof rec) => {
         setRec(prev => fn(prev));
@@ -81,6 +78,8 @@ export default function AgentDashboard() {
 
     const fetchDailyData = useCallback(async () => {
         if (!selectedBoat) return;
+        // BUG-015: Show loading and clear stale data before fetching new boat's data
+        setDataLoading(true);
         try {
             const [salesRes, paymentsRes] = await Promise.all([
                 api.get(`/sales/history?boatId=${selectedBoat.id}&date=${dateKey}`),
@@ -92,6 +91,8 @@ export default function AgentDashboard() {
             const error = err as ApiError;
             console.error("Failed to fetch daily data details:", error.message, error.code, error.response?.status);
             if (isOnline) toast("Data error", "error");
+        } finally {
+            setDataLoading(false);
         }
     }, [selectedBoat, dateKey, toast, isOnline]);
 
@@ -103,6 +104,18 @@ export default function AgentDashboard() {
                 weight: !data.weight ? "Weight required" : "",
                 rate: !data.rate ? "Rate required" : ""
             });
+            return;
+        }
+
+        // BUG-008 FIX: Reject zero/negative weight or rate — prevents ₹0 sale records
+        const parsedWeight = parseFloat(data.weight);
+        const parsedRate  = parseFloat(data.rate);
+        if (parsedWeight <= 0 || isNaN(parsedWeight)) {
+            setFieldErrors({ weight: "Weight must be greater than 0" });
+            return;
+        }
+        if (parsedRate <= 0 || isNaN(parsedRate)) {
+            setFieldErrors({ rate: "Rate must be greater than 0" });
             return;
         }
         
@@ -272,9 +285,75 @@ export default function AgentDashboard() {
         }
     }, [lang, toast, addRow, setLang, speakBack]);
 
+    // ── Voice Note: bulk-insert all parsed rows → auto-navigate to Slip ────
+    const handleVoiceNoteResult = useCallback(async (
+        results: ParsedVoiceResult[]
+    ) => {
+        if (!selectedBoat) return;
+
+        // Apply expense items immediately
+        results.forEach(item => {
+            if (item.type === 'EXPENSE' && item.key) {
+                setRec(prev => ({
+                    ...prev,
+                    exp: { ...prev.exp, [item.key as string]: String(item.amount || 0) }
+                }));
+            }
+        });
+
+        // Bulk-insert all sale items sequentially
+        const saleItems = results.filter(
+            r => r.type === 'SALE' && r.fish && r.weight != null && r.rate != null
+        );
+
+        let successCount = 0;
+        for (const item of saleItems) {
+            try {
+                await addRow({
+                    fish:    item.fish!,
+                    weight:  String(item.weight!),
+                    rate:    String(item.rate!),
+                    buyer:   item.buyer ?? '',
+                    paid:    '',
+                    total:   '',
+                    balance: '',
+                });
+                successCount++;
+            } catch {
+                // individual errors already handled inside addRow
+            }
+        }
+
+        await fetchDailyData();
+
+        if (successCount > 0) {
+            const msg = lang === 'ta'
+                ? `${successCount} விற்பனை பதிவு செய்யப்பட்டது! சீட்டு தயார்.`
+                : `${successCount} sale${successCount !== 1 ? 's' : ''} recorded! Generating slip…`;
+            toast(msg, 'success');
+            speakBack(msg);
+            // Auto-navigate to slip so agent sees the generated slip immediately
+            setActiveTab('slip');
+        }
+    }, [selectedBoat, addRow, fetchDailyData, setRec, lang, toast, speakBack]);
+
     useEffect(() => {
         void fetchDailyData();  
     }, [fetchDailyData]);
+
+    // BUG-004 FIX: Fetch real commission rate from commission_rules table on mount
+    useEffect(() => {
+        api.get('/reports/commission-rule')
+            .then(r => {
+                if (r.data?.commission_rate != null) {
+                    setCommRate(Number(r.data.commission_rate));
+                }
+            })
+            .catch(() => {
+                // Silently fall back to default 2% — never block the agent UI
+            });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);  // Run once on mount — commission rule is per-agent, not per-boat
 
     // Summary calculations
     const totalSales = (dailySales || []).reduce((sum, r) => sum + Number(r.total || 0), 0);
@@ -287,53 +366,11 @@ export default function AgentDashboard() {
     const remaining = netPay - totalPaid;
     const settled = netPay > 0 && remaining <= 0;
 
-    const handleSearchOwner = async () => {
-        if (!ownerSearchQuery.trim()) return;
-        setIsSearching(true);
-        setSearchResult(null);
-        try {
-            const res = await findOwnerByContact(ownerSearchQuery.trim());
-            setSearchResult(res);
-        } catch (err: unknown) {
-            const error = err as ApiError;
-            toast(error.response?.data?.message || "Owner not found", "error");
-        } finally {
-            setIsSearching(false);
-        }
-    };
-
-    const handleRequestLink = async (boatId: number) => {
-        setRequestingBoatId(boatId);
-        try {
-            await requestBoatLink(boatId);
-            toast("Request sent to owner", "success");
-            setShowAddBoat(false);
-            setSearchResult(null);
-            setOwnerSearchQuery("");
-            refreshBoats();
-        } catch (err: unknown) {
-            const error = err as ApiError;
-            toast(error.response?.data?.message || "Failed to send request", "error");
-        } finally {
-            setRequestingBoatId(null);
-        }
-    };
-
     const handleLogout = () => {
         logout();
     };
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && showAddBoat) {
-                setShowAddBoat(false);
-                setSearchResult(null);
-                setOwnerSearchQuery("");
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [showAddBoat]);
+
 
     if (boatsLoading) {
         return (
@@ -345,7 +382,9 @@ export default function AgentDashboard() {
         );
     }
 
-    const t = T_AGENT[lang as keyof typeof T_AGENT];
+    // BUG FIX #16: T_AGENT lookup had no fallback — if lang is any value other than 'en' or 'ta',
+    // `t` would be undefined and t.appName (and all other accesses) would crash the dashboard.
+    const t = T_AGENT[lang as keyof typeof T_AGENT] ?? T_AGENT['en'];
 
     return (
         <div className="min-h-screen bg-white text-black font-sans">
@@ -409,59 +448,7 @@ export default function AgentDashboard() {
                     />
 
                     {/* Notification Bell */}
-                    <div className="relative">
-                        <button 
-                            onClick={() => setShowNotifs(!showNotifs)}
-                            aria-label={lang === 'ta' ? 'அறிவிப்புகள்' : 'Notifications'}
-                            className="p-2.5 rounded-xl hover:bg-gray-100 transition-all relative group"
-                        >
-                            <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-ocean-600 fill-ocean-50' : 'text-gray-400'}`} />
-                            {unreadCount > 0 && (
-                                <span className="absolute top-2 right-2 w-4 h-4 bg-coral-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white animate-bounce">
-                                    {unreadCount}
-                                </span>
-                            )}
-                        </button>
-
-                        <AnimatePresence>
-                            {showNotifs && (
-                                <motion.div 
-                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                    className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 py-4 z-[100]"
-                                >
-                                    <div className="flex items-center justify-between px-5 mb-4">
-                                        <h3 className="text-[11px] font-black uppercase tracking-widest text-ocean-900">{t.notifications}</h3>
-                                        {notifications.length > 0 && (
-                                            <button onClick={clearAll} className="text-[9px] font-bold text-ocean-400 hover:text-ocean-600 transition-colors uppercase">{t.clearAll}</button>
-                                        )}
-                                    </div>
-                                    <div className="max-h-80 overflow-y-auto px-2 space-y-1">
-                                        {notifications.length === 0 ? (
-                                            <div className="py-8 text-center">
-                                                <p className="text-xs text-gray-400 font-medium">No new alerts.</p>
-                                            </div>
-                                        ) : (
-                                            notifications.map(n => (
-                                                <div 
-                                                    key={n.id} 
-                                                    onClick={() => markAsRead(String(n.id))}
-                                                    className={`p-3 rounded-xl cursor-pointer transition-all ${n.read ? 'opacity-50' : 'bg-ocean-50/50 hover:bg-ocean-50'}`}
-                                                >
-                                                    <div className="flex justify-between items-start mb-1">
-                                                        <span className={`text-[10px] font-black uppercase ${n.type === 'success' ? 'text-green-600' : n.type === 'error' ? 'text-coral-500' : 'text-ocean-600'}`}>{n.title}</span>
-                                                        <span className="text-[9px] text-gray-400 font-medium">{new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                                    </div>
-                                                    <p className="text-[11px] text-gray-600 font-medium leading-relaxed">{n.message}</p>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
+                    <NotificationDropdown t={t} />
 
                     <button 
                         onClick={handleLogout}
@@ -521,7 +508,8 @@ export default function AgentDashboard() {
 
                 <div className="space-y-8">
                     {/* Top Bar: Boat Selector & Date */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100"
+                         style={{ position: 'relative' }}>
                         <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 no-scrollbar">
                             {boats.map((boat) => (
                                 <button
@@ -552,6 +540,24 @@ export default function AgentDashboard() {
                         </div>
                     </div>
 
+                    {/* AI Voice Note Recorder — full session → auto-slip */}
+                    {selectedBoat && (
+                        <VoiceNoteRecorder
+                            lang={lang as 'ta' | 'en'}
+                            // BUG-011 FIX: Send actual fish names from sales history, NOT boat names.
+                            // Falls back to static list from language context if no sales recorded yet.
+                            fishList={[
+                                ...new Set(
+                                    dailySales
+                                        .map(r => (r as any).fishName || (r as any).fish || '')
+                                        .filter(Boolean)
+                                )
+                            ]}
+                            buyerList={buyers.map(b => b.name)}
+                            onConfirm={(results) => handleVoiceNoteResult(results)}
+                        />
+                    )}
+
                     {/* Tab Panels */}
                     <div className="min-h-[600px] relative">
                         {!selectedBoat && boats.length > 0 && (
@@ -569,6 +575,17 @@ export default function AgentDashboard() {
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.2 }}
                             >
+                                {/* BUG-015 FIX: Show skeleton overlay while fetching new boat data */}
+                                {dataLoading && (
+                                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-2xl z-10 flex items-center justify-center">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <div className="w-8 h-8 border-2 border-ocean-200 border-t-ocean-600 rounded-full animate-spin" />
+                                            <span className="text-sm font-semibold text-ocean-700">
+                                                {lang === 'ta' ? 'தகவல்கள் ஏற்றப்படுகின்றன…' : 'Loading boat data…'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                                 {activeTab === 'entry' && selectedBoat && (
                                     <EntryTab 
                                         lang={lang}
@@ -642,110 +659,12 @@ export default function AgentDashboard() {
                 </div>
 
                 {/* Add Boat Modal */}
-                <AnimatePresence>
-                    {showAddBoat && (
-                        <div
-                            role="dialog"
-                            aria-modal="true"
-                            aria-label="Add new boat"
-                            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
-                        >
-                            <motion.div 
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.9, opacity: 0 }}
-                                className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl border border-gray-100 overflow-hidden relative"
-                            >
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-ocean-50/50 rounded-bl-[5rem] -mr-16 -mt-16" />
-                                
-                                <h3 className="text-2xl font-black text-ocean-950 mb-2 flex items-center gap-2 relative z-10">
-                                    ⚓ {t.boats.add}
-                                </h3>
-                                <p className="text-ocean-600 text-[10px] font-black uppercase tracking-widest mb-6 relative z-10 px-1">
-                                    Search for boat owner to request access
-                                </p>
-
-                                <div className="space-y-6 relative z-10">
-                                    <div className="flex gap-2">
-                                        <div className="flex-1">
-                                            <input 
-                                                autoFocus
-                                                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 text-black text-sm font-bold focus:outline-none focus:ring-4 focus:ring-ocean-500/10 transition-all placeholder-gray-300"
-                                                placeholder="Mobile or Email"
-                                                value={ownerSearchQuery}
-                                                onChange={e => setOwnerSearchQuery(e.target.value)}
-                                                onKeyDown={e => e.key === 'Enter' && handleSearchOwner()}
-                                            />
-                                        </div>
-                                        <button 
-                                            onClick={handleSearchOwner}
-                                            disabled={isSearching}
-                                            className="bg-ocean-600 text-white px-6 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-ocean-700 transition-all active:scale-95 disabled:opacity-50"
-                                        >
-                                            {isSearching ? "..." : "Search"}
-                                        </button>
-                                    </div>
-
-                                    {searchResult && (
-                                        <motion.div 
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="space-y-4 pt-2"
-                                        >
-                                            <div className="bg-ocean-50/50 rounded-2xl p-4 border border-ocean-100">
-                                                <div className="text-[10px] font-black text-ocean-500 uppercase tracking-widest mb-1">Owner Found</div>
-                                                <div className="text-ocean-950 font-black">{searchResult.owner.name}</div>
-                                                <div className="text-[10px] font-bold text-ocean-400">{searchResult.owner.phone}</div>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <div className="text-[10px] font-black text-ocean-500 uppercase tracking-widest px-1">Available Boats</div>
-                                                {searchResult.boats.length === 0 ? (
-                                                    <div className="text-center py-4 text-gray-400 text-xs font-bold italic">No boats registered by this owner.</div>
-                                                ) : (
-                                                    <div className="max-h-48 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                                                        {searchResult.boats.map(b => (
-                                                            <div key={b.id} className="flex items-center justify-between bg-white border border-gray-100 rounded-2xl p-4 hover:border-ocean-300 transition-all group">
-                                                                <div>
-                                                                    <div className="font-black text-ocean-950 group-hover:text-ocean-600 transition-colors uppercase text-sm tracking-tight italic">{b.name}</div>
-                                                                    {b.agent_id && <div className="text-[9px] font-black text-coral-500 uppercase tracking-tighter">Already Managed</div>}
-                                                                </div>
-                                                                <button 
-                                                                    disabled={requestingBoatId !== null || (b.status === 'active' && b.agent_id !== null)}
-                                                                    onClick={() => handleRequestLink(b.id)}
-                                                                    className="bg-ocean-100 text-ocean-600 hover:bg-ocean-600 hover:text-white p-2.5 rounded-xl transition-all active:scale-90 disabled:opacity-30 disabled:hover:bg-ocean-100 disabled:hover:text-ocean-600"
-                                                                >
-                                                                    {requestingBoatId === b.id ? (
-                                                                        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                                                    ) : (
-                                                                        <ArrowRight className="w-5 h-5" />
-                                                                    )}
-                                                                </button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    )}
-
-                                    <div className="flex gap-3 pt-4 border-t border-gray-50">
-                                        <button 
-                                            onClick={() => {
-                                                setShowAddBoat(false);
-                                                setSearchResult(null);
-                                                setOwnerSearchQuery("");
-                                            }}
-                                            className="w-full bg-gray-50 text-ocean-400 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-ocean-50 hover:text-ocean-900 transition-all"
-                                        >
-                                            {t.boats.cancel || "Close"}
-                                        </button>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </div>
-                    )}
-                </AnimatePresence>
+                <AddBoatModal 
+                    showAddBoat={showAddBoat} 
+                    setShowAddBoat={setShowAddBoat} 
+                    refreshBoats={refreshBoats} 
+                    t={t} 
+                />
             </main>
         </div>
     );

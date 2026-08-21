@@ -1,16 +1,18 @@
-import { Request, Response, Router } from 'express';
+import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import crypto, { randomUUID } from 'crypto';
-import { z } from 'zod';
+import crypto from 'node:crypto';
 import { OAuth2Client } from 'google-auth-library';
-import pool from '../../config/db';
+import pool from '@fishmarket/database';
 import { logger } from '../../utils/logger';
 import { catchAsync } from '../../middleware/errors';
-import { validate } from '../../middleware/validation';
-import { authenticate, AuthRequest } from '../../middleware/auth';
+import { AuthRequest } from '../../middleware/auth';
 import redis, { blockToken } from '../../config/redis';
-import { firebaseAdminAuth } from '../../config/firebase';
+// Phase 11: auth helpers extracted to focused service files
+import { generateTokens, hashToken } from './token.service';
+import { setAuthCookies, clearAuthCookies, issueSession } from './session.service';
+import { generateOtp, hashOtp, sendSms } from './otp.service';
+import { cleanPhoneNumber } from '../../utils/phone';
 
 // ── Env guards ───────────────────────────────────────────────────
 
@@ -36,160 +38,17 @@ const getGoogleClient = () => {
     return googleClientUrlCached;
 };
 
-// ── Cookie helpers ───────────────────────────────────────────────
-const isProduction = process.env.NODE_ENV === 'production';
 
-const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
-    // Access token (HttpOnly)
-    res.cookie('access_token', accessToken, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax', // Lax for cross-site deep links
-        maxAge: 15 * 60 * 1000, // 15 minutes
-        path: '/',
-    });
-
-    // Refresh token (HttpOnly, Path-scoped)
-    res.cookie('refresh_token', refreshToken, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'strict', // Strict is safer for refresh tokens
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        path: '/api/auth/refresh',
-    });
-
-    // CSRF Token (NOT HttpOnly - needed for frontend to read and send back in header)
-    const csrfToken = randomUUID();
-    res.cookie('csrf_token', csrfToken, {
-        httpOnly: false, // Accessible by JS
-        secure: isProduction,
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // Sync with refresh token life
-        path: '/',
-    });
-};
-
-const clearAuthCookies = (res: Response) => {
-    res.clearCookie('access_token', { path: '/' });
-    res.clearCookie('refresh_token', { path: '/api/auth/refresh' });
-    res.clearCookie('csrf_token', { path: '/' });
-};
-
-// ── Token generation ─────────────────────────────────────────────
-const generateTokens = (userId: number, role: string, familyId?: string) => {
-    const jti = randomUUID(); // assigned to access token for denylist
-    const fid = familyId || randomUUID(); // family ID for rotation
-    const accessToken = jwt.sign({ userId, role, jti }, JWT_SECRET!, { expiresIn: '15m' });
-    const refreshToken = jwt.sign({ userId, role, fid }, JWT_REFRESH_SECRET!, { expiresIn: '7d' });
-    return { accessToken, refreshToken, jti, familyId: fid };
-};
-
-const hashToken = (token: string) =>
-    crypto.createHash('sha256').update(token).digest('hex');
-
-// ── Phone sanitiser ──────────────────────────────────────────────
-const cleanPhoneNumber = (phone: string) => {
-    // 1. Remove all non-numeric characters EXCEPT '+'
-    const raw = phone.replace(/\s+/g, '').replace(/[^\d+]/g, '');
-    
-    // 2. Handle 10-digit numbers (prepend +91)
-    if (/^\d{10}$/.test(raw)) return `+91${raw}`;
-    
-    // 3. Handle 12-digit numbers starting with 91 (prepend +)
-    if (/^91\d{10}$/.test(raw)) return `+${raw}`;
-    
-    // 4. Handle leading 0 (replace with +91)
-    if (/^0\d{10}$/.test(raw)) return `+91${raw.substring(1)}`;
-    
-    // 5. If it already starts with +91, return as is
-    if (raw.startsWith('+91')) return raw;
-    
-    return raw; // Fallback
-};
-
-// ── Schemas ──────────────────────────────────────────────────────
-const registerSchema = z.object({
-    body: z.object({
-        name: z.string().min(2),
-        phone: z.string().regex(/^\+?[\s\d\-()]{10,20}$/, 'Invalid phone number format'),
-        email: z.union([z.string().email(), z.literal(''), z.null()]).optional(),
-        role: z.enum(['OWNER', 'AGENT', 'BUYER']).optional().default('AGENT'),
-        password: z.string().min(8),
-    })
-});
-
-const loginSchema = z.object({
-    body: z.object({
-        phone: z.string().regex(/^\+?[\s\d\-()]{10,20}$/, 'Invalid phone number format'),
-        password: z.string().min(8),
-        role: z.enum(['OWNER', 'AGENT', 'BUYER']).optional(),
-    })
-});
-
-const changePasswordSchema = z.object({
-    body: z.object({
-        currentPassword: z.string(),
-        newPassword: z.string().min(8),
-    })
-});
-
-const googleSchema = z.object({
-    body: z.object({
-        credential: z.string().min(1).optional(),
-        code: z.string().optional(),
-        role: z.enum(['OWNER', 'AGENT', 'BUYER']).optional(),
-    })
-});
-
-const firebaseLoginSchema = z.object({
-    body: z.object({
-        idToken: z.string().min(1),
-    })
-});
-
-// ── Handlers ─────────────────────────────────────────────────────
-
-/**
- * Common Logic for issuing sessions with rotation support
- */
-const issueSession = async (res: Response, user: any) => {
-    const { accessToken, refreshToken, familyId } = generateTokens(user.id, user.role);
-    const tokenHash = hashToken(refreshToken);
-
-    // Save to new refresh_tokens table
-    await pool.query(
-        'INSERT INTO refresh_tokens (user_id, token_hash, family_id, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))',
-        [user.id, tokenHash, familyId]
-    );
-
-    // Reset lockout and last login on the user record
-    await pool.query(
-        'UPDATE users SET failed_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?',
-        [user.id]
-    );
-
-    setAuthCookies(res, accessToken, refreshToken);
-
-    return {
-        user: {
-            id: user.id,
-            name: user.name,
-            role: user.role.toLowerCase(),
-            phone: user.phone,
-            language: user.language,
-        }
-    };
-};
 
 export const register = catchAsync(async (req: Request, res: Response) => {
     const { name, phone, email, role, password } = req.body;
     if (['ADMIN', 'STAFF'].includes(role?.toUpperCase())) {
         return res.status(400).json({ message: 'Invalid role selection' });
     }
-    logger.info('[Register Trace] 1. Received request for: ' + phone);
+    logger.info('[Register Trace] 1. Received register request');
     const cleanPhone = cleanPhoneNumber(phone);
 
-    logger.info('[Register Trace] 2. Checking for existing user: ' + cleanPhone);
+    logger.info('[Register Trace] 2. Checking for existing user');
     const [existing]: any[] = await pool.query('SELECT id FROM users WHERE phone = ? OR (email IS NOT NULL AND email = ?)', [cleanPhone, email || null]);
     if (existing.length > 0) {
         logger.info('[Register Trace] 2. User exists, returning 400');
@@ -215,7 +74,7 @@ export const register = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const login = catchAsync(async (req: Request, res: Response) => {
-    const { phone, password, role } = req.body;
+    const { phone, password, role, keepSignedIn = true } = req.body;
     const cleanPhone = cleanPhoneNumber(phone);
 
     const [users]: any[] = await pool.query(
@@ -252,7 +111,7 @@ export const login = catchAsync(async (req: Request, res: Response) => {
         await pool.query(
             `UPDATE users 
              SET failed_attempts = failed_attempts + 1, 
-                 locked_until = IF(failed_attempts + 1 >= ?, NOW() + INTERVAL ? MINUTE, NULL) 
+                 locked_until = IF(failed_attempts >= ?, NOW() + INTERVAL ? MINUTE, NULL) 
              WHERE id = ?`,
             [MAX_FAILED_ATTEMPTS, LOCKOUT_MINUTES, user.id]
         );
@@ -270,7 +129,7 @@ export const login = catchAsync(async (req: Request, res: Response) => {
     }
 
     // Successful login — use issueSession for consistency
-    const data = await issueSession(res, user);
+    const data = await issueSession(res, user, keepSignedIn);
     res.json(data);
 });
 
@@ -332,13 +191,21 @@ export const refresh = catchAsync(async (req: Request, res: Response) => {
 export const logout = catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
     const userId = authReq.user?.userId;
+    const token = req.cookies?.refresh_token;
     
-    // Revoke all tokens in the current family if we can identify it
-    // Note: We don't have familyId in the access token, but we can clear by user_id
-    // Or better, we just clear the refresh_token cookie and let the user re-login.
-    // If they want to "Logout of all devices", we'd revoke all tokens for userId.
-    if (userId) {
-        // Just revoke all for this user for maximum security on logout
+    // Revoke specifically the family of the submitted refresh token if possible
+    if (userId && token) {
+        try {
+            const decoded = jwt.verify(token, JWT_REFRESH_SECRET!) as { fid: string };
+            if (decoded.fid) {
+                await pool.query('UPDATE refresh_tokens SET is_revoked = TRUE WHERE family_id = ?', [decoded.fid]);
+            }
+        } catch {
+            // Token expired or invalid, just revoke all for this user to be safe
+            await pool.query('UPDATE refresh_tokens SET is_revoked = TRUE WHERE user_id = ?', [userId]);
+        }
+    } else if (userId) {
+        // Just revoke all for this user for maximum security on logout if no family identified
         await pool.query('UPDATE refresh_tokens SET is_revoked = TRUE WHERE user_id = ?', [userId]);
     }
     
@@ -384,10 +251,14 @@ export const changePassword = catchAsync(async (req: Request, res: Response) => 
     if (!isMatch) return res.status(400).json({ message: 'Incorrect current password' });
 
     const hashedNew = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-    await pool.query(
-        'UPDATE users SET password_hash = ?, refresh_token_hash = NULL WHERE id = ?',
-        [hashedNew, userId]
-    );
+    // BUG FIX #2: refresh_token_hash column does not exist — tokens live in the refresh_tokens table.
+    // Also invalidate all active sessions when password changes (security best practice).
+    await pool.query('UPDATE users SET password_hash = ? WHERE id = ?', [hashedNew, userId]);
+    await pool.query('UPDATE refresh_tokens SET is_revoked = TRUE WHERE user_id = ?', [userId]);
+
+    if (authReq.user?.jti && authReq.user?.exp) {
+        await blockToken(authReq.user.jti, authReq.user.exp);
+    }
 
     clearAuthCookies(res);
     res.json({ message: 'Password updated. Please log in again.' });
@@ -438,18 +309,18 @@ export const googleAuth = async (req: Request, res: Response) => {
 
     // 2. Find by google_id
     logger.info('[GoogleAuth Trace] 3. Searching for user by google_id: ' + googleId);
-    let [rows]: any[] = await pool.query('SELECT * FROM users WHERE google_id = ?', [googleId]);
+    let [rows]: any[] = await pool.query('SELECT id, name, email, phone, role, language, is_active, google_id, google_picture FROM users WHERE google_id = ?', [googleId]);
     logger.info('[GoogleAuth Trace] 3. Search complete, rows found: ' + rows.length);
 
     // 3. Fallback: find by email (account merge)
     if (rows.length === 0) {
-        logger.info('[GoogleAuth Trace] 4. Fallback search by email: ' + googleEmail);
+        logger.info('[GoogleAuth Trace] 4. Fallback search by email');
         [rows] = await pool.query(
-            'SELECT * FROM users WHERE google_email = ? AND google_id IS NULL',
-            [googleEmail]
+            'SELECT id, name, email, phone, role, language, is_active, google_id, google_picture FROM users WHERE (google_email = ? OR email = ?) AND google_id IS NULL',
+            [googleEmail, googleEmail]
         );
         if (rows.length > 0) {
-            logger.info('[GoogleAuth Trace] 4. Found email match, merging account ID: ' + rows[0].id);
+            logger.info('[GoogleAuth Trace] 4. Found email match, merging account');
             await pool.query(
                 `UPDATE users SET google_id = ?, google_email = ?, google_picture = ?, auth_provider = 'both' WHERE id = ?`,
                 [googleId, googleEmail, googlePicture, rows[0].id]
@@ -476,7 +347,7 @@ export const googleAuth = async (req: Request, res: Response) => {
         const upperRole = requestedRole;
         const [result]: any[] = await pool.query(
             `INSERT INTO users (name, phone, role, google_id, google_email, google_picture, auth_provider, password_hash)
-             VALUES (?, NULL, ?, ?, ?, ?, 'google', '')`,
+             VALUES (?, NULL, ?, ?, ?, ?, 'google', NULL)`,
             [name || googleEmail, upperRole, googleId, googleEmail, googlePicture]
         );
         rows = [{ id: result.insertId, name, role: upperRole, google_picture: googlePicture }];
@@ -504,7 +375,7 @@ export const forgotPassword = catchAsync(async (req: Request, res: Response) => 
 
     const cleanPhone = cleanPhoneNumber(phone);
 
-    // Rate limit: 1 forgot-password OTP per 60s per phone (prevents SMS spam / cost abuse)
+    // Rate limit: 1 forgot-password OTP per 60s per phone
     if (redis) {
         const cooldown = await redis.get(`forgot_cooldown:${cleanPhone}`);
         if (cooldown) {
@@ -515,30 +386,26 @@ export const forgotPassword = catchAsync(async (req: Request, res: Response) => 
     const [rows]: any[] = await pool.query('SELECT id, name FROM users WHERE phone = ?', [cleanPhone]);
 
     if (rows.length === 0) {
-        // Don't reveal account existence — but still set cooldown to prevent enumeration via timing
         if (redis) await redis.set(`forgot_cooldown:${cleanPhone}`, '1', 'EX', 60);
         return res.json({ message: 'If registered, OTP will be sent' });
     }
 
     const user = rows[0];
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    const otp = generateOtp();
+    const expiry = new Date(Date.now() + 10 * 60 * 1000);
 
-    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const otpHash = hashOtp(otp);
 
     await pool.query(
         'UPDATE users SET reset_otp_hash = ?, reset_otp_expiry = ? WHERE id = ?',
         [otpHash, expiry, user.id]
     );
 
-    // Set 60s cooldown AFTER successful generation
     if (redis) await redis.set(`forgot_cooldown:${cleanPhone}`, '1', 'EX', 60);
 
-    // Mock SMS sending (replace with actual provider in production)
-    if (process.env.NODE_ENV !== 'production') {
-        logger.warn(`[SMS MOCK] OTP for dev: ${cleanPhone} → ${otp}`);
-    } else {
-        logger.info('[ForgotPassword] OTP dispatched (SMS provider pending)');
+    const sent = await sendSms(cleanPhone, `Your FISH MARKET reset code is: ${otp}. Valid for 10 minutes.`);
+    if (!sent) {
+        return res.status(500).json({ message: 'Failed to send OTP SMS. Please try again later.' });
     }
 
     res.json({ message: 'OTP sent successfully' });
@@ -548,7 +415,7 @@ export const verifyOtp = catchAsync(async (req: Request, res: Response) => {
     const { phone, otp } = req.body;
     const cleanPhone = cleanPhoneNumber(phone);
 
-    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const otpHash = hashOtp(otp);
 
     const [rows]: any[] = await pool.query(`
         SELECT id FROM users 
@@ -610,69 +477,162 @@ export const resetPassword = catchAsync(async (req: Request, res: Response) => {
     res.json({ message: 'Password reset successful' });
 });
 
-// ── Router ───────────────────────────────────────────────────────
-const router = Router();
-router.post('/register', validate(registerSchema), register);
-router.post('/login', validate(loginSchema), login);
-// BUG 2: googleAuth is now a plain async handler (not wrapped in catchAsync)
-// because it has its own internal try/catch for full error control.
-router.post('/google', validate(googleSchema), googleAuth);
-router.post('/refresh', refresh);
-router.post('/logout', authenticate, logout);
-router.get('/me', authenticate, me); // FIX 4 endpoint
-router.put('/change-password', authenticate, validate(changePasswordSchema), changePassword);
+// Twilio + Redis Login Flow
+export const sendLoginOtp = catchAsync(async (req: Request, res: Response) => {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ message: 'Phone number required' });
 
-// Forgot Password Flow
-router.post('/forgot-password', forgotPassword);
-router.post('/verify-otp', verifyOtp);
-router.post('/reset-password', resetPassword);
+    const cleanPhone = cleanPhoneNumber(phone);
 
-// Firebase Phone Login Flow
-export const verifyFirebasePhoneLogin = catchAsync(async (req: Request, res: Response) => {
-    const { idToken } = req.body;
-
-    if (!firebaseAdminAuth) {
-        return res.status(500).json({ message: 'Firebase authentication is not configured on this server.' });
+    if (!redis) {
+        return res.status(500).json({ message: 'Redis is required for OTP login' });
     }
 
-    let decodedToken;
-    try {
-        decodedToken = await firebaseAdminAuth.verifyIdToken(idToken);
-    } catch (error) {
-        logger.error(error, '[FirebaseAuth] Token verification failed:');
-        return res.status(401).json({ message: 'Invalid or expired Firebase token.' });
+    const cooldown = await redis.get(`login_cooldown:${cleanPhone}`);
+    if (cooldown) {
+        return res.status(429).json({ message: 'Please wait 60s before requesting another OTP' });
     }
 
-    const { phone_number } = decodedToken;
-    if (!phone_number) {
-        return res.status(400).json({ message: 'No phone number linked to this Firebase credential.' });
+    const [users]: any[] = await pool.query(
+        'SELECT id, is_active, locked_until FROM users WHERE phone = ?',
+        [cleanPhone]
+    );
+
+    if (users.length > 0) {
+        const user = users[0];
+        if (!user.is_active) return res.status(403).json({ message: 'Account deactivated' });
+        if (user.locked_until && new Date(user.locked_until) > new Date()) {
+            return res.status(429).json({ message: 'Account locked due to too many failed attempts' });
+        }
     }
 
-    const cleanPhone = cleanPhoneNumber(phone_number);
+    const otp = generateOtp();
+    
+    // BUG-018 FIX: Hash OTP before storing in Redis — prevents exposure if Redis is compromised
+    const otpHash = hashOtp(otp);
+    await redis.setex(`login_otp:${cleanPhone}`, 300, otpHash);
+    await redis.setex(`login_cooldown:${cleanPhone}`, 60, '1');
 
-    // Find or create user
+    const sent = await sendSms(cleanPhone, `Your FISH MARKET login code is: ${otp}. Valid for 5 minutes.`);
+    if (!sent) {
+        return res.status(500).json({ message: 'Failed to send OTP SMS. Please try again later.' });
+    }
+
+    res.json({ message: 'OTP sent successfully' });
+});
+
+export const verifyLoginOtp = catchAsync(async (req: Request, res: Response) => {
+    const { phone, otp } = req.body;
+    const cleanPhone = cleanPhoneNumber(phone);
+
+    if (!redis) return res.status(500).json({ message: 'Redis is required' });
+
+    // BUG-001 FIX: Track wrong-guess attempts. Lock after 5 wrong tries.
+    const attemptsKey = `otp_attempts:${cleanPhone}`;
+    const storedOtpHash = await redis.get(`login_otp:${cleanPhone}`);
+
+    if (!storedOtpHash) {
+        return res.status(400).json({ message: 'OTP expired or not requested' });
+    }
+
+    // BUG-018 FIX: Compare hashed OTP
+    const incomingHash = hashOtp(otp);
+
+    if (storedOtpHash !== incomingHash) {
+        // Increment wrong-attempt counter (expires with OTP TTL)
+        const attempts = await redis.incr(attemptsKey);
+        if (attempts === 1) await redis.expire(attemptsKey, 300);
+
+        if (attempts >= 5) {
+            // Invalidate OTP after too many wrong guesses
+            await redis.del(`login_otp:${cleanPhone}`);
+            await redis.del(attemptsKey);
+            return res.status(429).json({
+                message: 'Too many wrong attempts. OTP invalidated — request a new one.',
+            });
+        }
+
+        const attemptsLeft = Math.max(0, 5 - attempts);
+        return res.status(400).json({
+            message: 'Invalid OTP',
+            attemptsLeft,
+        });
+    }
+
+    // OTP is valid — clear it and reset counter
+    await redis.del(`login_otp:${cleanPhone}`);
+    await redis.del(attemptsKey);
+
+    // Find user
     const [users]: any[] = await pool.query(
         'SELECT id, name, phone, role, is_active, language FROM users WHERE phone = ?',
         [cleanPhone]
     );
 
-    let user;
     if (users.length === 0) {
-        // Auto-register as AGENT if not found
-        const [result]: any[] = await pool.query(
-            'INSERT INTO users (name, phone, role, password_hash, auth_provider) VALUES (?, ?, ?, ?, ?)',
-            ['User', cleanPhone, 'AGENT', '', 'phone']
-        );
-        user = { id: result.insertId, name: 'User', phone: cleanPhone, role: 'AGENT', language: 'en' };
-    } else {
-        user = users[0];
-        if (!user.is_active) return res.status(403).json({ message: 'Account deactivated' });
+        // BUG-002 FIX: Do NOT auto-create AGENT accounts.
+        // Mark phone as verified in Redis and ask frontend to pick a role.
+        await redis.setex(`verified_phone:${cleanPhone}`, 600, '1');
+        return res.json({
+            needsRoleSelection: true,
+            phone: cleanPhone,
+        });
     }
+
+    const user = users[0];
+    if (!user.is_active) return res.status(403).json({ message: 'Account deactivated' });
 
     const data = await issueSession(res, user);
     res.json(data);
 });
 
-router.post('/phone/firebase-login', validate(firebaseLoginSchema), verifyFirebasePhoneLogin);
+/**
+ * POST /api/auth/phone/complete-registration
+ * Called after verifyLoginOtp returns needsRoleSelection = true.
+ * Creates the account with the user-selected role.
+ */
+export const completePhoneRegistration = catchAsync(async (req: Request, res: Response) => {
+    const { phone, name, role } = req.body;
+    const cleanPhone = cleanPhoneNumber(phone);
 
-export default router;
+    if (!redis) return res.status(500).json({ message: 'Redis is required' });
+
+    // Ensure the phone was actually OTP-verified recently
+    const verified = await redis.get(`verified_phone:${cleanPhone}`);
+    if (!verified) {
+        return res.status(400).json({ message: 'Phone not verified or session expired. Please request a new OTP.' });
+    }
+
+    // Validate role
+    const ALLOWED_ROLES = ['OWNER', 'AGENT', 'BUYER'];
+    if (!ALLOWED_ROLES.includes((role || '').toUpperCase())) {
+        return res.status(400).json({ message: 'Invalid role. Choose: OWNER, AGENT, or BUYER' });
+    }
+
+    // Check phone not already registered (race-condition guard)
+    const [existing]: any[] = await pool.query('SELECT id FROM users WHERE phone = ?', [cleanPhone]);
+    if (existing.length > 0) {
+        // Phone already registered — just log them in
+        await redis.del(`verified_phone:${cleanPhone}`);
+        const [users]: any[] = await pool.query(
+            'SELECT id, name, phone, role, is_active, language FROM users WHERE phone = ?',
+            [cleanPhone]
+        );
+        const user = users[0];
+        if (!user.is_active) return res.status(403).json({ message: 'Account deactivated' });
+        const data = await issueSession(res, user);
+        return res.json(data);
+    }
+
+    const [result]: any[] = await pool.query(
+        'INSERT INTO users (name, phone, role, password_hash, auth_provider) VALUES (?, ?, ?, NULL, ?)',
+        [name || 'User', cleanPhone, role.toUpperCase(), 'phone']
+    );
+
+    await redis.del(`verified_phone:${cleanPhone}`);
+
+    const newUser = { id: result.insertId, name: name || 'User', phone: cleanPhone, role: role.toUpperCase(), language: 'en' };
+    const data = await issueSession(res, newUser);
+    res.status(201).json(data);
+});
+

@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   productionBrowserSourceMaps: false,
-  transpilePackages: ["@fishmarket/shared-types"],
+  transpilePackages: ["@fishmarket/shared-types", "recharts", "eventemitter3"],
   turbopack: {
     root: path.join(__dirname, '../../'),
   },

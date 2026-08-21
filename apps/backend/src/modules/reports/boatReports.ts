@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { z } from 'zod';
-import pool from '../../config/db';
+import pool from '@fishmarket/database';
 import { AuthRequest } from '../../middleware/auth';
 import { catchAsync } from '../../middleware/errors';
 import { createNotification } from '../notifications/notifications';
@@ -11,6 +11,25 @@ export const getBoatPaymentHistorySchema = z.object({
         boatId: z.string(),
         date: z.string(),
     })
+});
+
+// BUG-004 FIX: Expose the commission_rules table so the frontend reads the real rate
+export const getCommissionRule = catchAsync(async (req: AuthRequest, res: Response) => {
+    const agentId = req.user?.userId;
+    if (!agentId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const [rows]: any[] = await pool.query(
+        `SELECT commission_rate, bonus_target, bonus_amount, effective_from
+         FROM commission_rules
+         WHERE agent_id = ?
+         ORDER BY effective_from DESC
+         LIMIT 1`,
+        [agentId]
+    );
+
+    // Default 2% if no rule configured — matches NRM Sea Foods physical slips
+    const rule = rows[0] ?? { commission_rate: 2, bonus_target: 0, bonus_amount: 0 };
+    res.json(rule);
 });
 
 export const sendToOwnerSchema = z.object({
@@ -160,6 +179,12 @@ export const getAgentBoatWeekly = catchAsync(async (req: AuthRequest, res: Respo
     const bonusEarned = targetMet ? (rule[0]?.bonus_amount ?? 0) : 0;
     const totalEarnings = myCommission + bonusEarned;
 
+    // BUG FIX #12: Moved the empty-catches guard BEFORE the reduce computation.
+    // Previously the reduce ran on an empty array (harmless but wasteful) then the early return fired.
+    if (!catches || catches.length === 0) {
+        return res.status(200).json({ boat_name: null, owner_name: null, week_start, week_end, daily_breakdown: [], agent_summary: { total_entries: 0, gross_sales: 0, net_payable: 0 } });
+    }
+
     // 3. Group by date logic to flatten like Owner report or keep raw
     // To maintain symmetry between both dashboards, we'll keep raw or group
     // The user's query example just returns raw array for agent. We'll group it identical to owner.
@@ -171,10 +196,6 @@ export const getAgentBoatWeekly = catchAsync(async (req: AuthRequest, res: Respo
         acc[dStr].daily_total += parseFloat(row.total);
         return acc;
     }, {});
-
-    if (!catches || catches.length === 0) {
-      return res.status(200).json({ boat_name: null, owner_name: null, week_start, week_end, daily_breakdown: [], agent_summary: { total_entries: 0, gross_sales: 0, net_payable: 0 } });
-    }
 
     res.json({
         boat_name: catches[0]?.boat_name,

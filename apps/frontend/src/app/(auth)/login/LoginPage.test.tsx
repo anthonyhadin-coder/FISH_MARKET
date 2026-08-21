@@ -78,7 +78,7 @@ describe('LoginPage — 8 UX States', () => {
   it('State 1: renders Google button, divider, phone form and version badge', async () => {
     renderPage();
     expect(await screen.findByTestId('google-sdk-btn')).toBeTruthy();
-    expect(screen.getByPlaceholderText(/phone number/i)).toBeTruthy();
+    expect(screen.getAllByPlaceholderText(/phone number/i)[0]).toBeTruthy();
     expect(screen.getByText('Or access via')).toBeTruthy();
 
   });
@@ -88,7 +88,7 @@ describe('LoginPage — 8 UX States', () => {
     mocks.mockApiPost.mockReturnValue(new Promise(() => {})); // never-resolves
     renderPage();
 
-    fireEvent.change(screen.getByPlaceholderText(/phone number/i), {
+    fireEvent.change(screen.getAllByPlaceholderText(/phone number/i)[0], {
       target: { value: '9876543210' },
     });
     fireEvent.change(screen.getByPlaceholderText('••••••••'), {
@@ -108,7 +108,7 @@ describe('LoginPage — 8 UX States', () => {
     });
     renderPage();
 
-    fireEvent.change(screen.getByPlaceholderText(/phone number/i), {
+    fireEvent.change(screen.getAllByPlaceholderText(/phone number/i)[0], {
       target: { value: '0000000000' },
     });
     fireEvent.change(screen.getByPlaceholderText('••••••••'), {

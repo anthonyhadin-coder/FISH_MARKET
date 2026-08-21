@@ -1,17 +1,17 @@
 "use client";
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { Card } from '@fishmarket/ui';
+import { Button } from '@fishmarket/ui';
+import { Input } from '@fishmarket/ui';
 import {
     Users, Plus, Wallet, AlertCircle, X, Loader2, IndianRupee, MessageCircle, History as HistoryIcon, TrendingUp, TrendingDown, Calendar
 } from 'lucide-react';
 import { fetchBuyers as _fetchBuyers, createBuyer, recordBuyerPayment, Buyer, fetchBuyerHistory } from '@/lib/api/agentApi';
 import { shareToWhatsApp } from '@/lib/whatsapp';
 import { SaleRow, Payment } from '@fishmarket/shared-types';
-import { fmt, T_AGENT, dispDate } from '../SharedUI';
-import { useToast } from '@/components/ui/Toast';
+import { fmt, T_AGENT, dispDate } from '@/components/shared/agentShared';
+import { useToast } from '@fishmarket/ui';
 
 import { useAgent } from '../_context/AgentContext';
 

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card } from '@/components/ui/Card';
+import { Card } from '@fishmarket/ui';
 import { 
     TrendingDown, AlertCircle, Loader2, 
     CalendarDays, Ship

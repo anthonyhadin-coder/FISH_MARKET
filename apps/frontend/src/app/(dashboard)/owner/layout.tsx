@@ -16,7 +16,9 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
             } else if (user.role !== 'owner' && user.role !== 'admin') {
                 router.push(user.role === 'agent' ? '/agent' : '/');
             } else {
-                setTimeout(() => setIsAuthorized(true), 0);
+                // BUG FIX #9: Removed setTimeout wrapper — setting state directly in useEffect
+                // is safe and avoids potential state-update-on-unmounted-component React warnings.
+                setIsAuthorized(true);
             }
         }
     }, [user, isLoading, router]);

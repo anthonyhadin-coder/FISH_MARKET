@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card } from '@/components/ui/Card';
+import { Card } from '@fishmarket/ui';
 import {
     Ship, Loader2, CalendarDays, FileText, 
     TrendingUp, TrendingDown, DollarSign, BarChart2, Table as TableIcon
@@ -12,7 +12,7 @@ import {
 } from '@/lib/api/adminApi';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { T, Language } from '@/lib/i18n';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@fishmarket/ui';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';

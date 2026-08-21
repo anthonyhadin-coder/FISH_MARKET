@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, XCircle, Loader2, Ship, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import api from '@/lib/api';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@fishmarket/ui';
+import { fmt } from '@fishmarket/ui';
 
 // ── Types ─────────────────────────────────────────────────────────
 interface ReportItem {
@@ -84,8 +85,6 @@ const T = {
     rejectedNote: 'நிராகரண காரணம்',
   },
 };
-
-const fmt = (n: number) => `₹${Number(n).toLocaleString('en-IN')}`;
 
 // ── Single Report Card ────────────────────────────────────────────
 function ReportCard({ report, t, onAction }: {

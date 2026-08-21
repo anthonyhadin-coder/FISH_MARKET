@@ -7,10 +7,10 @@ import {
     ChevronUp, Calendar, Filter, BarChart3, Activity
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { T_AGENT, G, GCard, fmt } from "../SharedUI";
+import { T_AGENT, G, GCard, fmt } from "@/components/shared/agentShared";
 import { AgentBoatWeeklyReport } from './AgentBoatWeeklyReport';
 import api from '@/lib/api';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@fishmarket/ui';
 import { ApiError } from '@fishmarket/shared-types';
 
 interface ExpenseBreakdown {

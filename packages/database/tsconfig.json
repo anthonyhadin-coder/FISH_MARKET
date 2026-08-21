@@ -1,0 +1,11 @@
+{
+  "extends": "@fishmarket/tsconfig/base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "target": "ES2022"
+  },
+  "include": ["src"]
+}

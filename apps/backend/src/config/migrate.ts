@@ -1,4 +1,4 @@
-import pool from './db';
+import pool from '@fishmarket/database';
 
 async function migrate() {
     try {

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import pool from '../config/db';
+import pool from '@fishmarket/database';
 import redis from '../config/redis';
 import { logger } from '../utils/logger';
 

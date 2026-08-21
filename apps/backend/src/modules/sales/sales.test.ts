@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import { app } from '../../index';
-import pool from '../../config/db';
+import pool from '@fishmarket/database';
 
 const mockConn = {
     beginTransaction: vi.fn(),
@@ -11,7 +11,7 @@ const mockConn = {
     release: vi.fn(),
 };
 
-vi.mock('../../config/db', () => ({
+vi.mock('@fishmarket/database', () => ({
     default: {
         query: vi.fn(),
         getConnection: vi.fn(() => mockConn),

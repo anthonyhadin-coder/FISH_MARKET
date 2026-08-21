@@ -1,6 +1,6 @@
 import { Response, Router } from 'express';
 import { z } from 'zod';
-import pool from '../../config/db';
+import pool from '@fishmarket/database';
 import { authenticate, authorize, AuthRequest } from '../../middleware/auth';
 import { catchAsync } from '../../middleware/errors';
 import { validate } from '../../middleware/validation';

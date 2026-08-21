@@ -47,8 +47,15 @@ const getLimiter = (limiter: RateLimiterRedis | null) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         if (!redis || redis.status !== 'ready' || !limiter) {
             if (isProduction) {
-                logger.error('CRITICAL: Rate limiter failing open - Redis disconnected');
-                return next();
+                logger.error('CRITICAL: Rate limiter failing open - Redis disconnected. Falling back to in-process memory limiter.');
+                // BUG FIX #4: Do NOT open-pass in production. Use the in-process memory limiter
+                // as a degraded-but-safe fallback instead of bypassing rate limiting entirely.
+                try {
+                    await memoryLimiter.consume(req.ip ?? 'unknown');
+                    return next();
+                } catch {
+                    return res.status(429).json({ message: 'Too many requests. Please try again later.' });
+                }
             }
             // In dev, use memory
             try {
@@ -60,10 +67,12 @@ const getLimiter = (limiter: RateLimiterRedis | null) => {
         }
 
         const authReq = req as AuthRequest;
-        const key = authReq.user?.userId ? `u:${authReq.user.userId}` : req.ip;
+        // BUG FIX #15: req.ip can be undefined behind a misconfigured proxy.
+        // Fall back to 'unknown' to avoid crashing the rate limiter with a non-null assertion.
+        const key = authReq.user?.userId ? `u:${authReq.user.userId}` : (req.ip ?? 'unknown');
         
         try {
-            await limiter.consume(key!);
+            await limiter.consume(key);
             next();
         } catch (rlRes: any) {
             const retryAfter = Math.round(rlRes.msBeforeNext / 1000) || 1;

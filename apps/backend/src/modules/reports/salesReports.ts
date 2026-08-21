@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { z } from 'zod';
-import pool from '../../config/db';
+import pool from '@fishmarket/database';
 import { AuthRequest } from '../../middleware/auth';
 import { catchAsync } from '../../middleware/errors';
 import { buildAgentOrOwnerFilter } from './queryBuilders';
@@ -18,6 +18,12 @@ export const getWeeklyReportSchema = z.object({
     })
 });
 
+/**
+ * PHASE 9 FIX — Sequential queries parallelized with Promise.all.
+ * Previously 4 independent pool.query() calls were awaited sequentially,
+ * multiplying latency by 4x. They share no transaction dependency and
+ * can safely execute in parallel against the read-only replica or pool.
+ */
 export const getDailyReport = catchAsync(async (req: AuthRequest, res: Response) => {
     const agentId = req.user?.userId;
     const role = req.user?.role;
@@ -42,34 +48,40 @@ export const getDailyReport = catchAsync(async (req: AuthRequest, res: Response)
         return res.status(403).json({ message: e.message });
     }
 
-    const [salesRes]: any[] = await pool.query(
-        `SELECT COALESCE(SUM(total), 0) as totalSales FROM sales WHERE ${filterString}`,
-        params
-    );
-    const totalSales = Number(salesRes[0].totalSales);
+    // All 4 queries are independent reads — execute in parallel to eliminate 4x serial latency
+    const [
+        [salesRes],
+        [expensesRes],
+        [paymentsRes],
+        [expenseBreakdown],
+    ] = await Promise.all([
+        pool.query(
+            `SELECT COALESCE(SUM(total), 0) as totalSales FROM sales WHERE ${filterString}`,
+            params
+        ) as Promise<any[]>,
+        pool.query(
+            `SELECT COALESCE(SUM(amount), 0) as totalExpenses FROM expenses WHERE ${filterString}`,
+            params
+        ) as Promise<any[]>,
+        pool.query(
+            `SELECT COALESCE(SUM(amount), 0) as totalBoatPayments FROM boat_payments WHERE ${filterString}`,
+            params
+        ) as Promise<any[]>,
+        pool.query(
+            `SELECT expense_type as type, SUM(amount) as total, GROUP_CONCAT(note SEPARATOR ', ') as notes 
+             FROM expenses 
+             WHERE ${filterString}
+             GROUP BY expense_type`,
+            params
+        ) as Promise<any[]>,
+    ]);
 
-    const [expensesRes]: any[] = await pool.query(
-        `SELECT COALESCE(SUM(amount), 0) as totalExpenses FROM expenses WHERE ${filterString}`,
-        params
-    );
-    const totalExpenses = Number(expensesRes[0].totalExpenses);
+    const totalSales    = Number((salesRes as any)[0].totalSales);
+    const totalExpenses = Number((expensesRes as any)[0].totalExpenses);
+    const boatPayments  = Number((paymentsRes as any)[0].totalBoatPayments);
 
-    const [paymentsRes]: any[] = await pool.query(
-        `SELECT COALESCE(SUM(amount), 0) as totalBoatPayments FROM boat_payments WHERE ${filterString}`,
-        params
-    );
-    const boatPayments = Number(paymentsRes[0].totalBoatPayments);
-
-    const cashWithAgent = totalSales - boatPayments; // As per spec: "Agent Cash = Sales – Boat Payments"
-    const boatProfit = totalSales - totalExpenses; // "Profit = Sales – Expenses"
-
-    const [expenseBreakdown]: any[] = await pool.query(
-        `SELECT expense_type as type, SUM(amount) as total, GROUP_CONCAT(note SEPARATOR ', ') as notes 
-         FROM expenses 
-         WHERE ${filterString}
-         GROUP BY expense_type`,
-        params
-    );
+    const cashWithAgent = totalSales - boatPayments;
+    const boatProfit    = totalSales - totalExpenses;
 
     res.json({
         date: date || new Date().toISOString().split('T')[0],
@@ -82,6 +94,9 @@ export const getDailyReport = catchAsync(async (req: AuthRequest, res: Response)
     });
 });
 
+/**
+ * PHASE 9 FIX — getWeeklyReport: same parallel query optimization applied.
+ */
 export const getWeeklyReport = catchAsync(async (req: AuthRequest, res: Response) => {
     const agentId = req.user?.userId;
     const { boatId } = req.query;
@@ -97,35 +112,39 @@ export const getWeeklyReport = catchAsync(async (req: AuthRequest, res: Response
         daysRange: 7
     });
 
-    const filterString = filter.filterString;
-    const params = filter.params;
+    const { filterString, params } = filter;
 
-    // Fetch aggregation for the last 7 days
-    const [salesRes]: any = await pool.query(
-        `SELECT COALESCE(SUM(total), 0) as totalSales FROM sales WHERE ${filterString}`,
-        params
-    );
-    const [expensesRes]: any = await pool.query(
-        `SELECT COALESCE(SUM(amount), 0) as totalExpenses FROM expenses WHERE ${filterString}`,
-        params
-    );
-    const [paymentsRes]: any = await pool.query(
-        `SELECT COALESCE(SUM(amount), 0) as totalBoatPayments FROM boat_payments WHERE ${filterString}`,
-        params
-    );
-
-    const [expenseBreakdown]: any = await pool.query(
-        `SELECT expense_type as type, SUM(amount) as total 
-         FROM expenses 
-         WHERE ${filterString}
-         GROUP BY expense_type`,
-        params
-    );
+    const [
+        [salesRes],
+        [expensesRes],
+        [paymentsRes],
+        [expenseBreakdown],
+    ] = await Promise.all([
+        pool.query(
+            `SELECT COALESCE(SUM(total), 0) as totalSales FROM sales WHERE ${filterString}`,
+            params
+        ) as Promise<any[]>,
+        pool.query(
+            `SELECT COALESCE(SUM(amount), 0) as totalExpenses FROM expenses WHERE ${filterString}`,
+            params
+        ) as Promise<any[]>,
+        pool.query(
+            `SELECT COALESCE(SUM(amount), 0) as totalBoatPayments FROM boat_payments WHERE ${filterString}`,
+            params
+        ) as Promise<any[]>,
+        pool.query(
+            `SELECT expense_type as type, SUM(amount) as total 
+             FROM expenses 
+             WHERE ${filterString}
+             GROUP BY expense_type`,
+            params
+        ) as Promise<any[]>,
+    ]);
 
     res.json({
-        totalSales: Number(salesRes[0].totalSales),
-        totalExpenses: Number(expensesRes[0].totalExpenses),
-        boatPayments: Number(paymentsRes[0].totalBoatPayments),
-        expenseBreakdown
+        totalSales:     Number((salesRes as any)[0].totalSales),
+        totalExpenses:  Number((expensesRes as any)[0].totalExpenses),
+        boatPayments:   Number((paymentsRes as any)[0].totalBoatPayments),
+        expenseBreakdown,
     });
 });

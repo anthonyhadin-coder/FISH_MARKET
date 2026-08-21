@@ -11,7 +11,8 @@ import {
     getOwnerInbox, 
     getReportDetail, 
     approveReport, 
-    rejectReport, rejectSchema 
+    rejectReport, rejectSchema,
+    getCommissionRule
 } from './boatReports';
 
 const router = Router();
@@ -20,6 +21,8 @@ router.get('/daily', authenticate, validate(getDailyReportSchema), getDailyRepor
 router.get('/weekly', authenticate, validate(getWeeklyReportSchema), getWeeklyReport);
 router.get('/trends', authenticate, getTrendData);
 router.get('/boat-payments', authenticate, validate(getBoatPaymentHistorySchema), getBoatPaymentHistory);
+// BUG-004 FIX: Real commission rate from DB (default 2% to match physical slips)
+router.get('/commission-rule', authenticate, authorize(['agent']), getCommissionRule);
 
 router.get('/boat/owner-weekly', authenticate, authorize(['owner']), getOwnerBoatWeekly);
 router.get('/boat/agent-weekly', authenticate, authorize(['agent']), getAgentBoatWeekly);

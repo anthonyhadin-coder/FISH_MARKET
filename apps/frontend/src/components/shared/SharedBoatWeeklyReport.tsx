@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Ship, CalendarDays, Download, Send, Loader2, CheckCircle2 } from 'lucide-react';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@fishmarket/ui';
 
 const fmt = (n: number) => `₹${Number(n).toLocaleString('en-IN')}`;
 

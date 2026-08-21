@@ -80,7 +80,7 @@ export default function GoogleAuthButton({
           onError={onError}
           useOneTap={false}
           type="standard"
-          theme="outline"
+          theme="filled_black"
           shape="rectangular"
           size="large"
           text="signin_with"

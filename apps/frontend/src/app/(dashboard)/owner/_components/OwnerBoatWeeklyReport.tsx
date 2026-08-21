@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchOwnerBoatWeeklyReport, fetchAllBoatsAdmin, AdminBoat } from '@/lib/api/adminApi';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { T, Language } from '@/lib/i18n';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@fishmarket/ui';
 import { SharedBoatWeeklyReport } from '@/components/shared/SharedBoatWeeklyReport';
 
 export function OwnerBoatWeeklyReport() {

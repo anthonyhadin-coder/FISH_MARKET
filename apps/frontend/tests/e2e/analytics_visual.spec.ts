@@ -33,7 +33,8 @@ test.describe('Analytics Visual Regression', () => {
         await page.waitForLoadState('networkidle');
     });
 
-    test('Desktop: Reports Tab Visual Consistency', async ({ page }) => {
+    test('Desktop: Reports Tab Visual Consistency', async ({ page, isMobile }) => {
+        test.skip(isMobile, 'Skip desktop-only visual test on mobile project viewports');
         // Viewport is default Desktop Chrome
         const reportsTab = page.getByTestId('reports-tab-content'); 
         await expect(reportsTab).toHaveScreenshot('reports-desktop.png', { 
@@ -45,7 +46,8 @@ test.describe('Analytics Visual Regression', () => {
         });
     });
 
-    test('Mobile: Reports Tab Responsiveness', async ({ page }) => {
+    test('Mobile: Reports Tab Responsiveness', async ({ page, isMobile }) => {
+        test.skip(!isMobile, 'Skip mobile-only visual test on desktop project viewports');
         // Redundantly ensure viewport if needed, though project config handles it
         await page.setViewportSize({ width: 390, height: 844 });
         
@@ -62,7 +64,8 @@ test.describe('Analytics Visual Regression', () => {
         });
     });
 
-    test('Tamil: Reports Tab Visuals', async ({ page }) => {
+    test('Tamil: Reports Tab Visuals', async ({ page, isMobile }) => {
+        test.skip(isMobile, 'Skip Tamil desktop visual test on mobile project viewports');
         test.slow();
         
         // Switch to Tamil

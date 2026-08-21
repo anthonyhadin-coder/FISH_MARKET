@@ -1,6 +1,6 @@
 import React from 'react';
 import { fetchAgentBoatWeeklyReport } from '@/lib/api/adminApi';
-import { T_AGENT } from '../SharedUI';
+import { T_AGENT } from '@/components/shared/agentShared';
 import { SharedBoatWeeklyReport } from '@/components/shared/SharedBoatWeeklyReport';
 
 interface AgentBoatWeeklyReportProps {

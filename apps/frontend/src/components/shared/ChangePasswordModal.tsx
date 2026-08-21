@@ -1,13 +1,13 @@
 "use client";
 import React, { useState } from 'react';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
-import { Card } from '../ui/Card';
+import { Button } from '@fishmarket/ui';
+import { Input } from '@fishmarket/ui';
+import { Card } from '@fishmarket/ui';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { T } from '@/lib/i18n';
 import { CheckCircle2, X, KeyRound, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
-import { useToast } from "@/components/ui/Toast";
+import { useToast } from '@fishmarket/ui';
 
 interface ChangePasswordModalProps {
     isOpen: boolean;

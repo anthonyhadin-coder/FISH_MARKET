@@ -13,9 +13,13 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     const [lang, setLangState] = useState<Language>('en');
 
     useEffect(() => {
+        // BUG FIX #7: Removed unnecessary setTimeout wrapper.
+        // useEffect only runs on the client, so setting state directly here is safe.
+        // The previous pattern caused Tamil users to see an English flash on every page load
+        // because the component rendered with 'en' first, then switched after the timeout.
         const saved = localStorage.getItem('lang') as Language;
         if (saved) {
-            setTimeout(() => setLangState(saved), 0);
+            setLangState(saved);
         }
     }, []);
 

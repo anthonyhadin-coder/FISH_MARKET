@@ -2,34 +2,39 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Fish Market Server-Side Proxy
- * Enforces route protection and role-based redirection.
+ * Fish Market Server-Side Route Guard & Proxy
+ * Enforces role-based redirection.
  */
-
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     
     // Get role from cookies (synced by AuthContext)
     const roleCookie = request.cookies.get('fm_role')?.value;
-    const role = roleCookie?.toLowerCase(); // 'agent' | 'owner' | 'admin'
+    const role = roleCookie?.toLowerCase(); // 'agent' | 'owner' | 'admin' | 'buyer'
+    const homePath =
+        role === 'admin' || role === 'owner'
+            ? '/owner'
+            : role === 'buyer'
+                ? '/marketplace'
+                : '/agent';
     
     // 1. Redirection for Auth Pages (/login, /register)
     // If the user already has a valid role, keep them away from login/register
     if (pathname === '/login' || pathname === '/register') {
         if (role) {
             // Redirecting logged-in user
-            const target = (role === 'admin' || role === 'owner') ? '/owner' : '/agent';
-            return NextResponse.redirect(new URL(target, request.url));
+            return NextResponse.redirect(new URL(homePath, request.url));
         }
         return NextResponse.next();
     }
 
-    // 2. Protection for Dashboard Routes (/agent, /owner, /admin)
+    // 2. Protection for Dashboard Routes (/agent, /owner, /admin, /marketplace)
     const isAgentRoute = pathname.startsWith('/agent');
     const isOwnerRoute = pathname.startsWith('/owner');
     const isAdminRoute = pathname.startsWith('/admin');
+    const isBuyerRoute = pathname.startsWith('/marketplace');
 
-    if (isAgentRoute || isOwnerRoute || isAdminRoute) {
+    if (isAgentRoute || isOwnerRoute || isAdminRoute || isBuyerRoute) {
         // No role cookie? Send them to login
         if (!role) {
             return NextResponse.redirect(new URL('/login', request.url));
@@ -37,10 +42,13 @@ export function proxy(request: NextRequest) {
 
         // Cross-role protection: Agent trying to access Owner/Admin, etc.
         if (isAgentRoute && role !== 'agent') {
-            return NextResponse.redirect(new URL('/owner', request.url));
+            return NextResponse.redirect(new URL(homePath, request.url));
         }
-        if ((isOwnerRoute || isAdminRoute) && role === 'agent') {
-            return NextResponse.redirect(new URL('/agent', request.url));
+        if ((isOwnerRoute || isAdminRoute) && role !== 'owner' && role !== 'admin') {
+            return NextResponse.redirect(new URL(homePath, request.url));
+        }
+        if (isBuyerRoute && role !== 'buyer') {
+            return NextResponse.redirect(new URL(homePath, request.url));
         }
     }
 

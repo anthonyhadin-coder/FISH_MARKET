@@ -1,4 +1,4 @@
-import pool from '../config/db'; 
+import pool from '@fishmarket/database'; 
 
 export const seedDatabase = async () => {
   // Clear existing data (Order matters for FK constraints)

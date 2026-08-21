@@ -87,10 +87,10 @@ export const updateBoat = (id: number, data: { name?: string; agentId?: number |
 export const createBoatAdmin = (data: { name: string; agentId?: number | null }) =>
     api.post<AdminBoat>('/boats', data).then(r => r.data);
 
-export const deleteBoat = (id: number) =>
+export const deleteBoatAdmin = (id: number) =>
     api.delete(`/admin/boats/${id}`).then(r => r.data);
 
-export const approveBoatLink = (data: { boatId: number; agentId: number; action: 'approve' | 'reject' }) =>
+export const approveBoatLinkAdmin = (data: { boatId: number; agentId: number; action: 'approve' | 'reject' }) =>
     api.post('/boats/approve-link', data).then(r => r.data);
 
 // ─── Report API ───────────────────────────────────────────────────────────────

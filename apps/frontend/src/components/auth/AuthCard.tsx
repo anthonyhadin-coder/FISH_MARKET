@@ -6,7 +6,9 @@ interface AuthCardProps {
 
 export default function AuthCard({ children }: AuthCardProps) {
   return (
-    <div className="bg-white md:rounded-2xl md:shadow-xl md:shadow-slate-200/50 p-6 sm:p-8 md:p-10 w-full border-transparent md:border-slate-100 border">
+    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-cyan-950/40 p-6 sm:p-7 md:p-8 w-full relative overflow-hidden">
+      {/* Subtle top glow line */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       {children}
     </div>
   );

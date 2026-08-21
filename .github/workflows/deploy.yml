@@ -1,7 +1,10 @@
 name: Deploy — Production
 
 on:
-  push:
+  # Only run after the CI Quality Gate passes on main
+  workflow_run:
+    workflows: ["CI — Quality Gate"]
+    types: [completed]
     branches: [main]
 
 env:
@@ -12,6 +15,8 @@ env:
 jobs:
   build-and-push-images:
     name: 🐳 Build & Push Docker Images
+    # Only deploy if CI passed
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -28,17 +33,26 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Frontend
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata for Frontend
         id: meta-frontend
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=main
 
-      - name: Extract metadata (tags, labels) for Backend
+      - name: Extract metadata for Backend
         id: meta-backend
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=main
 
       - name: Build and push Frontend image
         uses: docker/build-push-action@v5
@@ -48,8 +62,10 @@ jobs:
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
-            NEXT_PUBLIC_API_URL=https://api.fishmarket.app
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
 
       - name: Build and push Backend image
         uses: docker/build-push-action@v5
@@ -59,6 +75,8 @@ jobs:
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy-production:
     name: 🚀 Deploy to Cloud Providers
@@ -73,8 +91,7 @@ jobs:
         uses: actions/checkout@v4
 
       # ─────────────────────────────────────────────
-      # FRONTEND: Deploy to Vercel (Recommended) OR Cloud Run
-      # We keep Vercel CLI for frontend edge performance
+      # FRONTEND: Deploy to Vercel
       # ─────────────────────────────────────────────
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
@@ -103,22 +120,69 @@ jobs:
         with:
           service: fish-market-backend
           image: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:main
-          region: us-central1
+          region: ${{ vars.GCP_REGION }}
           env_vars: |
             NODE_ENV=production
-            CLIENT_URL=https://fishmarket.app
-            ALLOWED_ORIGINS=https://fishmarket.app
+            CLIENT_URL=${{ vars.CLIENT_URL }}
+            ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}
           secrets: |
             DATABASE_URL=DATABASE_URL:latest
             REDIS_URL=REDIS_URL:latest
             JWT_SECRET=JWT_SECRET:latest
             REFRESH_TOKEN_SECRET=REFRESH_TOKEN_SECRET:latest
+            SENTRY_DSN=SENTRY_DSN:latest
+            VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest
+            VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest
 
-      - name: Print success summary
+      # ─────────────────────────────────────────────
+      # HEALTH CHECK — fail deployment if unhealthy
+      # ─────────────────────────────────────────────
+      - name: Health Check Backend
+        id: health-check
+        run: |
+          BACKEND_URL="${{ steps.deploy-backend.outputs.url }}"
+          echo "Checking health at $BACKEND_URL/health ..."
+          for i in {1..10}; do
+            STATUS=$(curl -sf "$BACKEND_URL/health" | jq -r '.status' 2>/dev/null || echo "error")
+            if [ "$STATUS" = "ok" ]; then
+              echo "✅ Backend is healthy"
+              exit 0
+            fi
+            echo "Attempt $i/10 — status: $STATUS — waiting 15s..."
+            sleep 15
+          done
+          echo "❌ Health check failed after 10 attempts"
+          exit 1
+
+      # ─────────────────────────────────────────────
+      # ROLLBACK — if health check fails
+      # ─────────────────────────────────────────────
+      - name: Rollback Backend on Failure
+        if: failure() && steps.health-check.outcome == 'failure'
+        run: |
+          echo "⏪ Rolling back to previous Cloud Run revision..."
+          PREV_REVISION=$(gcloud run revisions list \
+            --service=fish-market-backend \
+            --region=${{ vars.GCP_REGION }} \
+            --format="value(name)" \
+            --sort-by="~createTime" \
+            --limit=2 | tail -1)
+          if [ -n "$PREV_REVISION" ]; then
+            gcloud run services update-traffic fish-market-backend \
+              --to-revisions="$PREV_REVISION=100" \
+              --region=${{ vars.GCP_REGION }}
+            echo "✅ Rolled back to $PREV_REVISION"
+          else
+            echo "⚠️  No previous revision found to roll back to"
+          fi
+
+      - name: Print deployment summary
+        if: success()
         run: |
           echo "======================================"
           echo "  🐟 Deep Ocean Fish Market Deployed! "
           echo "======================================"
           echo "  Frontend: ${{ steps.vercel-deploy.outputs.deploy_url }}"
           echo "  Backend:  ${{ steps.deploy-backend.outputs.url }}"
+          echo "  Commit:   ${{ github.sha }}"
           echo "======================================"

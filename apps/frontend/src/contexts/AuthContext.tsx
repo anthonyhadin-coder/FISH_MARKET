@@ -1,24 +1,21 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { ApiError, User } from '@fishmarket/shared-types';
+import { clearAuthState, formatAuthError } from '@/lib/authUtils';
 
 interface AuthContextType {
     user: User | null;
     login: (user: User) => void;
     logout: () => void;
-    // FIX 4: isLoading is true while we verify the session with GET /api/auth/me.
-    // Components should render a splash screen rather than the authenticated UI
-    // while this is pending, preventing a "logged-in flash" when the cookie is expired.
     isLoading: boolean;
+    error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-    // Seed from localStorage ONLY as an optimistic initial value.
-    // The /api/auth/me check below will correct it if the cookie has expired.
     const [user, setUser] = useState<User | null>(() => {
         if (typeof window !== 'undefined') {
             const stored = localStorage.getItem('user');
@@ -31,127 +28,100 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return null;
     });
 
-    // FIX 4: Start in loading=true so the app does NOT render the authenticated
-    // UI before the server has confirmed the session is valid.
     const [isLoading, setIsLoading] = useState(true);
-
+    const [error, setError] = useState<string | null>(null);
     const router = useRouter();
 
-    // ── FIX 4: Session hydration on first mount ──────────────────────────────
-    // Silently verify whether the HttpOnly access_token cookie is still valid.
+    // Hydrate session on first load.
+    // _retry: true tells the interceptor to skip the silent refresh attempt on 401
+    // during hydration — we have no session yet, so refresh would fail too and just adds latency.
+    const hydrateSession = useCallback(async () => {
+        try {
+            const res = await api.get('/auth/me', { _retry: true } as Parameters<typeof api.get>[1] & { _retry?: boolean });
+            const freshUser: User = res.data.user;
+            setUser(freshUser);
+            localStorage.setItem('user', JSON.stringify(freshUser));
+            setError(null);
+        } catch (err) {
+            const apiError = err as ApiError;
+            const status = apiError.response?.status;
+            if (status === 401) {
+                // Session expired or no session — clear stale state
+                clearAuthState();
+                setUser(null);
+                setError(null); // Not an error to display, just not logged in
+            } else {
+                // Network error or server error — keep localStorage user as fallback
+                console.warn('Session hydration failed:', apiError.message);
+                setError(formatAuthError(apiError));
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    // Session hydration on first mount
     const hasHydrated = React.useRef(false);
     useEffect(() => {
         if (hasHydrated.current) return;
         hasHydrated.current = true;
+        void hydrateSession();
+    }, [hydrateSession]);
 
-        const verifySession = async () => {
-            try {
-                const res = await api.get('/auth/me');
-                // Cookie is valid — sync the authoritative user from the server.
-                const freshUser: User = res.data.user;
-                setUser(freshUser);
-                localStorage.setItem('user', JSON.stringify(freshUser));
-            } catch (err) {
-                const error = err as ApiError;
-                if (error.response?.status === 401) {
-                    // Cookie is expired — clear stale state including the middleware role cookie.
-                    localStorage.removeItem('user');
-                    localStorage.removeItem('token');
-                    document.cookie = 'fm_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-                    setUser(null);
-                }
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        void verifySession();
-    }, []);
-
-    // ── Safe Redirection Guard ──────────────────────────────────────────────
-    const [shouldRedirectToLogin, setShouldRedirectToLogin] = useState(false);
-
-    useEffect(() => {
-        if (shouldRedirectToLogin && !isLoading) {
-            router.push('/login?reason=session-expired');
-            setShouldRedirectToLogin(false);
-        }
-    }, [shouldRedirectToLogin, isLoading, router]);
-
-
-    // ── FIX 1 (client side): Listen for the auth:unauthorized event ─────────
+    // Handle unauthorized events
     useEffect(() => {
         const handleUnauthorized = () => {
-            // Only redirect if we actually had a user (prevents infinite loops on login page)
             setUser((currentUser) => {
                 if (!currentUser) return null;
-                
-                // Clear state synchronously here
-                localStorage.removeItem('user');
-                localStorage.removeItem('token');
-                document.cookie = 'fm_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-                
-                // Return null to update the state
+                clearAuthState();
                 return null;
             });
-
-            // Signal that we need to redirect
-            setShouldRedirectToLogin(true);
+            setError('Session expired');
         };
 
         window.addEventListener('auth:unauthorized', handleUnauthorized);
-        return () =>
-            window.removeEventListener('auth:unauthorized', handleUnauthorized);
+        return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
     }, []);
 
-    const login = (userData: User) => {
+    const login = useCallback((userData: User) => {
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
+        setError(null);
 
-        // Sync role to a non-HttpOnly cookie for Next.js middleware route protection.
+        // Sync role to non-HttpOnly cookie for middleware
         if (typeof window !== 'undefined') {
             const role = userData.role.toLowerCase();
             const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-            document.cookie = `fm_role=${role}; path=/; max-age=86400; SameSite=Lax${secure}`;
+            document.cookie = `fm_role=${role}; path=/; max-age=604800; SameSite=Lax${secure}`;
         }
 
+        // Redirect based on role - use setTimeout to avoid navigation during render
         const role = userData.role.toLowerCase();
-        if (role === 'owner' || role === 'admin') router.push('/owner');
-        else if (role === 'agent') router.push('/agent');
-        else if (role === 'buyer') router.push('/customer');
-        else router.push(`/${role}`);
-    };
+        setTimeout(() => {
+            if (role === 'owner' || role === 'admin') router.push('/owner');
+            else if (role === 'agent') router.push('/agent');
+            else if (role === 'buyer') router.push('/marketplace');
+            else router.push(`/${role}`);
+        }, 0);
+    }, [router]);
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         try {
             await api.post('/auth/logout');
         } catch (err) {
             console.error('Logout failed on server', err instanceof Error ? err.message : err);
         }
 
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-
-        // Clear client-visible cookies (HttpOnly ones are cleared by the server).
-        if (typeof window !== 'undefined') {
-            document.cookie =
-                'fm_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-            document.cookie =
-                'fm_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-
-            // CLEANUP 8: Purge the API cache from the service worker so
-            // sensitive data (balances, reports) is not stored on disk after logout.
-            if ('caches' in window) {
-                caches.delete('api-cache').catch(() => {});
-            }
-        }
-
+        clearAuthState();
         setUser(null);
+        setError(null);
         router.push('/login');
-    };
+    }, [router]);
+
+    const value = { user, login, logout, isLoading, error };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );

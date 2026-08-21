@@ -1,33 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
-import rateLimit from 'express-rate-limit';
-
-// Rate limiting for transcription: max 10 requests per minute per user
-export const transcribeRateLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 10,
-    message: 'Too many transcription requests, please wait a minute.',
-    standardHeaders: true,
-    legacyHeaders: false,
-    keyGenerator: (req: any) => {
-        // Use user ID if available, otherwise fall back to IP
-        const key = req.user?.userId || req.ip;
-        // Ensure we return a string and handle potential IPv6 identification
-        return String(key);
-    },
-    // Explicitly disable validation checks that cause synchronous crashes
-    validate: false,
-});
-
+// Rate limiting is handled centrally by voiceRateLimit in middleware/rateLimiter.ts
 export const validateAudioFile = (req: Request, res: Response, next: NextFunction) => {
     const file = (req as any).file;
     if (!file) {
         return res.status(400).json({ message: 'No audio file provided' });
     }
 
-    // 1. Max file size: 5MB
-    const MAX_SIZE = 5 * 1024 * 1024;
+    // BUG-009 FIX: 25MB — real 20-30 min Opus recordings need up to 25MB.
+    // Multer enforces this at the HTTP layer (voice/index.ts); this is a belt-and-suspenders guard.
+    const MAX_SIZE = 25 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-        return res.status(400).json({ message: 'Audio file too large (max 5MB)' });
+        return res.status(400).json({ message: 'Audio file too large (max 25MB)' });
     }
 
     // 2. MIME type check: support broad spectrum of browser formats (WebM, WAV, MP4/AAC, OGG)

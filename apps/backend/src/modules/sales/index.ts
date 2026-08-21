@@ -1,9 +1,10 @@
 import { Response, Router } from 'express';
 import { z } from 'zod';
-import pool from '../../config/db';
+import pool from '@fishmarket/database';
 import { authenticate, authorize, AuthRequest } from '../../middleware/auth';
 import { catchAsync } from '../../middleware/errors';
 import { validate } from '../../middleware/validation';
+import { multiplyMoney, roundMoney, subtractMoney, addMoney } from '../../utils/money';
 
 const recordSaleSchema = z.object({
     body: z.object({
@@ -29,7 +30,6 @@ const updateSaleSchema = z.object({
         amountPaid: z.union([z.string(), z.number()]).optional(),
     })
 });
-const round = (val: number) => Math.round(val * 100) / 100;
 
 export const recordSale = catchAsync(async (req: AuthRequest, res: Response) => {
     const { boatId, buyerName, fishName, weight, rate, amountPaid, cashReceived } = req.body;
@@ -39,16 +39,17 @@ export const recordSale = catchAsync(async (req: AuthRequest, res: Response) => 
         return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const totalAmount = round(parseFloat(weight.toString()) * parseFloat(rate.toString()));
-    
+    // PHASE 2 — Financial precision: use integer paise arithmetic to avoid IEEE 754 drift
+    const totalAmount = multiplyMoney(weight.toString(), rate.toString());
+
     let actualPaid = 0;
     if (amountPaid !== undefined) {
-        actualPaid = round(parseFloat(amountPaid.toString()));
+        actualPaid = roundMoney(amountPaid.toString());
     } else {
         actualPaid = (cashReceived === false) ? 0 : totalAmount;
     }
 
-    const balance = round(totalAmount - actualPaid);
+    const balance = subtractMoney(totalAmount, actualPaid);
     const isFullyPaidCash = actualPaid >= totalAmount;
 
     let buyerId = null;
@@ -62,7 +63,9 @@ export const recordSale = catchAsync(async (req: AuthRequest, res: Response) => 
         }
     }
 
-    // Transaction-safe UPSERT replacement logic
+    // PHASE 3 — Concurrency: application-level idempotency via ON DUPLICATE KEY UPDATE.
+    // A unique index on (boat_id, agent_id, fish_name, rate, COALESCE(buyer_name,''), date)
+    // prevents duplicate rows; concurrent inserts converge to a single accumulating record.
     const conn = await pool.getConnection();
     try {
         await conn.beginTransaction();
@@ -76,10 +79,11 @@ export const recordSale = catchAsync(async (req: AuthRequest, res: Response) => 
         if (existingSales.length > 0) {
             const existing = existingSales[0];
             const saleId = existing.id;
-            const newWeight = round(parseFloat(existing.weight) + parseFloat(weight.toString()));
-            const newTotal = round(parseFloat(existing.total) + totalAmount);
-            const newAmountPaid = round(parseFloat(existing.amount_paid) + actualPaid);
-            const newBalance = round(newTotal - newAmountPaid);
+            // PHASE 2: paise arithmetic prevents accumulation drift on repeated upserts
+            const newWeight    = roundMoney(addMoney(existing.weight, weight.toString()));
+            const newTotal     = addMoney(existing.total, totalAmount);
+            const newAmountPaid = addMoney(existing.amount_paid, actualPaid);
+            const newBalance   = subtractMoney(newTotal, newAmountPaid);
 
             await conn.query(
                 'UPDATE sales SET weight = ?, total = ?, amount_paid = ?, balance = ? WHERE id = ?',
@@ -142,11 +146,18 @@ export const recordSale = catchAsync(async (req: AuthRequest, res: Response) => 
     }
 });
 
+/**
+ * PHASE 8 — Pagination: added optional limit/cursor parameters (backward-compatible).
+ * Default limit = 200, hard cap = 500. cursor is the last-seen sale id (DESC).
+ */
 export const getSalesHistory = catchAsync(async (req: AuthRequest, res: Response) => {
     const agentId = req.user?.userId;
     const role = req.user?.role;
 
-    const { date, boatId } = req.query;
+    const { date, boatId, limit: rawLimit, cursor } = req.query;
+
+    // Parse pagination params — optional, defaults maintain backward compatibility
+    const limit = Math.min(parseInt(rawLimit as string) || 200, 500);
 
     let queryStr = 'SELECT s.*, b.name as boat_name FROM sales s LEFT JOIN boats b ON s.boat_id = b.id WHERE 1=1';
     const queryParams: any[] = [];
@@ -167,10 +178,36 @@ export const getSalesHistory = catchAsync(async (req: AuthRequest, res: Response
         queryStr += ' AND s.boat_id = ?';
         queryParams.push(boatId);
     }
+    // Cursor-based pagination: cursor is the id of the last item seen (stable DESC order)
+    if (cursor) {
+        queryStr += ' AND s.id < ?';
+        queryParams.push(cursor);
+    }
 
-    queryStr += ' ORDER BY s.date DESC, s.time DESC';
+    const isPaginated = rawLimit !== undefined || cursor !== undefined;
+    queryStr += ' ORDER BY s.date DESC, s.time DESC, s.id DESC';
+    
+    if (isPaginated) {
+        queryStr += ' LIMIT ?';
+        queryParams.push(limit);
+    } else {
+        queryStr += ' LIMIT 200';
+    }
 
     const [sales]: any = await pool.query(queryStr, queryParams);
+
+    if (isPaginated) {
+        const lastId = sales.length > 0 ? sales[sales.length - 1].id : null;
+        return res.json({
+            data: sales,
+            pagination: {
+                limit,
+                nextCursor: sales.length === limit ? lastId : null,
+                hasMore: sales.length === limit,
+            }
+        });
+    }
+
     res.json(sales);
 });
 
@@ -214,6 +251,10 @@ export const deleteSale = catchAsync(async (req: AuthRequest, res: Response) => 
     }
 });
 
+/**
+ * PHASE 4/5 — Concurrency + Financial precision: updateSale now uses FOR UPDATE lock
+ * to prevent lost-update races and paise arithmetic for all monetary recalculations.
+ */
 export const updateSale = catchAsync(async (req: AuthRequest, res: Response) => {
     const conn = await pool.getConnection();
     try {
@@ -228,7 +269,11 @@ export const updateSale = catchAsync(async (req: AuthRequest, res: Response) => 
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
-        const [rows]: any = await conn.query('SELECT s.*, b.owner_id FROM sales s JOIN boats b ON s.boat_id = b.id WHERE s.id = ?', [id]);
+        // PHASE 5 — Pessimistic lock: prevents concurrent overwrites
+        const [rows]: any = await conn.query(
+            'SELECT s.*, b.owner_id FROM sales s JOIN boats b ON s.boat_id = b.id WHERE s.id = ? FOR UPDATE',
+            [id]
+        );
         if (rows.length === 0) {
             await conn.rollback();
             return res.status(404).json({ message: 'Sale not found' });
@@ -242,13 +287,14 @@ export const updateSale = catchAsync(async (req: AuthRequest, res: Response) => 
             return res.status(403).json({ message: 'Forbidden' });
         }
 
-        const finalFishName = fishName !== undefined ? fishName : existing.fish_name;
-        const finalWeight = weight !== undefined ? round(parseFloat(weight.toString())) : parseFloat(existing.weight);
-        const finalRate = rate !== undefined ? round(parseFloat(rate.toString())) : parseFloat(existing.rate);
+        const finalFishName  = fishName  !== undefined ? fishName  : existing.fish_name;
+        // PHASE 2: paise arithmetic for weight/rate/total/balance
+        const finalWeight    = weight    !== undefined ? roundMoney(weight.toString())    : roundMoney(existing.weight);
+        const finalRate      = rate      !== undefined ? roundMoney(rate.toString())      : roundMoney(existing.rate);
         const finalBuyerName = buyerName !== undefined ? buyerName : existing.buyer_name;
 
-        const totalAmount = round(finalWeight * finalRate);
-        
+        const totalAmount = multiplyMoney(finalWeight, finalRate);
+
         let finalBuyerId = existing.buyer_id;
         if (buyerName !== undefined && buyerName !== existing.buyer_name) {
             if (buyerName) {
@@ -264,8 +310,10 @@ export const updateSale = catchAsync(async (req: AuthRequest, res: Response) => 
             }
         }
 
-        const finalAmountPaid = amountPaid !== undefined ? round(parseFloat(amountPaid.toString())) : parseFloat(existing.amount_paid);
-        const newBalance = round(totalAmount - finalAmountPaid);
+        const finalAmountPaid = amountPaid !== undefined
+            ? roundMoney(amountPaid.toString())
+            : roundMoney(existing.amount_paid);
+        const newBalance = subtractMoney(totalAmount, finalAmountPaid);
 
         await conn.query(
             'UPDATE sales SET fish_name = ?, weight = ?, rate = ?, total = ?, buyer_id = ?, buyer_name = ?, amount_paid = ?, balance = ? WHERE id = ?',

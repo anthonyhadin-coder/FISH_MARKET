@@ -1,5 +1,5 @@
 import webpush from 'web-push';
-import pool from '../config/db';
+import pool from '@fishmarket/database';
 import { logger } from '../utils/logger';
 import dotenv from 'dotenv';
 import path from 'path';

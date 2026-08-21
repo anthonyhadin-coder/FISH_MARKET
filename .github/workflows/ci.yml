@@ -1,14 +1,19 @@
-name: CI — Lint, Test & E2E
+name: CI — Quality Gate
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, 'release/**']
   pull_request:
     branches: [main, dev]
 
-# Allow the E2E job to commit snapshot baselines back to the branch
+# Minimal default permissions — scoped per-job below
 permissions:
-  contents: write
+  contents: read
+
+# Cancel in-progress runs on the same branch when a new push arrives
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   NODE_VERSION: '24'
@@ -16,7 +21,68 @@ env:
 
 jobs:
   # ─────────────────────────────────────────────
-  # JOB 1: Client — ESLint + Vitest
+  # JOB 0: Secret Scanning (Gitleaks)
+  # ─────────────────────────────────────────────
+  secret-scan:
+    name: 🔐 Secret Scan
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─────────────────────────────────────────────
+  # JOB 1: Dependency Audit
+  # ─────────────────────────────────────────────
+  dependency-audit:
+    name: 📦 Dependency Audit
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --audit-level=high
+
+  # ─────────────────────────────────────────────
+  # JOB 2: TypeScript Type Check
+  # ─────────────────────────────────────────────
+  type-check:
+    name: 🔷 TypeScript Check
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript type check
+        run: npx turbo run type-check
+
+  # ─────────────────────────────────────────────
+  # JOB 3: Client — ESLint + Vitest
   # ─────────────────────────────────────────────
   lint-and-test-client:
     name: 🔍 Client — Lint & Unit Tests
@@ -41,7 +107,7 @@ jobs:
         run: cd ${{ github.workspace }} && npm ci
 
       - name: Run ESLint
-        run: npm run lint -- --max-warnings=50 || true
+        run: npm run lint -- --max-warnings=0
 
       - name: Run Vitest unit tests
         run: npm run test
@@ -51,7 +117,7 @@ jobs:
           NEXT_PUBLIC_GOOGLE_CLIENT_ID: test-client-id
 
   # ─────────────────────────────────────────────
-  # JOB 2: Server — ESLint + Vitest + Supertest
+  # JOB 4: Server — ESLint + Vitest + Supertest
   # ─────────────────────────────────────────────
   lint-and-test-server:
     name: 🔍 Server — Lint & Integration Tests
@@ -100,10 +166,10 @@ jobs:
         run: cd ${{ github.workspace }} && npm ci
 
       - name: Run ESLint
-        run: npm run lint || true
+        run: npm run lint -- --max-warnings=0
 
       - name: Initialize Test Database
-        run: npx -y tsx src/scripts/initDb.ts
+        run: npx -y tsx scripts/initDb.ts
         env:
           DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/fish_market_test
 
@@ -141,14 +207,17 @@ jobs:
           ALLOWED_ORIGINS: http://127.0.0.1:3000
 
   # ─────────────────────────────────────────────
-  # JOB 3: Visual Snapshot Update (On Push to Main)
+  # JOB 5: Visual Snapshot Update (On Push to Main Only)
   # ─────────────────────────────────────────────
   update-snapshots:
     name: 📸 Update Visual Snapshots
     if: "github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
     needs: [lint-and-test-client, lint-and-test-server]
-    
+    # Scoped write permission ONLY for this job (snapshot commits)
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -170,9 +239,13 @@ jobs:
 
       - name: Start Services
         run: docker compose -f infrastructure/docker/docker-compose.yml up -d --wait db redis
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          JWT_SECRET: ci-test-jwt-secret-minimum-32-characters
+          REFRESH_TOKEN_SECRET: ci-test-refresh-secret-minimum-32-chars
 
       - name: Initialize Test Database
-        run: cd apps/backend && npx -y tsx src/scripts/initDb.ts
+        run: cd apps/backend && npx -y tsx scripts/initDb.ts
         env:
           DATABASE_URL: mysql://root:password@127.0.0.1:3306/fish_market
 
@@ -180,7 +253,6 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/apps/frontend
           npm run build
-          # Required for standalone: copy static + public assets
           cp -r .next/static .next/standalone/apps/frontend/.next/static
           cp -r public .next/standalone/apps/frontend/public
         env:
@@ -189,7 +261,7 @@ jobs:
       - name: Start backend server
         run: cd $GITHUB_WORKSPACE/apps/backend && npm run dev &
         env:
-          NODE_ENV: production
+          NODE_ENV: development
           PORT: 5000
           CLIENT_URL: http://127.0.0.1:3000
           REFRESH_TOKEN_SECRET: ci-test-refresh-secret-minimum-32-chars
@@ -229,14 +301,14 @@ jobs:
             (git commit -m "chore: update visual snapshots [skip ci]" && git push)
 
   # ─────────────────────────────────────────────
-  # JOB 4: Playwright E2E Tests
+  # JOB 6: Playwright E2E Tests
   # ─────────────────────────────────────────────
   e2e-tests:
     name: 🎭 Playwright E2E Tests
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
     needs: [update-snapshots]
-    
+
     services:
       mysql:
         image: mysql:8.0
@@ -279,7 +351,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Initialize Test Database
-        run: cd apps/backend && npx -y tsx src/scripts/initDb.ts
+        run: cd apps/backend && npx -y tsx scripts/initDb.ts
         env:
           DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/fish_market_test
 
@@ -287,7 +359,6 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/apps/frontend
           npm run build
-          # Required for standalone: copy static + public assets
           cp -r .next/static .next/standalone/apps/frontend/.next/static
           cp -r public .next/standalone/apps/frontend/public
         env:
@@ -296,7 +367,7 @@ jobs:
       - name: Start backend server
         run: cd $GITHUB_WORKSPACE/apps/backend && npm run dev &
         env:
-          NODE_ENV: production
+          NODE_ENV: development
           PORT: 5000
           CLIENT_URL: http://127.0.0.1:3000
           REFRESH_TOKEN_SECRET: ci-test-refresh-secret-minimum-32-chars
@@ -305,7 +376,6 @@ jobs:
           GOOGLE_CLIENT_SECRET: test-google-secret
           DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/fish_market_test
           REDIS_URL: redis://127.0.0.1:6379
-          NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api
 
       - name: Start frontend client
         run: |
@@ -327,22 +397,10 @@ jobs:
           BASE_URL: http://127.0.0.1:3000
           API_URL: http://127.0.0.1:5000/api
 
-      - name: Upload Platewright report
+      - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report/
+          path: apps/frontend/playwright-report/
           retention-days: 7
-
-  deploy:
-    name: 🚀 Deploy to Production
-    if: "github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip ci]')"
-    runs-on: ubuntu-latest
-    needs: [e2e-tests]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Deploy Placeholder
-        run: echo "Deploying to Production..."

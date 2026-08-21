@@ -1,0 +1,25 @@
+# CODEOWNERS — Deep Ocean Fish Market
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global fallback — everything requires a review from the lead
+*                                   @anthonyhadin-coder
+
+# Backend core
+apps/backend/src/config/            @anthonyhadin-coder
+apps/backend/src/middleware/        @anthonyhadin-coder
+apps/backend/src/modules/auth/      @anthonyhadin-coder
+
+# CI/CD pipelines — any change requires review
+.github/workflows/                  @anthonyhadin-coder
+
+# Infrastructure — Docker, Kubernetes, Nginx
+infrastructure/                     @anthonyhadin-coder
+
+# Shared packages — breaking changes affect all workspaces
+packages/                           @anthonyhadin-coder
+
+# Database migrations — must be reviewed carefully
+apps/backend/src/db/migrations/     @anthonyhadin-coder
+
+# Environment files
+*.env.example                       @anthonyhadin-coder

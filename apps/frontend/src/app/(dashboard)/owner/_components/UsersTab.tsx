@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Card } from '@fishmarket/ui';
+import { Button } from '@fishmarket/ui';
 import {
     Users, Plus, Trash2, X, Loader2, AlertCircle, UserCircle2, ShieldCheck
 } from 'lucide-react';

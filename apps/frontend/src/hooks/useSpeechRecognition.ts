@@ -103,37 +103,62 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
     }
   }, []);
 
-  // ── Noise gate analyser ───────────────────────────────────────
-  const handleNoiseLevel = useCallback((stream: MediaStream) => {
+  // ── Advanced Audio Pipeline & VAD ───────────────────────────────
+  const setupAudioPipeline = useCallback((stream: MediaStream) => {
     const audioContext = new AudioContext();
+    audioContextRef.current = audioContext;
     const analyser     = audioContext.createAnalyser();
     const source       = audioContext.createMediaStreamSource(stream);
-    source.connect(analyser);
-    analyser.fftSize = 256;
+    
+    // 1. High-Pass Filter for Wind Noise Reduction
+    const biquadFilter = audioContext.createBiquadFilter();
+    biquadFilter.type = 'highpass';
+    biquadFilter.frequency.value = 100; // Filter out low frequency wind rumble
 
+    // 2. Dynamics Compressor for AGC
+    const compressor = audioContext.createDynamicsCompressor();
+    compressor.threshold.value = -50;
+    compressor.knee.value = 40;
+    compressor.ratio.value = 12;
+    compressor.attack.value = 0;
+    compressor.release.value = 0.25;
+
+    // Connect nodes
+    source.connect(biquadFilter);
+    biquadFilter.connect(compressor);
+    compressor.connect(analyser);
+
+    // Create a destination for the MediaRecorder
+    const destination = audioContext.createMediaStreamDestination();
+    compressor.connect(destination);
+
+    analyser.fftSize = 256;
     const dataArray = new Uint8Array(analyser.frequencyBinCount);
-    // FIX 2/3: Raise threshold, debounce, and apply rolling average
-    const NOISE_THRESHOLD = 60;
-    const NOISE_SAMPLES = 5;
-    const noiseSamples: number[] = [];
+    
+    // Variance-based VAD Approximation
+    const NOISE_SAMPLES = 10;
+    const history: number[] = [];
+    
     const checkVolume = () => {
       if (!recognitionRef.current) return;
       analyser.getByteFrequencyData(dataArray);
+      
       const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
       setDbLevel(avg);
       
-      // Rolling average to prevent false triggers from brief spikes
-      noiseSamples.push(avg);
-      if (noiseSamples.length > NOISE_SAMPLES) {
-        noiseSamples.shift();
-      }
+      history.push(avg);
+      if (history.length > NOISE_SAMPLES) history.shift();
       
-      const smoothedAvg = noiseSamples.reduce((a, b) => a + b, 0) / noiseSamples.length;
+      // Calculate variance to distinguish steady noise (wind) from speech
+      const mean = history.reduce((a, b) => a + b, 0) / history.length;
+      const variance = history.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / history.length;
       
-      const noisy = smoothedAvg > NOISE_THRESHOLD;
-      setIsTooNoisy(noisy);
+      // If average is extremely high but variance is very low, it's steady noise (e.g., wind)
+      // If average is high and variance is high, it's speech
+      const isSteadyNoise = mean > 55 && variance < 10;
+      setIsTooNoisy(isSteadyNoise);
       
-      if (noisy) {
+      if (isSteadyNoise) {
         const now = Date.now();
         if (now - lastNoiseToastRef.current > 5000) {
           lastNoiseToastRef.current = now;
@@ -142,14 +167,15 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
       }
     };
     
-    // Check less frequently to save resources and prevent rapid flashing
-    const intervalId = setInterval(checkVolume, 500);
+    const intervalId = setInterval(checkVolume, 200);
     
-    // Must clear interval on unmount
-    return () => {
-      clearInterval(intervalId);
-      source.disconnect();
-      audioContext.close().catch(() => {});
+    return {
+      filteredStream: destination.stream,
+      cleanup: () => {
+        clearInterval(intervalId);
+        source.disconnect();
+        audioContext.close().catch(() => {});
+      }
     };
   }, [options]);
 
@@ -166,6 +192,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
 
       const res        = await api.post('/voice/transcribe', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60000 // Voice processing with LLMs can take 15-30s easily
       });
 
       const transcript = res.data.transcript as string;
@@ -272,16 +299,17 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
           noiseSuppression: true, 
           autoGainControl: true,
           channelCount: 1,
-          sampleRate: 16000
+          sampleRate: 48000
         },
       });
       streamRef.current = stream;
       
-      clearNoiseRef.current = handleNoiseLevel(stream) ?? null;
+      const pipeline = setupAudioPipeline(stream);
+      clearNoiseRef.current = pipeline.cleanup;
 
       // Record audio for potential Whisper fallback
       try {
-        const mr = new MediaRecorder(stream);
+        const mr = new MediaRecorder(pipeline.filteredStream);
         chunksRef.current = [];
         mr.ondataavailable = e => chunksRef.current.push(e.data);
         mr.onstop = () => {
@@ -374,10 +402,11 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions) => {
         }
         setInterimTranscript(interim);
 
-        // FIX 3: Longer silence tolerance (Give 3s not 1.5s in noisy env)
+        // FIX 3: Dynamic Longer silence tolerance (Give 5s to 10s depending on noise)
+        const timeoutMs = dbLevel > 50 ? 10000 : 5000;
         silenceTimerRef.current = setTimeout(() => {
           if (isListeningRef.current) stopListening();
-        }, 3000);
+        }, timeoutMs);
       };
 
       // ── onerror: Tamil fails → retry English → Whisper ────────

@@ -1,8 +1,8 @@
 "use client";
 import React, { useRef, useEffect } from 'react';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
-import { useToast } from '../ui/Toast';
-import { G } from '@/app/(dashboard)/agent/SharedUI';
+import { useToast } from '@fishmarket/ui';
+import { G } from '@/components/shared/agentShared';
 import { VoiceGuideModal } from './VoiceGuideModal';
 import { HelpCircle } from 'lucide-react';
 import { useState } from 'react';

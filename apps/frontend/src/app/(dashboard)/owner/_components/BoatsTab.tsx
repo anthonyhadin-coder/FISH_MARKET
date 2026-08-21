@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Card } from '@fishmarket/ui';
+import { Button } from '@fishmarket/ui';
 import {
     Ship, Plus, Trash2, Edit2, X, Check, Loader2, UserCheck
 } from 'lucide-react';
@@ -12,7 +12,7 @@ import {
 import { fetchAllUsers, AdminUser } from '@/lib/api/adminApi';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { T } from '@/lib/i18n';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@fishmarket/ui';
 
 export function BoatsTab() {
     const { lang } = useLanguage();

@@ -1,5 +1,5 @@
 import { Response, Router } from 'express';
-import pool from '../../config/db';
+import pool from '@fishmarket/database';
 import { authenticate, AuthRequest } from '../../middleware/auth';
 import { catchAsync } from '../../middleware/errors';
 import { z } from 'zod';

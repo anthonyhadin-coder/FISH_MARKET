@@ -1,15 +1,6 @@
 import api from './api';
-
-export interface Boat {
-    id: number;
-    name: string;
-    owner_id: number;
-    agent_id: number | null;
-    status: 'active' | 'inactive' | 'pending';
-    requested_by: number | null;
-    agent_name?: string;
-    created_at?: string;
-}
+import type { Boat } from '@fishmarket/shared-types';
+export type { Boat };
 
 export const fetchMyBoats = () =>
     api.get<Boat[]>('/boats').then(r => r.data);

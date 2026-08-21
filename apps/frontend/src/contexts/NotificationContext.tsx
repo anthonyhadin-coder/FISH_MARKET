@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@fishmarket/ui';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppNotification } from '@fishmarket/shared-types';

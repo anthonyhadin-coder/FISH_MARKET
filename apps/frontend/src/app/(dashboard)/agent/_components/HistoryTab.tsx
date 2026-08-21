@@ -2,12 +2,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Loader2, MessageCircle } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
+import { Card } from '@fishmarket/ui';
+import { Input } from '@fishmarket/ui';
 import { shareToWhatsApp } from '@/lib/whatsapp';
 import api from '@/lib/api';
-import { fmt, T_AGENT } from '../SharedUI';
-import { useToast } from '@/components/ui/Toast';
+import { fmt, T_AGENT } from '@/components/shared/agentShared';
+import { useToast } from '@fishmarket/ui';
 
 interface SaleHistoryItem {
     id: string | number;

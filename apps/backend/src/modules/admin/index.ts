@@ -1,7 +1,7 @@
 import { Response, Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import pool from '../../config/db';
+import pool from '@fishmarket/database';
 import { authenticate, authorize, AuthRequest } from '../../middleware/auth';
 import { catchAsync } from '../../middleware/errors';
 import { validate } from '../../middleware/validation';
@@ -350,28 +350,38 @@ export const getAllReports = catchAsync(async (req: AuthRequest, res: Response) 
 });
 
 export const getFleetWeeklyReport = catchAsync(async (req: AuthRequest, res: Response) => {
-    // Fetch last 7 days aggregation for the entire fleet owned by this user
+    const ownerId = req.user?.userId;
+    // PHASE 5 FIX — Full table scan eliminated:
+    // Subqueries now pre-filter to (a) the 7-day window and (b) the owner's boats only,
+    // before the cross-join materialises — previously they scanned ALL historical rows.
+    // PHASE 6 FIX — Expense-only days are now preserved because the date_series is the
+    // outermost FROM clause and both sales and expenses LEFT JOIN onto it.
     const [rows]: any = await pool.query(`
-        SELECT 
+        SELECT
             d.date,
-            COALESCE(SUM(s.sales), 0) AS sales,
+            COALESCE(SUM(s.sales), 0)    AS sales,
             COALESCE(SUM(e.expenses), 0) AS expenses
         FROM (
             SELECT CURDATE() - INTERVAL (n.n) DAY AS date
             FROM (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6) n
         ) d
-        CROSS JOIN (SELECT id FROM boats WHERE owner_id = ?) b
         LEFT JOIN (
-            SELECT DATE(date) as date, SUM(total) as sales, boat_id
-            FROM sales GROUP BY DATE(date), boat_id
-        ) s ON s.date = d.date AND s.boat_id = b.id
+            SELECT DATE(date) AS date, SUM(total) AS sales, boat_id
+            FROM sales
+            WHERE date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+              AND boat_id IN (SELECT id FROM boats WHERE owner_id = ?)
+            GROUP BY DATE(date), boat_id
+        ) s ON s.date = d.date
         LEFT JOIN (
-            SELECT DATE(date) as date, SUM(amount) as expenses, boat_id
-            FROM expenses GROUP BY DATE(date), boat_id
-        ) e ON e.date = d.date AND e.boat_id = b.id
+            SELECT DATE(date) AS date, SUM(amount) AS expenses, boat_id
+            FROM expenses
+            WHERE date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+              AND boat_id IN (SELECT id FROM boats WHERE owner_id = ?)
+            GROUP BY DATE(date), boat_id
+        ) e ON e.date = d.date
         GROUP BY d.date
         ORDER BY d.date ASC
-    `, [req.user?.userId]);
+    `, [ownerId, ownerId]);
 
     const history = rows.map((r: any) => ({
         date: r.date,

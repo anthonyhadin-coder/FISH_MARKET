@@ -1,8 +1,19 @@
 import { test, expect, type Page } from '@playwright/test';
 import { injectAxe, checkA11y } from 'axe-playwright';
+import { setupUniversalMocking } from './test-utils';
 
 test.describe('Accessibility (WCAG 2.1 AA)', () => {
   test('Home Page should be accessible', async ({ page }) => {
+    await setupUniversalMocking(page);
+    
+    // Force logged-out state for landing page
+    await page.route('**/api/auth/me', route => 
+      route.fulfill({ 
+        status: 401, 
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Unauthorized' }) 
+      })
+    );
 
     // Pre-warm: hit the page once to trigger Next.js compilation
     await page.goto('/', { waitUntil: 'commit' });
@@ -33,6 +44,7 @@ test.describe('Accessibility (WCAG 2.1 AA)', () => {
   });
 
   test('Voice Entry Tab should have proper contrast and tab order', async ({ page }: { page: Page }) => {
+    await setupUniversalMocking(page);
     await page.route('**/api/auth/me', route => route.fulfill({ status: 200, json: { user: { id: '1', name: 'Test Agent', role: 'agent' } } }));
     await page.goto('/agent'); // Adjust based on routing
     
