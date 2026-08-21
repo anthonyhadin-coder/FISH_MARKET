@@ -18,11 +18,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
-    "@types/node": "^25.5.0",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.2.0",
     "axe-playwright": "^2.2.2",
-    "concurrently": "^9.1.2",
-    "turbo": "^2.9.6",
-    "vitest": "^4.1.0"
+    "concurrently": "^10.0.5",
+    "turbo": "^2.10.11",
+    "vitest": "^4.1.11"
   }
 }
