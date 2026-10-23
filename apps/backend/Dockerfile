@@ -1,12 +1,12 @@
 # Stage 1: Prune
-FROM node:20.11.1-alpine AS pruner
+FROM node:26.12.0-alpine AS pruner
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY . .
 RUN npx turbo prune --scope=server --docker
 
 # Stage 2: Install dependencies
-FROM node:20.11.1-alpine AS installer
+FROM node:26.12.0-alpine AS installer
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY .gitignore .gitignore
@@ -15,7 +15,7 @@ COPY --from=pruner /app/out/package-lock.json ./package-lock.json
 RUN npm ci
 
 # Stage 3: Build
-FROM node:20.11.1-alpine AS builder
+FROM node:26.12.0-alpine AS builder
 WORKDIR /app
 COPY --from=installer /app/ .
 COPY --from=pruner /app/out/full/ .
@@ -23,7 +23,7 @@ COPY --from=pruner /app/out/full/ .
 RUN npx turbo run build --filter=server...
 
 # Stage 4: Production Runner
-FROM node:20.11.1-alpine AS runner
+FROM node:26.12.0-alpine AS runner
 WORKDIR /app
 
 RUN apk add --no-cache dumb-init
