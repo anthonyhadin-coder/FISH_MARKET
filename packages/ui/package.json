@@ -20,7 +20,7 @@
     "@fishmarket/tsconfig": "*",
     "react": "^18",
     "react-dom": "^18",
-    "typescript": "^5.0.0"
+    "typescript": "^7.0.2"
   },
   "peerDependencies": {
     "react": "^18",

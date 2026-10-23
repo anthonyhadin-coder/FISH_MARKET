@@ -11,9 +11,9 @@
     "mysql2": "^3.9.7"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^26",
     "@fishmarket/eslint-config": "*",
     "@fishmarket/tsconfig": "*",
-    "typescript": "^5.0.0"
+    "typescript": "^7.0.2"
   }
 }
